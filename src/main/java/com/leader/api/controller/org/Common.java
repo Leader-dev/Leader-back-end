@@ -1,13 +1,12 @@
 package com.leader.api.controller.org;
 
-import com.leader.api.data.org.Organization;
-import com.leader.api.data.org.OrganizationLobbyOverview;
-import com.leader.api.data.org.OrganizationQueryObject;
-import com.leader.api.data.org.OrganizationRepository;
+import com.leader.api.data.org.*;
 import com.leader.api.data.org.membership.OrganizationJoinedOverview;
 import com.leader.api.data.org.membership.OrganizationMembershipRepository;
 import com.leader.api.data.org.report.OrganizationReport;
 import com.leader.api.data.org.report.OrganizationReportRepository;
+import com.leader.api.data.org.type.OrganizationTypeProject;
+import com.leader.api.data.org.type.OrganizationTypeRepository;
 import com.leader.api.response.ErrorResponse;
 import com.leader.api.response.SuccessResponse;
 import com.leader.api.util.Util;
@@ -35,6 +34,20 @@ public class Common {
 
     @Autowired
     private OrganizationReportRepository organizationReportRepository;
+
+    @Autowired
+    private OrganizationTypeRepository organizationTypeRepository;
+
+    @PostMapping("/types")
+    public Document getOrganizationTypes() {
+        List<OrganizationTypeProject> types = organizationTypeRepository.findAllByAliasNotNull(OrganizationTypeProject.class);
+
+        Document typesResponse = new Document();
+        types.forEach(t -> typesResponse.append(t.alias, t));  // convert object list to key-value-pair object
+        Document response = new SuccessResponse();
+        response.append("types", typesResponse);
+        return response;
+    }
 
     @PostMapping("/list")
     public Document listOrganizations(@RequestBody OrganizationQueryObject queryObject) {

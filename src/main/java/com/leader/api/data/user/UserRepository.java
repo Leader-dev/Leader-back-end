@@ -28,7 +28,7 @@ public interface UserRepository extends MongoRepository<User, ObjectId> {
         User user = findByUsername(username);
         String salt = user.salt;
         String processedPassword = Util.SHA1(password + salt);
-        return processedPassword.equals(user.password);
+        return user.password.equals(processedPassword);
     }
 
     default void updatePasswordByPhone(String phone, String password, int saltLength) {

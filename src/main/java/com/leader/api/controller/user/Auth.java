@@ -16,6 +16,8 @@ import javax.servlet.http.HttpSession;
 @RequestMapping("/user")
 public class Auth {
 
+    private static final int RSA_KEYSIZE = 1024;
+    private static final long RSA_KEY_EXPIRE = 60000;
     private static final long AUTHCODE_REQUEST_INTERVAL = 60000;
     private static final long AUTHCODE_EXPIRE = 300000;
     private static final int SALT_LENGTH = 16;
@@ -46,6 +48,30 @@ public class Auth {
         return response;
     }
 
+    @PostMapping("/key")
+    public Document getPublicKey(HttpSession session) {
+        // generate public key
+        byte[] publicKey = Util.generateKey(session, RSA_KEYSIZE);
+
+        // put public key in response
+        Document response = new SuccessResponse();
+        response.append("publicKey", publicKey);
+        return response;
+    }
+
+    @PostMapping("/check")
+    public Document checkText(@RequestBody UserQueryObject queryObject, HttpSession session) {
+        // decrypt
+        String text = Util.decrypt(session, queryObject.password, RSA_KEY_EXPIRE);
+        if (text == null) {
+            return new ErrorResponse("key_invalid");
+        }
+
+        Document response = new SuccessResponse();
+        response.append("text", text);
+        return response;
+    }
+
     @PostMapping("/authcode")
     public Document getAuthCode(@RequestBody UserQueryObject queryObject) {
         long timePassed = authCodeRecordRepository.timePassedSinceLastAuthCode(queryObject.phone);
@@ -58,22 +84,30 @@ public class Auth {
     }
 
     @PostMapping("/register")
-    public Document createUser(@RequestBody UserQueryObject queryObject) {
+    public Document createUser(@RequestBody UserQueryObject queryObject, HttpSession session) {
         // check authcode
         if (!authCodeRecordRepository.isAuthCodeValid(queryObject.phone, queryObject.authcode, AUTHCODE_EXPIRE)) {
             return new ErrorResponse("authcode_incorrect");
         }
+
         // check username
         if (userRepository.existsByUsername(queryObject.username)) {
             return new ErrorResponse("username_exist");
         }
+
         // check phone
         if (userRepository.existsByPhone(queryObject.phone)) {
             return new ErrorResponse("phone_exist");
         }
 
+        // decrypt password
+        String password = Util.decrypt(session, queryObject.password, RSA_KEY_EXPIRE);
+        if (password == null) {
+            return new ErrorResponse("key_invalid");
+        }
+
         // add user
-        userRepository.insertUser(queryObject.username, queryObject.password, queryObject.phone, SALT_LENGTH);
+        userRepository.insertUser(queryObject.username, password, queryObject.phone, SALT_LENGTH);
 
         // delete authcode record
         authCodeRecordRepository.deleteByPhone(queryObject.phone);
@@ -83,13 +117,26 @@ public class Auth {
 
     @PostMapping("/login")
     public Document login(@RequestBody UserQueryObject queryObject, HttpSession session) {
+        // check username
         if (!userRepository.existsByUsername(queryObject.username)) {
             return new ErrorResponse("user_not_exist");
         }
-        if (!userRepository.validateUser(queryObject.username, queryObject.password)) {
+
+        // decrypt password
+        String password = Util.decrypt(session, queryObject.password, RSA_KEY_EXPIRE);
+        if (password == null) {
+            return new ErrorResponse("key_invalid");
+        }
+
+        // check password
+        if (!userRepository.validateUser(queryObject.username, password)) {
             return new ErrorResponse("password_incorrect");
         }
-        session.setAttribute("user_id", userRepository.getIdByUsername(queryObject.username));
+
+        // update session
+        ObjectId userid = userRepository.getIdByUsername(queryObject.username);
+        Util.saveUserIdToSession(session, userid);
+
         return new SuccessResponse();
     }
 
@@ -105,7 +152,7 @@ public class Auth {
     }
 
     @PostMapping("/changepassword")
-    public Document changePassword(@RequestBody UserQueryObject queryObject) {
+    public Document changePassword(@RequestBody UserQueryObject queryObject, HttpSession session) {
         // check phone
         if (!userRepository.existsByPhone(queryObject.phone)) {
             return new ErrorResponse("phone_not_exist");
@@ -115,8 +162,14 @@ public class Auth {
             return new ErrorResponse("authcode_incorrect");
         }
 
+        // decrypt password
+        String password = Util.decrypt(session, queryObject.password, RSA_KEY_EXPIRE);
+        if (password == null) {
+            return new ErrorResponse("key_invalid");
+        }
+
         // update user
-        userRepository.updatePasswordByPhone(queryObject.phone, queryObject.password, SALT_LENGTH);
+        userRepository.updatePasswordByPhone(queryObject.phone, password, SALT_LENGTH);
 
         // delete authcode record
         authCodeRecordRepository.deleteByPhone(queryObject.phone);

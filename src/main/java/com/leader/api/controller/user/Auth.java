@@ -152,8 +152,12 @@ public class Auth {
     }
 
     @PostMapping("/userid")
-    public ObjectId userid(HttpSession session) {
-        return Util.getUserIdFromSession(session);
+    public Document userid(HttpSession session) {
+        ObjectId userid = Util.getUserIdFromSession(session);
+
+        Document response = new SuccessResponse();
+        response.append("userid", userid);
+        return response;
     }
 
     @PostMapping("/changepassword")

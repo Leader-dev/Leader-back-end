@@ -1,0 +1,39 @@
+# This workflow will build a Java project with Maven when pushed to dev
+
+name: Maven Dev Package
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ dev ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up JDK 8
+      uses: actions/setup-java@v2
+      with:
+        java-version: '8'
+        distribution: 'adopt'
+    - name: Build with Maven
+      run: mvn clean package
+    - name: ssh scp ssh pipelines
+      uses: cross-the-world/ssh-scp-ssh-pipelines@latest
+      with:
+        host: ${{ secrets.T_HOST }}
+        user: ${{ secrets.T_USER }}
+        pass: ${{ secrets.T_PASS }}
+        connect_timeout: 10s
+        first_ssh: |
+          cd ${{ secrets.T_PATH }}
+          tmux kill-session -t ${{ secrets.T_SESSION }}
+          rm ${{ secrets.T_JAR }}
+        scp: |
+          "./target/${{ secrets.T_JAR }}" => ${{ secrets.T_PATH }}
+        last_ssh: |
+          cd ${{ secrets.T_PATH }}
+          tmux new -s ${{ secrets.T_SESSION }}
+          java -jar ${{ secrets.T_JAR }}

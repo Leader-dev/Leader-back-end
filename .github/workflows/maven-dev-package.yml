@@ -37,5 +37,4 @@ jobs:
           "./target/${{ secrets.T_JAR }}" => ${{ secrets.T_PATH }}
         last_ssh: |
           cd ${{ secrets.T_PATH }}
-          tmux new -s ${{ secrets.T_SESSION }}
-          java -jar ${{ secrets.T_JAR }}
+          tmux new -d -s ${{ secrets.T_SESSION }} "java -jar ${{ secrets.T_JAR }}"

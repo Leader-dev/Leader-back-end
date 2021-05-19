@@ -43,6 +43,7 @@ public class Auth {
         } else if (queryObject.phone != null) {
             exist = userRepository.existsByPhone(queryObject.phone);
         }
+
         Document response = new SuccessResponse();
         response.append("exist", exist);
         return response;
@@ -61,7 +62,7 @@ public class Auth {
 
     @PostMapping("/check")
     public Document checkText(@RequestBody UserQueryObject queryObject, HttpSession session) {
-        // decrypt
+        // decrypt password
         String text = Util.decrypt(session, queryObject.password, RSA_KEY_EXPIRE);
         if (text == null) {
             return new ErrorResponse("key_invalid");
@@ -74,12 +75,16 @@ public class Auth {
 
     @PostMapping("/authcode")
     public Document getAuthCode(@RequestBody UserQueryObject queryObject) {
+        // ensure the interface is not called too frequently
         long timePassed = authCodeRecordRepository.timePassedSinceLastAuthCode(queryObject.phone);
         if (timePassed != -1 && timePassed < AUTHCODE_REQUEST_INTERVAL) {
             return new ErrorResponse("request_too_frequent");
         }
+
+        // generate and send authcode
         authCodeRecordRepository.generateAuthCode(queryObject.phone);
         // TODO Actually send the authcode to phone
+
         return new SuccessResponse();
     }
 

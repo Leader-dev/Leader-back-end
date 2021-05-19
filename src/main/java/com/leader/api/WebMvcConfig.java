@@ -31,12 +31,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        // add base authentication checker for all routes other than /user/**
         registry
                 .addInterceptor(new HandlerInterceptor() {
                     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
                         HttpSession session = request.getSession();
                         Object userid = session.getAttribute("user_id");
-                        if (userid == null) {
+                        if (userid == null) {  // if userid does not exist in session, send authentication error (403)
                             response.setContentType("application/json");
                             response.setCharacterEncoding("utf-8");
                             response.getOutputStream().print(AUTH_ERROR_RESPONSE);
@@ -51,11 +52,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Document> handle(Exception ex, HttpServletRequest request, HttpServletResponse response) {
+        // whenever an exception occur, return internal error (500) along with the original message of the exception
         return new ResponseEntity<>(new InternalErrorResponse(ex.getMessage()), HttpStatus.OK);
     }
 
     @Override
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+        // whenever a ObjectId object is encountered in response, convert it to hex string (toString() function does this)
         Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder()
             .serializerByType(ObjectId.class, new ToStringSerializer());
         MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(builder.build());

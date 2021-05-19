@@ -40,12 +40,15 @@ public class Common {
 
     @PostMapping("/types")
     public Document getOrganizationTypes() {
+        // find all types that contains alias field
         List<OrganizationTypeProject> types = organizationTypeRepository.findAllByAliasNotNull(OrganizationTypeProject.class);
 
-        Document typesResponse = new Document();
-        types.forEach(t -> typesResponse.append(t.alias, t));  // convert object list to key-value-pair object
+        // convert types from object list to key-value-pair object, with alias being the key
+        Document typesMapping = new Document();
+        types.forEach(t -> typesMapping.append(t.alias, t));
+
         Document response = new SuccessResponse();
-        response.append("types", typesResponse);
+        response.append("types", typesMapping);
         return response;
     }
 

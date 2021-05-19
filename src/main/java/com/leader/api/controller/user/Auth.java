@@ -181,9 +181,4 @@ public class Auth {
 
         return new SuccessResponse();
     }
-
-    @PostMapping("/test")
-    public UserQueryObject test(@RequestParam("value") UserQueryObject queryObject) {
-        return queryObject;
-    }
 }

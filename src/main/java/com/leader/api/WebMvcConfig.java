@@ -47,7 +47,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                     }
                 })
                 .addPathPatterns("/**")
-                .excludePathPatterns("/user/**");
+                .excludePathPatterns("/user/**", "/api/info");
     }
 
     @ExceptionHandler(Exception.class)

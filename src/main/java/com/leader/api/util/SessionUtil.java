@@ -19,6 +19,10 @@ public class SessionUtil {
         return (ObjectId) session.getAttribute(USER_ID);
     }
 
+    public static void removeUserIdFromSession(HttpSession session) {
+        session.removeAttribute(USER_ID);
+    }
+
     private static final String PRIVATE_KEY = "private_key";
     private static final String PRIVATE_KEY_TIMESTAMP = "private_key_timestamp";
 

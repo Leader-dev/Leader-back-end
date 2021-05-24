@@ -4,7 +4,6 @@ import com.leader.api.response.ErrorResponse;
 import com.leader.api.response.SuccessResponse;
 import com.leader.api.service.UserAuthService;
 import com.leader.api.util.SessionUtil;
-import com.leader.api.util.SecureUtil;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +19,6 @@ public class Auth {
     private UserAuthService userAuthService;
 
     private static class UserQueryObject {
-        public String username;
         public String password;
         public String phone;
         public String authcode;
@@ -28,12 +26,7 @@ public class Auth {
 
     @PostMapping("/exist")
     public Document userExist(@RequestBody UserQueryObject queryObject) {
-        boolean exist = false;
-        if (queryObject.username != null) {
-            exist = userAuthService.usernameExists(queryObject.username);
-        } else if (queryObject.phone != null) {
-            exist = userAuthService.phoneExists(queryObject.phone);
-        }
+        boolean exist = userAuthService.phoneExists(queryObject.phone);
 
         Document response = new SuccessResponse();
         response.append("exist", exist);
@@ -78,11 +71,6 @@ public class Auth {
             return new ErrorResponse("authcode_incorrect");
         }
 
-        // check username
-        if (userAuthService.usernameExists(queryObject.username)) {
-            return new ErrorResponse("username_exist");
-        }
-
         // check phone
         if (userAuthService.phoneExists(queryObject.phone)) {
             return new ErrorResponse("phone_exist");
@@ -92,7 +80,7 @@ public class Auth {
         String password = userAuthService.decryptPassword(session, queryObject.password);
 
         // actually create user
-        userAuthService.createUser(queryObject.username, password, queryObject.phone);
+        userAuthService.createUser(password, queryObject.phone);
 
         // delete authcode record
         userAuthService.removeAuthCodeRecord(queryObject.phone);
@@ -102,21 +90,30 @@ public class Auth {
 
     @PostMapping("/login")
     public Document login(@RequestBody UserQueryObject queryObject, HttpSession session) {
-        // check username
-        if (!userAuthService.usernameExists(queryObject.username)) {
+        // check phone
+        if (!userAuthService.phoneExists(queryObject.phone)) {
             return new ErrorResponse("user_not_exist");
         }
 
-        // decrypt password
-        String password = userAuthService.decryptPassword(session, queryObject.password);
+        if (queryObject.password != null) {  // if chose to use password
+            // decrypt password
+            String password = userAuthService.decryptPassword(session, queryObject.password);
 
-        // check password
-        if (!userAuthService.validateUser(queryObject.username, password)) {
-            return new ErrorResponse("password_incorrect");
+            // check password
+            if (!userAuthService.validateUser(queryObject.phone, password)) {
+                return new ErrorResponse("password_incorrect");
+            }
+        } else if (queryObject.authcode != null) {  // if chose to use phone authcode
+            // check authcode
+            if (!userAuthService.validateAuthCode(queryObject.phone, queryObject.authcode)) {
+                return new ErrorResponse("authcode_incorrect");
+            }
+        } else {
+            throw new RuntimeException("Expect password or authcode attribute in request");
         }
 
         // update session
-        ObjectId userid = userAuthService.getUserIdByUsername(queryObject.username);
+        ObjectId userid = userAuthService.getUserIdByPhone(queryObject.phone);
         SessionUtil.saveUserIdToSession(session, userid);
 
         return new SuccessResponse();
@@ -124,7 +121,8 @@ public class Auth {
 
     @PostMapping("/logout")
     public Document logout(HttpSession session) {
-        session.invalidate();
+        SessionUtil.removeUserIdFromSession(session);
+
         return new SuccessResponse();
     }
 

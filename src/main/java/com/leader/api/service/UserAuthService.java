@@ -46,16 +46,6 @@ public class UserAuthService {
         authCodeRecordRepository.insert(authCodeRecord);
     }
 
-    public boolean usernameExists(String username) {
-        return userRepository.existsByUsername(username);
-    }
-
-    public void assertUsernameExists(String username) {
-        if (!usernameExists(username)) {
-            throw new RuntimeException("Username not exist");
-        }
-    }
-
     public boolean phoneExists(String phone) {
         return userRepository.existsByPhone(phone);
     }
@@ -108,9 +98,8 @@ public class UserAuthService {
         authCodeRecordRepository.deleteByPhone(phone);
     }
 
-    public void createUser(String username, String password, String phone) {
+    public void createUser(String password, String phone) {
         User user = new User();
-        user.username = username;
         user.phone = phone;
         String salt = SecureUtil.createRandomSalt(SALT_LENGTH);
         user.password = SecureUtil.SHA1(password + salt);
@@ -118,9 +107,9 @@ public class UserAuthService {
         userRepository.insert(user);
     }
 
-    public boolean validateUser(String username, String password) {
-        assertUsernameExists(username);
-        User user = userRepository.findByUsername(username);
+    public boolean validateUser(String phone, String password) {
+        assertPhoneExists(phone);
+        User user = userRepository.findByPhone(phone);
         String salt = user.salt;
         String processedPassword = SecureUtil.SHA1(password + salt);
         return user.password.equals(processedPassword);
@@ -135,9 +124,9 @@ public class UserAuthService {
         userRepository.save(user);
     }
 
-    public ObjectId getUserIdByUsername(String username) {
-        assertUsernameExists(username);
-        User user = userRepository.findByUsername(username);
+    public ObjectId getUserIdByPhone(String phone) {
+        assertPhoneExists(phone);
+        User user = userRepository.findByPhone(phone);
         return user.id;
     }
 }

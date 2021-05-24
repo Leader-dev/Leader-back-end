@@ -2,14 +2,11 @@ package com.leader.api.controller.org;
 
 import com.leader.api.data.org.*;
 import com.leader.api.data.org.membership.OrganizationJoinedOverview;
-import com.leader.api.data.org.membership.OrganizationMembershipRepository;
 import com.leader.api.data.org.report.OrganizationReport;
-import com.leader.api.data.org.report.OrganizationReportRepository;
-import com.leader.api.data.org.type.OrganizationTypeProject;
-import com.leader.api.data.org.type.OrganizationTypeRepository;
 import com.leader.api.response.ErrorResponse;
 import com.leader.api.response.SuccessResponse;
-import com.leader.api.util.Util;
+import com.leader.api.service.OrganizationService;
+import com.leader.api.util.SessionUtil;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,35 +24,34 @@ import java.util.List;
 public class Common {
 
     @Autowired
-    private OrganizationRepository organizationRepository;
-
-    @Autowired
-    private OrganizationMembershipRepository organizationMembershipRepository;
-
-    @Autowired
-    private OrganizationReportRepository organizationReportRepository;
-
-    @Autowired
-    private OrganizationTypeRepository organizationTypeRepository;
+    private OrganizationService organizationService;
 
     @PostMapping("/types")
     public Document getOrganizationTypes() {
-        // find all types that contains alias field
-        List<OrganizationTypeProject> types = organizationTypeRepository.findAllByAliasNotNull(OrganizationTypeProject.class);
-
         // convert types from object list to key-value-pair object, with alias being the key
-        Document typesMapping = new Document();
-        types.forEach(t -> typesMapping.append(t.alias, t));
+        Document typesMapping = organizationService.getTypeAliasMapping();
 
         Document response = new SuccessResponse();
         response.append("types", typesMapping);
         return response;
     }
 
+    @PostMapping("/index")
+    public Document getOrganizationIndex() {
+        // TODO Use more intelligent way to decide content
+        List<OrganizationPosterOverview> pic = organizationService.findOrganizationsByNumber(5, OrganizationPosterOverview.class);
+        List<OrganizationLobbyOverview> list = organizationService.findOrganizationsByNumber(9, OrganizationLobbyOverview.class);
+
+        Document response = new SuccessResponse();
+        response.append("pic", pic);
+        response.append("list", list);
+        return response;
+    }
+
     @PostMapping("/list")
     public Document listOrganizations(@RequestBody OrganizationQueryObject queryObject) {
         // find organizations
-        Page<OrganizationLobbyOverview> list = organizationRepository.findRunningOrganizationsByQueryObject(queryObject);
+        Page<OrganizationLobbyOverview> list = organizationService.findRunningOrganizationsByQueryObject(queryObject);
 
         Document response = new SuccessResponse();
         response.append("list", list.getContent());
@@ -67,7 +63,7 @@ public class Common {
     @PostMapping("/detail")
     public Document organizationDetail(@RequestBody OrganizationQueryObject queryObject) {
         // find organization
-        Organization detail = organizationRepository.findByIdAndStatus(queryObject.organizationId, "running");
+        Organization detail = organizationService.getOrganization(queryObject.organizationId);
         if (detail == null) {
             return new ErrorResponse("invalid_organization");
         }
@@ -79,23 +75,20 @@ public class Common {
 
     @PostMapping("/create")
     public Document createOrganization(@RequestBody Organization newOrganization, HttpSession session) {
-        ObjectId userid = Util.getUserIdFromSession(session);
+        ObjectId userid = SessionUtil.getUserIdFromSession(session);
 
         // insert organization
-        Organization insertedOrg = organizationRepository.insertNewOrganization(newOrganization);
-
-        // insert membership
-        organizationMembershipRepository.insertNewMembership(insertedOrg.id, userid);
+        organizationService.createOrganization(newOrganization, userid);
 
         return new SuccessResponse();
     }
 
     @PostMapping("/joined")
     public Document listJoinedOrganizations(HttpSession session) {
-        ObjectId userid = Util.getUserIdFromSession(session);
+        ObjectId userid = SessionUtil.getUserIdFromSession(session);
 
         // get joined organizations
-        List<OrganizationJoinedOverview> list = organizationMembershipRepository.lookupJoinedOrganizationsByUserId(userid);
+        List<OrganizationJoinedOverview> list = organizationService.findJoinedOrganizations(userid);
 
         Document response = new SuccessResponse();
         response.append("list", list);
@@ -104,8 +97,8 @@ public class Common {
 
     @PostMapping("/report")
     public Document reportOrganization(@RequestBody OrganizationReport report, HttpSession session) {
-        report.senderUserId = Util.getUserIdFromSession(session);
-        organizationReportRepository.insertNewReport(report);
+        report.senderUserId = SessionUtil.getUserIdFromSession(session);
+        organizationService.sendReport(report);
 
         return new SuccessResponse();
     }

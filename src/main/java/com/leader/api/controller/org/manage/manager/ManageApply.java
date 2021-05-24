@@ -6,7 +6,8 @@ import com.leader.api.data.org.OrganizationRepository;
 import com.leader.api.data.org.membership.OrganizationMembershipRepository;
 import com.leader.api.response.ErrorResponse;
 import com.leader.api.response.SuccessResponse;
-import com.leader.api.util.Util;
+import com.leader.api.util.SecureUtil;
+import com.leader.api.util.SessionUtil;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +35,7 @@ public class ManageApply {
 
     @PostMapping("/updatescheme")
     public Document updateApplicationScheme(@RequestBody ApplicationQueryObject queryObject, HttpSession session) {
-        ObjectId userid = Util.getUserIdFromSession(session);
+        ObjectId userid = SessionUtil.getUserIdFromSession(session);
         if (!membershipRepository.existsByOrganizationIdAndUserId(queryObject.organizationId, userid)) {
             return new ErrorResponse("invalid_organization");
         }

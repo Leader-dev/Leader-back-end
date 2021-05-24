@@ -40,15 +40,4 @@ public interface OrganizationMembershipRepository extends MongoRepository<Organi
             "}"
     })
     List<OrganizationJoinedOverview> lookupJoinedOrganizationsByUserId(ObjectId userId);
-
-    default OrganizationMembership insertNewMembership(ObjectId organizationId, ObjectId userId) {
-        OrganizationMembership existing = findByOrganizationIdAndUserId(organizationId, userId);
-        if (existing != null) {
-            return existing;
-        }
-        OrganizationMembership orgMembership = new OrganizationMembership();
-        orgMembership.organizationId = organizationId;
-        orgMembership.userId = userId;
-        return insert(orgMembership);
-    }
 }

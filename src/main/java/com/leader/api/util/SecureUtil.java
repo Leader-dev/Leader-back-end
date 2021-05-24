@@ -1,0 +1,63 @@
+package com.leader.api.util;
+
+import javax.crypto.*;
+import java.nio.charset.StandardCharsets;
+import java.security.*;
+import java.util.Base64;
+
+public class SecureUtil {
+
+    private final static String CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcsdefghijklmnopqrstuvwxyz0123456789";
+
+    public static String createRandomSalt(int length) {
+        StringBuilder saltBuilder = new StringBuilder(length);
+        SecureRandom random = new SecureRandom();  // unpredictable random number generator
+        for (int i = 0; i < length; i++) {
+            int randomIndex = random.nextInt(CHARSET.length());
+            char ch = CHARSET.charAt(randomIndex);
+            saltBuilder.append(ch);
+        }
+        return saltBuilder.toString();
+    }
+
+    public static String SHA1(String message) {
+        try {
+            MessageDigest messageDigest = MessageDigest.getInstance("SHA-1");
+            messageDigest.update(message.getBytes());
+            return new String(messageDigest.digest());
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static String generateRandomAuthCode(int length) {
+        SecureRandom random = new SecureRandom();
+        double randomNumber = random.nextDouble();
+        return String.valueOf(randomNumber).substring(2, 2 + length);
+    }
+
+    public static KeyPair generateRSAKeyPair(int keysize) {
+        try {
+            KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+            generator.initialize(keysize);
+            return generator.generateKeyPair();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return new KeyPair(null, null);
+        }
+    }
+
+    public static String decryptRSA(String cipherText, PrivateKey key) {
+        try {
+            Cipher cipher = Cipher.getInstance("RSA");
+            cipher.init(Cipher.DECRYPT_MODE, key);
+            byte[] bytesIn = cipherText.getBytes(StandardCharsets.UTF_8);
+            byte[] bytesDecoded = Base64.getDecoder().decode(bytesIn);
+            return new String(cipher.doFinal(bytesDecoded));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+}

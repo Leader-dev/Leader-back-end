@@ -9,6 +9,7 @@ public class User {
 
     @Id
     public ObjectId id;
+    public String uid;
     public String password;
     public String phone;
     public String salt;

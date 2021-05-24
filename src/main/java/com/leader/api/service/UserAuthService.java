@@ -21,6 +21,8 @@ public class UserAuthService {
     private static final int AUTHCODE_LENGTH = 6;
     private static final long AUTHCODE_REQUEST_INTERVAL = 60000;
     private static final long AUTHCODE_EXPIRE = 300000;
+    private static final int UID_LENGTH = 8;
+    private static final long UID_LENGTH_CAPACITY = 50000000;
     private static final int SALT_LENGTH = 16;
 
     @Autowired
@@ -44,6 +46,27 @@ public class UserAuthService {
         authCodeRecord.timestamp = new Date();
         authCodeRecordRepository.deleteByPhone(phone);  // make sure previous ones are deleted
         authCodeRecordRepository.insert(authCodeRecord);
+    }
+
+    private String generateNewUid() {
+        if (userRepository.count() > UID_LENGTH_CAPACITY) {
+            throw new RuntimeException("Uid length capacitance exceeded");
+        }
+        String generated;
+        do {  // ensure that generated uid doesn't exist
+            generated = SecureUtil.generateRandomUid(UID_LENGTH);
+        } while (userRepository.existsByUid(generated));
+        return generated;
+    }
+
+    public boolean uidExists(String uid) {
+        return userRepository.existsByUid(uid);
+    }
+
+    public void assertUidExists(String uid) {
+        if (!uidExists(uid)) {
+            throw new RuntimeException("Uid not exist");
+        }
     }
 
     public boolean phoneExists(String phone) {
@@ -100,6 +123,7 @@ public class UserAuthService {
 
     public void createUser(String password, String phone) {
         User user = new User();
+        user.uid = generateNewUid();
         user.phone = phone;
         String salt = SecureUtil.createRandomSalt(SALT_LENGTH);
         user.password = SecureUtil.SHA1(password + salt);

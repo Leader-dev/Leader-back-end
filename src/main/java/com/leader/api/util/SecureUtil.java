@@ -31,6 +31,16 @@ public class SecureUtil {
         }
     }
 
+    public static String generateRandomUid(int length) {
+        SecureRandom random = new SecureRandom();
+        double randomNumber = random.nextDouble();
+        String generated;
+        do {  // ensure that first digit is not 0
+            generated = String.valueOf(randomNumber).substring(2, 2 + length);
+        } while (generated.startsWith("0"));
+        return generated;
+    }
+
     public static String generateRandomAuthCode(int length) {
         SecureRandom random = new SecureRandom();
         double randomNumber = random.nextDouble();

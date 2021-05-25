@@ -1,7 +1,9 @@
 package com.leader.api;
 
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.leader.api.response.AuthErrorResponse;
 import com.leader.api.response.InternalErrorResponse;
+import com.leader.api.util.UserAuthException;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.context.annotation.Configuration;
@@ -27,8 +29,6 @@ import java.util.List;
 @ControllerAdvice
 public class WebMvcConfig implements WebMvcConfigurer {
 
-    private final String AUTH_ERROR_RESPONSE = "{\"code\":403}";
-
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         // add base authentication checker for all routes other than /user/**
@@ -37,11 +37,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
                         HttpSession session = request.getSession();
                         Object userid = session.getAttribute("user_id");
-                        if (userid == null) {  // if userid does not exist in session, send authentication error (403)
-                            response.setContentType("application/json");
-                            response.setCharacterEncoding("utf-8");
-                            response.getOutputStream().print(AUTH_ERROR_RESPONSE);
-                            return false;
+                        if (userid == null) {  // if userid does not exist in session, raise exception
+                            throw new UserAuthException();
                         }
                         return true;
                     }
@@ -52,6 +49,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Document> handle(Exception ex, HttpServletRequest request, HttpServletResponse response) {
+        // Special handling for user auth failed, return auth error (403)
+        if (ex instanceof UserAuthException) {
+            return new ResponseEntity<>(new AuthErrorResponse(), HttpStatus.OK);
+        }
         // whenever an exception occur, return internal error (500) along with the original message of the exception
         return new ResponseEntity<>(new InternalErrorResponse(ex.getMessage()), HttpStatus.OK);
     }

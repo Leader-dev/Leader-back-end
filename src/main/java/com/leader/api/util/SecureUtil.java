@@ -36,9 +36,9 @@ public class SecureUtil {
 
     public static String generateRandomUid(int length) {
         SecureRandom random = new SecureRandom();
-        double randomNumber = random.nextDouble();
         String generated;
         do {  // ensure that first digit is not 0
+            double randomNumber = random.nextDouble();
             generated = String.valueOf(randomNumber).substring(2, 2 + length);
         } while (generated.startsWith("0"));
         return generated;

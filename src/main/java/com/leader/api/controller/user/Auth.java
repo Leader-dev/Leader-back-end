@@ -66,21 +66,21 @@ public class Auth {
 
     @PostMapping("/register")
     public Document createUser(@RequestBody UserQueryObject queryObject, HttpSession session) {
-        // check authcode
-        if (!userAuthService.validateAuthCode(queryObject.phone, queryObject.authcode)) {
-            return new ErrorResponse("authcode_incorrect");
-        }
-
         // check phone
         if (userAuthService.phoneExists(queryObject.phone)) {
             return new ErrorResponse("phone_exist");
+        }
+
+        // check authcode
+        if (!userAuthService.validateAuthCode(queryObject.phone, queryObject.authcode)) {
+            return new ErrorResponse("authcode_incorrect");
         }
 
         // decrypt password
         String password = userAuthService.decryptPassword(session, queryObject.password);
 
         // actually create user
-        userAuthService.createUser(password, queryObject.phone);
+        userAuthService.createUser(queryObject.phone, password);
 
         // delete authcode record
         userAuthService.removeAuthCodeRecord(queryObject.phone);

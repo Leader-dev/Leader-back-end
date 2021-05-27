@@ -121,7 +121,7 @@ public class UserAuthService {
         authCodeRecordRepository.deleteByPhone(phone);
     }
 
-    public void createUser(String password, String phone) {
+    public void createUser(String phone, String password) {
         User user = new User();
         user.uid = generateNewUid();
         user.phone = phone;

@@ -1,4 +1,4 @@
-package com.leader.api.service;
+package com.leader.api.service.org;
 
 import com.leader.api.data.org.Organization;
 import com.leader.api.data.org.application.*;

@@ -1,4 +1,4 @@
-package com.leader.api.response;
+package com.leader.api.util.response;
 
 import org.bson.Document;
 

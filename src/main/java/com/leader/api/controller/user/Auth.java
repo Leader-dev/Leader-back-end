@@ -1,9 +1,10 @@
 package com.leader.api.controller.user;
 
-import com.leader.api.response.ErrorResponse;
-import com.leader.api.response.SuccessResponse;
-import com.leader.api.service.UserAuthService;
-import com.leader.api.util.SessionUtil;
+import com.leader.api.service.util.AuthCodeService;
+import com.leader.api.util.response.ErrorResponse;
+import com.leader.api.util.response.SuccessResponse;
+import com.leader.api.service.user.UserAuthService;
+import com.leader.api.service.util.SessionService;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,10 +16,20 @@ import javax.servlet.http.HttpSession;
 @RequestMapping("/user")
 public class Auth {
 
-    @Autowired
-    private UserAuthService userAuthService;
+    private final UserAuthService userAuthService;
 
-    private static class UserQueryObject {
+    private final AuthCodeService authCodeService;
+
+    private final SessionService sessionService;
+
+    @Autowired
+    public Auth(UserAuthService userAuthService, AuthCodeService authCodeService, SessionService sessionService) {
+        this.userAuthService = userAuthService;
+        this.authCodeService = authCodeService;
+        this.sessionService = sessionService;
+    }
+
+    static class UserQueryObject {
         public String password;
         public String phone;
         public String authcode;
@@ -36,7 +47,7 @@ public class Auth {
     @PostMapping("/key")
     public Document getPublicKey(HttpSession session) {
         // generate public key
-        byte[] publicKey = userAuthService.generateKeyPair(session);
+        String publicKey = userAuthService.generateKeyPair(session);
 
         // put public key in response
         Document response = new SuccessResponse();
@@ -56,7 +67,7 @@ public class Auth {
 
     @PostMapping("/authcode")
     public Document getAuthCode(@RequestBody UserQueryObject queryObject) {
-        boolean sendSuccess = userAuthService.sendAuthCode(queryObject.phone);
+        boolean sendSuccess = authCodeService.sendAuthCode(queryObject.phone);
         if (!sendSuccess) {
             return new ErrorResponse("request_too_frequent");
         }
@@ -72,7 +83,7 @@ public class Auth {
         }
 
         // check authcode
-        if (!userAuthService.validateAuthCode(queryObject.phone, queryObject.authcode)) {
+        if (!authCodeService.validateAuthCode(queryObject.phone, queryObject.authcode)) {
             return new ErrorResponse("authcode_incorrect");
         }
 
@@ -83,7 +94,7 @@ public class Auth {
         userAuthService.createUser(queryObject.phone, password);
 
         // delete authcode record
-        userAuthService.removeAuthCodeRecord(queryObject.phone);
+        authCodeService.removeAuthCodeRecord(queryObject.phone);
 
         return new SuccessResponse();
     }
@@ -105,30 +116,33 @@ public class Auth {
             }
         } else if (queryObject.authcode != null) {  // if chose to use phone authcode
             // check authcode
-            if (!userAuthService.validateAuthCode(queryObject.phone, queryObject.authcode)) {
+            if (!authCodeService.validateAuthCode(queryObject.phone, queryObject.authcode)) {
                 return new ErrorResponse("authcode_incorrect");
             }
+
+            // invalidate current authcode
+            authCodeService.removeAuthCodeRecord(queryObject.phone);
         } else {
             throw new RuntimeException("Expect password or authcode attribute in request");
         }
 
         // update session
         ObjectId userid = userAuthService.getUserIdByPhone(queryObject.phone);
-        SessionUtil.saveUserIdToSession(session, userid);
+        sessionService.saveUserIdToSession(session, userid);
 
         return new SuccessResponse();
     }
 
     @PostMapping("/logout")
     public Document logout(HttpSession session) {
-        SessionUtil.removeUserIdFromSession(session);
+        sessionService.removeUserIdFromSession(session);
 
         return new SuccessResponse();
     }
 
     @PostMapping("/userid")
     public Document userid(HttpSession session) {
-        ObjectId userid = SessionUtil.getUserIdFromSession(session);
+        ObjectId userid = sessionService.getUserIdFromSession(session);
 
         Document response = new SuccessResponse();
         response.append("userid", userid);
@@ -142,7 +156,7 @@ public class Auth {
             return new ErrorResponse("phone_not_exist");
         }
         // check authcode
-        if (!userAuthService.validateAuthCode(queryObject.phone, queryObject.authcode)) {
+        if (!authCodeService.validateAuthCode(queryObject.phone, queryObject.authcode)) {
             return new ErrorResponse("authcode_incorrect");
         }
 
@@ -153,7 +167,7 @@ public class Auth {
         userAuthService.updateUserPasswordByPhone(queryObject.phone, password);
 
         // delete authcode record
-        userAuthService.removeAuthCodeRecord(queryObject.phone);
+        authCodeService.removeAuthCodeRecord(queryObject.phone);
 
         return new SuccessResponse();
     }

@@ -1,8 +1,8 @@
 package com.leader.api;
 
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import com.leader.api.response.AuthErrorResponse;
-import com.leader.api.response.InternalErrorResponse;
+import com.leader.api.util.response.AuthErrorResponse;
+import com.leader.api.util.response.InternalErrorResponse;
 import com.leader.api.util.UserAuthException;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -34,7 +34,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // add base authentication checker for all routes other than /user/**
         registry
                 .addInterceptor(new HandlerInterceptor() {
-                    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+                    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
                         HttpSession session = request.getSession();
                         Object userid = session.getAttribute("user_id");
                         if (userid == null) {  // if userid does not exist in session, raise exception

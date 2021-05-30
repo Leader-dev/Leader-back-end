@@ -4,10 +4,9 @@ import com.leader.api.data.org.Organization;
 import com.leader.api.data.org.OrganizationApplicationScheme;
 import com.leader.api.data.org.OrganizationRepository;
 import com.leader.api.data.org.membership.OrganizationMembershipRepository;
-import com.leader.api.response.ErrorResponse;
-import com.leader.api.response.SuccessResponse;
-import com.leader.api.util.SecureUtil;
-import com.leader.api.util.SessionUtil;
+import com.leader.api.util.response.ErrorResponse;
+import com.leader.api.util.response.SuccessResponse;
+import com.leader.api.service.util.SessionService;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,11 +21,19 @@ import javax.servlet.http.HttpSession;
 @RequestMapping("/org/manage/apply")
 public class ManageApply {
 
-    @Autowired
-    private OrganizationRepository organizationRepository;
+    private final OrganizationRepository organizationRepository;
+
+    private final OrganizationMembershipRepository membershipRepository;
+
+    private final SessionService sessionService;
 
     @Autowired
-    private OrganizationMembershipRepository membershipRepository;
+    public ManageApply(OrganizationRepository organizationRepository, OrganizationMembershipRepository membershipRepository,
+                       SessionService sessionService) {
+        this.organizationRepository = organizationRepository;
+        this.membershipRepository = membershipRepository;
+        this.sessionService = sessionService;
+    }
 
     private static class ApplicationQueryObject {
         ObjectId organizationId;
@@ -35,7 +42,7 @@ public class ManageApply {
 
     @PostMapping("/updatescheme")
     public Document updateApplicationScheme(@RequestBody ApplicationQueryObject queryObject, HttpSession session) {
-        ObjectId userid = SessionUtil.getUserIdFromSession(session);
+        ObjectId userid = sessionService.getUserIdFromSession(session);
         if (!membershipRepository.existsByOrganizationIdAndUserId(queryObject.organizationId, userid)) {
             return new ErrorResponse("invalid_organization");
         }

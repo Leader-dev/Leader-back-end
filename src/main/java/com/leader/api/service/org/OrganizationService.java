@@ -1,4 +1,4 @@
-package com.leader.api.service;
+package com.leader.api.service.org;
 
 import com.leader.api.data.org.*;
 import com.leader.api.data.org.membership.OrganizationJoinedOverview;
@@ -21,17 +21,25 @@ import java.util.List;
 @Service
 public class OrganizationService {
 
-    @Autowired
-    private OrganizationRepository organizationRepository;
+    private final OrganizationRepository organizationRepository;
+
+    private final OrganizationMembershipRepository membershipRepository;
+
+    private final OrganizationTypeRepository typeRepository;
+
+    private final OrganizationReportRepository reportRepository;
 
     @Autowired
-    private OrganizationMembershipRepository membershipRepository;
-
-    @Autowired
-    private OrganizationTypeRepository typeRepository;
-
-    @Autowired
-    private OrganizationReportRepository reportRepository;
+    public OrganizationService(
+            OrganizationRepository organizationRepository,
+            OrganizationMembershipRepository membershipRepository,
+            OrganizationTypeRepository typeRepository,
+            OrganizationReportRepository reportRepository) {
+        this.organizationRepository = organizationRepository;
+        this.membershipRepository = membershipRepository;
+        this.typeRepository = typeRepository;
+        this.reportRepository = reportRepository;
+    }
 
     private Organization insertNewOrganization(Organization newOrganization) {
         Organization org = new Organization();
@@ -148,11 +156,14 @@ public class OrganizationService {
 
     public void sendReport(OrganizationReport report) {
         assertOrganizationExists(report.organizationId);
+
+        // ensure id field is not set
         OrganizationReport newReport = new OrganizationReport();
         newReport.organizationId = report.organizationId;
         newReport.senderUserId = report.senderUserId;
         newReport.description = report.description;
         newReport.imageUrls = report.imageUrls;
-        reportRepository.insert(report);
+
+        reportRepository.insert(newReport);
     }
 }

@@ -1,4 +1,4 @@
-package com.leader.api.response;
+package com.leader.api.util.response;
 
 public class InternalErrorResponse extends CodeResponse {
 

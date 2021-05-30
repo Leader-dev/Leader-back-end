@@ -3,10 +3,10 @@ package com.leader.api.controller.org;
 import com.leader.api.data.org.*;
 import com.leader.api.data.org.membership.OrganizationJoinedOverview;
 import com.leader.api.data.org.report.OrganizationReport;
-import com.leader.api.response.ErrorResponse;
-import com.leader.api.response.SuccessResponse;
-import com.leader.api.service.OrganizationService;
-import com.leader.api.util.SessionUtil;
+import com.leader.api.util.response.ErrorResponse;
+import com.leader.api.util.response.SuccessResponse;
+import com.leader.api.service.org.OrganizationService;
+import com.leader.api.service.util.SessionService;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,8 +23,15 @@ import java.util.List;
 @RequestMapping("/org/common")
 public class Common {
 
+    private final OrganizationService organizationService;
+
+    private final SessionService sessionService;
+
     @Autowired
-    private OrganizationService organizationService;
+    public Common(OrganizationService organizationService, SessionService sessionService) {
+        this.organizationService = organizationService;
+        this.sessionService = sessionService;
+    }
 
     @PostMapping("/types")
     public Document getOrganizationTypes() {
@@ -75,7 +82,7 @@ public class Common {
 
     @PostMapping("/create")
     public Document createOrganization(@RequestBody Organization newOrganization, HttpSession session) {
-        ObjectId userid = SessionUtil.getUserIdFromSession(session);
+        ObjectId userid = sessionService.getUserIdFromSession(session);
 
         // insert organization
         organizationService.createOrganization(newOrganization, userid);
@@ -85,7 +92,7 @@ public class Common {
 
     @PostMapping("/joined")
     public Document listJoinedOrganizations(HttpSession session) {
-        ObjectId userid = SessionUtil.getUserIdFromSession(session);
+        ObjectId userid = sessionService.getUserIdFromSession(session);
 
         // get joined organizations
         List<OrganizationJoinedOverview> list = organizationService.findJoinedOrganizations(userid);
@@ -97,7 +104,7 @@ public class Common {
 
     @PostMapping("/report")
     public Document reportOrganization(@RequestBody OrganizationReport report, HttpSession session) {
-        report.senderUserId = SessionUtil.getUserIdFromSession(session);
+        report.senderUserId = sessionService.getUserIdFromSession(session);
         organizationService.sendReport(report);
 
         return new SuccessResponse();

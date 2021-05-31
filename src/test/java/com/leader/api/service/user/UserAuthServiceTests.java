@@ -1,6 +1,5 @@
 package com.leader.api.service.user;
 
-import com.leader.api.data.user.AuthCodeRecordRepository;
 import com.leader.api.data.user.User;
 import com.leader.api.data.user.UserRepository;
 import com.leader.api.service.util.SecureService;
@@ -12,59 +11,59 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.nio.charset.StandardCharsets;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
 public class UserAuthServiceTests {
 
-    final String TEST_PHONE = "13360097989";
-    final String TEST_PASSWORD = "xxxxxxxx";
-    final String TEST_INCORRECT_PASSWORD = "xxxxxxxy";
-    final String TEST_PUBLIC_KEY = "1234567890";
-    final String TEST_SALT = "fwgfv3843oiu43hfir3bb3";
-    final String TEST_UID = "654321";
-    final String TEST_SHA1 = "3128yr7n92tg3f7596fx5ncg524g";
-    final String TEST_INCORRECT_SHA1 = "vharo78cnfiumx4qn34yxfv43498x";
-    final String TEST_CIPHER_TEXT = "ny3872m94nr0c3fxnpmoir2fxmejkwxrw";
-    final ObjectId TEST_USER_ID = new ObjectId();
+    private static final String TEST_PHONE = "13360097989";
+    private static final String TEST_PASSWORD = "xxxxxxxx";
+    private static final String TEST_INCORRECT_PASSWORD = "xxxxxxxy";
+    private static final byte[] TEST_PUBLIC_KEY = "1234567890".getBytes(StandardCharsets.UTF_8);
+    private static final String TEST_SALT = "fwgfv3843oiu43hfir3bb3";
+    private static final String TEST_UID = "654321";
+    private static final String TEST_SHA1 = "3128yr7n92tg3f7596fx5ncg524g";
+    private static final String TEST_INCORRECT_SHA1 = "vharo78cnfiumx4qn34yxfv43498x";
+    private static final String TEST_CIPHER_TEXT = "ny3872m94nr0c3fxnpmoir2fxmejkwxrw";
+    private static final ObjectId TEST_USER_ID = new ObjectId();
 
     @Autowired
-    UserAuthService authService;
+    private UserAuthService authService;
 
     @MockBean
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     @MockBean
-    AuthCodeRecordRepository authCodeRecordRepository;
+    private SecureService secureService;
 
     @MockBean
-    SecureService secureService;
-
-    @MockBean
-    SessionService sessionService;
+    private SessionService sessionService;
 
     @Test
     public void assertPhoneExistsTest() {
         when(userRepository.existsByPhone(TEST_PHONE)).thenReturn(true);
-        Assertions.assertDoesNotThrow(() -> authService.assertPhoneExists(TEST_PHONE), "Should not throw");
+        assertDoesNotThrow(() -> authService.assertPhoneExists(TEST_PHONE), "Should not throw");
 
         when(userRepository.existsByPhone(TEST_PHONE)).thenReturn(false);
-        Assertions.assertThrows(RuntimeException.class, () -> authService.assertPhoneExists(TEST_PHONE), "Should throw");
+        assertThrows(RuntimeException.class, () -> authService.assertPhoneExists(TEST_PHONE), "Should throw");
     }
 
     @Test
     public void assertUidExistsTest() {
         when(userRepository.existsByUid(TEST_UID)).thenReturn(true);
-        Assertions.assertDoesNotThrow(() -> authService.assertUidExists(TEST_UID), "Should not throw");
+        assertDoesNotThrow(() -> authService.assertUidExists(TEST_UID), "Should not throw");
 
         when(userRepository.existsByUid(TEST_UID)).thenReturn(false);
-        Assertions.assertThrows(RuntimeException.class, () -> authService.assertUidExists(TEST_UID), "Should throw");
+        assertThrows(RuntimeException.class, () -> authService.assertUidExists(TEST_UID), "Should throw");
     }
 
     @Test
     public void generateKeyPairTest() {
         when(sessionService.generateKey(any(), anyInt())).thenReturn(TEST_PUBLIC_KEY);
-        Assertions.assertEquals(authService.generateKeyPair(null), TEST_PUBLIC_KEY);
+        assertEquals(TEST_PUBLIC_KEY, authService.generateKeyPair(null));
     }
 
     @Test
@@ -73,7 +72,7 @@ public class UserAuthServiceTests {
         Assertions.assertEquals(authService.decryptPassword(null, TEST_CIPHER_TEXT), TEST_PASSWORD);
 
         when(sessionService.decrypt(any(), eq(TEST_CIPHER_TEXT), anyLong())).thenReturn(null);
-        Assertions.assertThrows(RuntimeException.class, () -> authService.decryptPassword(null, TEST_CIPHER_TEXT), "Should throw");
+        assertThrows(RuntimeException.class, () -> authService.decryptPassword(null, TEST_CIPHER_TEXT), "Should throw");
     }
 
     @Test
@@ -81,16 +80,30 @@ public class UserAuthServiceTests {
         when(userRepository.count()).thenReturn(0L);
         when(userRepository.existsByUid(any())).thenReturn(true, true, false);
         when(secureService.SHA1(any())).thenReturn(TEST_SHA1);
-        Assertions.assertDoesNotThrow(() -> authService.createUser(TEST_PHONE, TEST_PASSWORD), "Should success");
+
+        assertDoesNotThrow(() -> authService.createUser(TEST_PHONE, TEST_PASSWORD), "Should success");
+
         verify(userRepository, times(1)).count();
         verify(userRepository, times(3)).existsByUid(any());
         verify(userRepository, times(1)).insert(argThat((User user) -> user.password.equals(TEST_SHA1)));
     }
 
     @Test
+    public void createUserNoPasswordTest() {
+        when(userRepository.count()).thenReturn(0L);
+        when(userRepository.existsByUid(any())).thenReturn(true, true, false);
+
+        assertDoesNotThrow(() -> authService.createUser(TEST_PHONE, null), "Should success");
+
+        verify(userRepository, times(1)).count();
+        verify(userRepository, times(3)).existsByUid(any());
+        verify(userRepository, times(1)).insert(argThat((User user) -> user.password == null));
+    }
+
+    @Test
     public void createUserCapacityReachedTest() {
         when(userRepository.count()).thenReturn(50000010L);
-        Assertions.assertThrows(RuntimeException.class, () -> authService.createUser(TEST_PHONE, TEST_PASSWORD), "Should throw");
+        assertThrows(RuntimeException.class, () -> authService.createUser(TEST_PHONE, TEST_PASSWORD), "Should throw");
         verify(userRepository, never()).insert((User) any());
     }
 
@@ -107,15 +120,25 @@ public class UserAuthServiceTests {
         // success case
 
         when(secureService.SHA1(TEST_PASSWORD + TEST_SALT)).thenReturn(TEST_SHA1);
-        Assertions.assertTrue(authService.validateUser(TEST_PHONE, TEST_PASSWORD), "Should success");
+        assertTrue(authService.validateUser(TEST_PHONE, TEST_PASSWORD), "Should success");
         verify(secureService, times(1)).SHA1(TEST_PASSWORD + TEST_SALT);
         clearInvocations(secureService);
 
         // incorrect case
 
         when(secureService.SHA1(TEST_INCORRECT_PASSWORD + TEST_SALT)).thenReturn(TEST_INCORRECT_SHA1);
-        Assertions.assertFalse(authService.validateUser(TEST_PHONE, TEST_INCORRECT_PASSWORD), "Should fail");
+        assertFalse(authService.validateUser(TEST_PHONE, TEST_INCORRECT_PASSWORD), "Should fail");
         verify(secureService, times(1)).SHA1(TEST_INCORRECT_PASSWORD + TEST_SALT);
+    }
+
+    @Test
+    public void validateUserNoPasswordTest() {
+        User user = new User();
+
+        when(userRepository.existsByPhone(TEST_PHONE)).thenReturn(true);
+        when(userRepository.findByPhone(TEST_PHONE)).thenReturn(user);
+
+        assertFalse(authService.validateUser(TEST_PHONE, TEST_PASSWORD), "Should fail");
     }
 
     @Test

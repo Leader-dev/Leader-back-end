@@ -10,22 +10,23 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mock.web.MockHttpSession;
 
 import javax.servlet.http.HttpSession;
-
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Date;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
 public class SessionServiceTests {
 
-    static class PrivateKeyAdaptor implements PrivateKey {
+    private static final String TEST_PUBLIC_KEY_STRING = "n7cy328cfgn74x34tg4v567ch";
+    private static final String TEST_PRIVATE_KEY_STRING = "kj98xd349ymfg4togcn5g33gc6";
+
+    private static class PrivateKeyAdaptor implements PrivateKey {
 
         @Override
         public String getAlgorithm() {
@@ -39,11 +40,11 @@ public class SessionServiceTests {
 
         @Override
         public byte[] getEncoded() {
-            return "n7cy328cfgn74x34tg4v567ch".getBytes(StandardCharsets.UTF_8);
+            return TEST_PUBLIC_KEY_STRING.getBytes(StandardCharsets.UTF_8);
         }
     }
 
-    static class PublicKeyAdaptor implements PublicKey {
+    private static class PublicKeyAdaptor implements PublicKey {
 
         @Override
         public String getAlgorithm() {
@@ -57,28 +58,28 @@ public class SessionServiceTests {
 
         @Override
         public byte[] getEncoded() {
-            return "kj98xd349ymfg4togcn5g33gc6".getBytes(StandardCharsets.UTF_8);
+            return TEST_PRIVATE_KEY_STRING.getBytes(StandardCharsets.UTF_8);
         }
     }
 
-    final ObjectId TEST_USER_ID = new ObjectId();
-    final Date TEST_DATE = new Date();
-    final PublicKey TEST_PUBLIC_KEY = new PublicKeyAdaptor();
-    final PrivateKey TEST_PRIVATE_KEY = new PrivateKeyAdaptor();
-    final KeyPair TEST_KEY_PAIR = new KeyPair(TEST_PUBLIC_KEY, TEST_PRIVATE_KEY);
-    final String TEST_CIPHER_TEXT = "f2ctgn5tnuclulgmctfhu3xft";
-    final String TEST_PLAIN_TEXT = "yy278ybtn9fox3wituhmrfvct";
+    private static final ObjectId TEST_USER_ID = new ObjectId();
+    private static final Date TEST_DATE = new Date();
+    private static final PublicKey TEST_PUBLIC_KEY = new PublicKeyAdaptor();
+    private static final PrivateKey TEST_PRIVATE_KEY = new PrivateKeyAdaptor();
+    private static final KeyPair TEST_KEY_PAIR = new KeyPair(TEST_PUBLIC_KEY, TEST_PRIVATE_KEY);
+    private static final String TEST_CIPHER_TEXT = "f2ctgn5tnuclulgmctfhu3xft";
+    private static final String TEST_PLAIN_TEXT = "yy278ybtn9fox3wituhmrfvct";
 
     @Autowired
-    SessionService sessionService;
+    private SessionService sessionService;
 
     @MockBean
-    SecureService secureService;
+    private SecureService secureService;
 
     @MockBean
-    DateUtil dateUtil;
+    private DateUtil dateUtil;
 
-    HttpSession session;
+    private HttpSession session;
 
     @BeforeEach
     public void setup() {
@@ -139,7 +140,7 @@ public class SessionServiceTests {
     @Test
     public void generateKeyTest() {
         when(secureService.generateRSAKeyPair(anyInt())).thenReturn(TEST_KEY_PAIR);
-        assertEquals("kj98xd349ymfg4togcn5g33gc6", sessionService.generateKey(session, 0));
+        assertArrayEquals(TEST_PUBLIC_KEY.getEncoded(), sessionService.generateKey(session, 0));
         assertEquals(TEST_PRIVATE_KEY, session.getAttribute("private_key"));
     }
 

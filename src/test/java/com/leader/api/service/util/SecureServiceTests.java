@@ -15,14 +15,14 @@ import static org.mockito.Mockito.*;
 @SpringBootTest
 public class SecureServiceTests {
 
-    final String TEST_PLAIN_TEXT = "jiqtngrc43xfn89yfmtgt";
-    final String TEST_SHA1 = "db13e81dacc1cc0cadf6570fcb3449f0f5bf72b8";
+    private static final String TEST_PLAIN_TEXT = "jiqtngrc43xfn89yfmtgt";
+    private static final String TEST_SHA1 = "db13e81dacc1cc0cadf6570fcb3449f0f5bf72b8";
 
     @Autowired
-    SecureService secureService;
+    private SecureService secureService;
 
     @MockBean
-    RandomUtil randomUtil;
+    private RandomUtil randomUtil;
 
     @BeforeEach
     public void setup() {

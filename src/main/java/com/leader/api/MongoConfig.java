@@ -1,11 +1,8 @@
-package com.leader.api.data;
+package com.leader.api;
 
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCredential;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.mongo.MongoProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
@@ -29,14 +26,14 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
     @Value("${mongo.repository-database}")
     private String repositoryDatabase;
 
-    public MongoClient mongoClient() {
-        return MongoClients.create(MongoClientSettings.builder()
-                .credential(MongoCredential.createCredential(
-                        username,
-                        authenticationDatabase,
-                        password.toCharArray()
-                ))
-                .build()
+    @Override
+    protected void configureClientSettings(MongoClientSettings.Builder builder) {
+        builder.credential(
+            MongoCredential.createCredential(
+                    username,
+                    authenticationDatabase,
+                    password.toCharArray()
+            )
         );
     }
 

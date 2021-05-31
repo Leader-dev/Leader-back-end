@@ -19,6 +19,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest
 public class UserAuthServiceTests {
 
+    private static final String TEST_NICKNAME = "Raymond";
     private static final String TEST_PHONE = "13360097989";
     private static final String TEST_PASSWORD = "xxxxxxxx";
     private static final String TEST_INCORRECT_PASSWORD = "xxxxxxxy";
@@ -81,7 +82,7 @@ public class UserAuthServiceTests {
         when(userRepository.existsByUid(any())).thenReturn(true, true, false);
         when(secureService.SHA1(any())).thenReturn(TEST_SHA1);
 
-        assertDoesNotThrow(() -> authService.createUser(TEST_PHONE, TEST_PASSWORD), "Should success");
+        assertDoesNotThrow(() -> authService.createUser(TEST_PHONE, TEST_PASSWORD, TEST_NICKNAME), "Should success");
 
         verify(userRepository, times(1)).count();
         verify(userRepository, times(3)).existsByUid(any());
@@ -89,21 +90,9 @@ public class UserAuthServiceTests {
     }
 
     @Test
-    public void createUserNoPasswordTest() {
-        when(userRepository.count()).thenReturn(0L);
-        when(userRepository.existsByUid(any())).thenReturn(true, true, false);
-
-        assertDoesNotThrow(() -> authService.createUser(TEST_PHONE, null), "Should success");
-
-        verify(userRepository, times(1)).count();
-        verify(userRepository, times(3)).existsByUid(any());
-        verify(userRepository, times(1)).insert(argThat((User user) -> user.password == null));
-    }
-
-    @Test
     public void createUserCapacityReachedTest() {
         when(userRepository.count()).thenReturn(50000010L);
-        assertThrows(RuntimeException.class, () -> authService.createUser(TEST_PHONE, TEST_PASSWORD), "Should throw");
+        assertThrows(RuntimeException.class, () -> authService.createUser(TEST_PHONE, TEST_PASSWORD, TEST_NICKNAME), "Should throw");
         verify(userRepository, never()).insert((User) any());
     }
 
@@ -129,16 +118,6 @@ public class UserAuthServiceTests {
         when(secureService.SHA1(TEST_INCORRECT_PASSWORD + TEST_SALT)).thenReturn(TEST_INCORRECT_SHA1);
         assertFalse(authService.validateUser(TEST_PHONE, TEST_INCORRECT_PASSWORD), "Should fail");
         verify(secureService, times(1)).SHA1(TEST_INCORRECT_PASSWORD + TEST_SALT);
-    }
-
-    @Test
-    public void validateUserNoPasswordTest() {
-        User user = new User();
-
-        when(userRepository.existsByPhone(TEST_PHONE)).thenReturn(true);
-        when(userRepository.findByPhone(TEST_PHONE)).thenReturn(user);
-
-        assertFalse(authService.validateUser(TEST_PHONE, TEST_PASSWORD), "Should fail");
     }
 
     @Test

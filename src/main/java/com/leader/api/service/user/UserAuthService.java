@@ -75,24 +75,20 @@ public class UserAuthService {
         return decryptedPassword;
     }
 
-    public void createUser(String phone, String password) {
+    public void createUser(String phone, String password, String nickname) {
         User user = new User();
         user.uid = generateNewUid();
         user.phone = phone;
-        if (password != null) {
-            String salt = secureService.generateRandomSalt(SALT_LENGTH);
-            user.password = secureService.SHA1(password + salt);
-            user.salt = salt;
-        }
+        String salt = secureService.generateRandomSalt(SALT_LENGTH);
+        user.password = secureService.SHA1(password + salt);
+        user.salt = salt;
+        user.nickname = nickname;
         userRepository.insert(user);
     }
 
     public boolean validateUser(String phone, String password) {
         assertPhoneExists(phone);
         User user = userRepository.findByPhone(phone);
-        if (user.password == null) {
-            return false;
-        }
         String salt = user.salt;
         String processedPassword = secureService.SHA1(password + salt);
         return user.password.equals(processedPassword);

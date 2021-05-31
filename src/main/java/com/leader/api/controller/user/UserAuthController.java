@@ -32,10 +32,11 @@ public class UserAuthController {
         this.sessionService = sessionService;
     }
 
-    static class UserQueryObject {
+    public static class UserQueryObject {
         public String password;
         public String phone;
         public String authcode;
+        public String nickname;
     }
 
     @PostMapping("/exist")
@@ -90,16 +91,11 @@ public class UserAuthController {
             return new ErrorResponse("authcode_incorrect");
         }
 
-        String password;
-        if (queryObject.password == null) {
-            password = null;
-        } else {
-            // decrypt password
-            password = userAuthService.decryptPassword(session, queryObject.password);
-        }
+        // decrypt password
+        String password = userAuthService.decryptPassword(session, queryObject.password);
 
         // actually create user
-        userAuthService.createUser(queryObject.phone, password);
+        userAuthService.createUser(queryObject.phone, password, queryObject.nickname);
 
         // delete authcode record
         authCodeService.removeAuthCodeRecord(queryObject.phone);

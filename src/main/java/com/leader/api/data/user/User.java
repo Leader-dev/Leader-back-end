@@ -13,4 +13,6 @@ public class User {
     public String password;
     public String phone;
     public String salt;
+
+    public String nickname;
 }

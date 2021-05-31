@@ -27,6 +27,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest
 public class UserAuthControllerTests {
 
+    private static final String TEST_NICKNAME = "Raymond";
     private static final String TEST_PHONE = "13360097989";
     private static final String TEST_AUTHCODE = "123456";
     private static final String TEST_PASSWORD = "xxxxxxxx";
@@ -122,6 +123,7 @@ public class UserAuthControllerTests {
 
     @Test
     public void registerSuccessTest() {
+        queryObject.nickname = TEST_NICKNAME;
         queryObject.phone = TEST_PHONE;
         queryObject.authcode = TEST_AUTHCODE;
         queryObject.password = TEST_PASSWORD;
@@ -132,24 +134,8 @@ public class UserAuthControllerTests {
         response = userAuthController.registerUser(queryObject, TEST_SESSION);
 
         assertSuccessResponse(response);
-        verify(userAuthService, atLeastOnce()).createUser(TEST_PHONE, TEST_PASSWORD);
+        verify(userAuthService, atLeastOnce()).createUser(TEST_PHONE, TEST_PASSWORD, TEST_NICKNAME);
         verify(authCodeService, atLeastOnce()).removeAuthCodeRecord(TEST_PHONE);
-    }
-
-    @Test
-    public void registerNoPasswordTest() {
-        queryObject.phone = TEST_PHONE;
-        queryObject.authcode = TEST_AUTHCODE;
-        when(userAuthService.phoneExists(TEST_PHONE)).thenReturn(false);
-        when(authCodeService.validateAuthCode(TEST_PHONE, TEST_AUTHCODE)).thenReturn(true);
-
-        response = userAuthController.registerUser(queryObject, TEST_SESSION);
-
-        assertSuccessResponse(response);
-        verify(userAuthService, never()).decryptPassword(any(), any());
-        verify(userAuthService, atLeastOnce()).createUser(TEST_PHONE, null);
-        verify(authCodeService, atLeastOnce()).removeAuthCodeRecord(TEST_PHONE);
-        clearInvocations(userAuthService);
     }
 
     @Test
@@ -160,7 +146,7 @@ public class UserAuthControllerTests {
         response = userAuthController.registerUser(queryObject, TEST_SESSION);
 
         assertErrorResponse(response, "phone_exist");
-        verify(userAuthService, never()).createUser(any(), any());
+        verify(userAuthService, never()).createUser(any(), any(), any());
         verify(authCodeService, never()).removeAuthCodeRecord(TEST_PHONE);
     }
 
@@ -174,7 +160,7 @@ public class UserAuthControllerTests {
         response = userAuthController.registerUser(queryObject, TEST_SESSION);
 
         assertErrorResponse(response, "authcode_incorrect");
-        verify(userAuthService, never()).createUser(any(), any());
+        verify(userAuthService, never()).createUser(any(), any(), any());
         verify(authCodeService, never()).removeAuthCodeRecord(TEST_PHONE);
     }
 

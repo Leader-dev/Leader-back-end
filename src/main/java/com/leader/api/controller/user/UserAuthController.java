@@ -1,20 +1,23 @@
 package com.leader.api.controller.user;
 
+import com.leader.api.service.user.UserAuthService;
 import com.leader.api.service.util.AuthCodeService;
+import com.leader.api.service.util.SessionService;
 import com.leader.api.util.response.ErrorResponse;
 import com.leader.api.util.response.SuccessResponse;
-import com.leader.api.service.user.UserAuthService;
-import com.leader.api.service.util.SessionService;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/user")
-public class Auth {
+public class UserAuthController {
 
     private final UserAuthService userAuthService;
 
@@ -23,7 +26,7 @@ public class Auth {
     private final SessionService sessionService;
 
     @Autowired
-    public Auth(UserAuthService userAuthService, AuthCodeService authCodeService, SessionService sessionService) {
+    public UserAuthController(UserAuthService userAuthService, AuthCodeService authCodeService, SessionService sessionService) {
         this.userAuthService = userAuthService;
         this.authCodeService = authCodeService;
         this.sessionService = sessionService;
@@ -47,7 +50,7 @@ public class Auth {
     @PostMapping("/key")
     public Document getPublicKey(HttpSession session) {
         // generate public key
-        String publicKey = userAuthService.generateKeyPair(session);
+        byte[] publicKey = userAuthService.generateKeyPair(session);
 
         // put public key in response
         Document response = new SuccessResponse();
@@ -66,7 +69,7 @@ public class Auth {
     }
 
     @PostMapping("/authcode")
-    public Document getAuthCode(@RequestBody UserQueryObject queryObject) {
+    public Document sendAuthCode(@RequestBody UserQueryObject queryObject) {
         boolean sendSuccess = authCodeService.sendAuthCode(queryObject.phone);
         if (!sendSuccess) {
             return new ErrorResponse("request_too_frequent");
@@ -76,7 +79,7 @@ public class Auth {
     }
 
     @PostMapping("/register")
-    public Document createUser(@RequestBody UserQueryObject queryObject, HttpSession session) {
+    public Document registerUser(@RequestBody UserQueryObject queryObject, HttpSession session) {
         // check phone
         if (userAuthService.phoneExists(queryObject.phone)) {
             return new ErrorResponse("phone_exist");
@@ -87,8 +90,13 @@ public class Auth {
             return new ErrorResponse("authcode_incorrect");
         }
 
-        // decrypt password
-        String password = userAuthService.decryptPassword(session, queryObject.password);
+        String password;
+        if (queryObject.password == null) {
+            password = null;
+        } else {
+            // decrypt password
+            password = userAuthService.decryptPassword(session, queryObject.password);
+        }
 
         // actually create user
         userAuthService.createUser(queryObject.phone, password);

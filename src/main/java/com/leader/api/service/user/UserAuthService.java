@@ -1,10 +1,7 @@
 package com.leader.api.service.user;
 
-import com.leader.api.data.user.AuthCodeRecord;
-import com.leader.api.data.user.AuthCodeRecordRepository;
 import com.leader.api.data.user.User;
 import com.leader.api.data.user.UserRepository;
-import com.leader.api.util.component.DateUtil;
 import com.leader.api.service.util.SecureService;
 import com.leader.api.service.util.SessionService;
 import org.bson.types.ObjectId;
@@ -66,7 +63,7 @@ public class UserAuthService {
         }
     }
 
-    public String generateKeyPair(HttpSession session) {
+    public byte[] generateKeyPair(HttpSession session) {
         return sessionService.generateKey(session, RSA_KEYSIZE);
     }
 
@@ -82,15 +79,20 @@ public class UserAuthService {
         User user = new User();
         user.uid = generateNewUid();
         user.phone = phone;
-        String salt = secureService.generateRandomSalt(SALT_LENGTH);
-        user.password = secureService.SHA1(password + salt);
-        user.salt = salt;
+        if (password != null) {
+            String salt = secureService.generateRandomSalt(SALT_LENGTH);
+            user.password = secureService.SHA1(password + salt);
+            user.salt = salt;
+        }
         userRepository.insert(user);
     }
 
     public boolean validateUser(String phone, String password) {
         assertPhoneExists(phone);
         User user = userRepository.findByPhone(phone);
+        if (user.password == null) {
+            return false;
+        }
         String salt = user.salt;
         String processedPassword = secureService.SHA1(password + salt);
         return user.password.equals(processedPassword);

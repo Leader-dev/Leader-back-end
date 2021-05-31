@@ -67,14 +67,14 @@ public class SessionService {
         return key;
     }
 
-    public String generateKey(HttpSession session, int keysize) {
+    public byte[] generateKey(HttpSession session, int keysize) {
         // generate key
         KeyPair keyPair = secureService.generateRSAKeyPair(keysize);
 
         // save private key to session
         savePrivateKeyToSession(session, keyPair.getPrivate());
 
-        return new String(keyPair.getPublic().getEncoded());
+        return keyPair.getPublic().getEncoded();
     }
 
     public String decrypt(HttpSession session, String password, long expire) {

@@ -1,9 +1,9 @@
 package com.leader.api;
 
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.leader.api.util.UserAuthException;
 import com.leader.api.util.response.AuthErrorResponse;
 import com.leader.api.util.response.InternalErrorResponse;
-import com.leader.api.util.UserAuthException;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +15,7 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -28,6 +29,12 @@ import java.util.List;
 @EnableWebMvc
 @ControllerAdvice
 public class WebMvcConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        // allow CORS for all paths
+        registry.addMapping("/**");
+    }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {

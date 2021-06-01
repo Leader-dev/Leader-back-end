@@ -33,7 +33,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         // allow CORS for all paths
-        registry.addMapping("/**");
+        registry
+                .addMapping("/**")
+                .allowCredentials(true)
+                .allowedOriginPatterns("*");
     }
 
     @Override

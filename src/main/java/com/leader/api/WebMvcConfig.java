@@ -6,12 +6,15 @@ import com.leader.api.util.response.AuthErrorResponse;
 import com.leader.api.util.response.InternalErrorResponse;
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.session.web.http.CookieSerializer;
+import org.springframework.session.web.http.DefaultCookieSerializer;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -37,6 +40,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addMapping("/**")
                 .allowCredentials(true)
                 .allowedOriginPatterns("*");
+    }
+
+    @Bean
+    public CookieSerializer httpSessionIdResolver(){
+        DefaultCookieSerializer cookieSerializer = new DefaultCookieSerializer();
+        cookieSerializer.setSameSite(null);
+        return cookieSerializer;
     }
 
     @Override

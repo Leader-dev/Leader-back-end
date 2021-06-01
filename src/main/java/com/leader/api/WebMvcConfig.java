@@ -6,6 +6,7 @@ import com.leader.api.util.response.AuthErrorResponse;
 import com.leader.api.util.response.InternalErrorResponse;
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -42,10 +43,14 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .allowedOriginPatterns("*");
     }
 
+    @Value("${config.secure-cookie}")
+    private String useSecureCookie;
+
     @Bean
     public CookieSerializer httpSessionIdResolver(){
         DefaultCookieSerializer cookieSerializer = new DefaultCookieSerializer();
-        cookieSerializer.setSameSite(null);
+        cookieSerializer.setSameSite("None");
+        cookieSerializer.setUseSecureCookie(Boolean.parseBoolean(useSecureCookie));
         return cookieSerializer;
     }
 

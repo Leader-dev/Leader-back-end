@@ -36,6 +36,6 @@ jobs:
         scp: |
           "./target/${{ secrets.T_JAR }}" => ${{ secrets.T_PATH }}
         last_ssh: |
-          sleep 5
+          sleep 10
           cd ${{ secrets.T_PATH }}
           tmux new -d -s ${{ secrets.T_SESSION }} "java -jar ${{ secrets.T_JAR }}"

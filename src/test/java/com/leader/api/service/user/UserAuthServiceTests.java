@@ -3,15 +3,12 @@ package com.leader.api.service.user;
 import com.leader.api.data.user.User;
 import com.leader.api.data.user.UserRepository;
 import com.leader.api.service.util.SecureService;
-import com.leader.api.service.util.SessionService;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-
-import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -23,12 +20,10 @@ public class UserAuthServiceTests {
     private static final String TEST_PHONE = "13360097989";
     private static final String TEST_PASSWORD = "xxxxxxxx";
     private static final String TEST_INCORRECT_PASSWORD = "xxxxxxxy";
-    private static final byte[] TEST_PUBLIC_KEY = "1234567890".getBytes(StandardCharsets.UTF_8);
     private static final String TEST_SALT = "fwgfv3843oiu43hfir3bb3";
     private static final String TEST_UID = "654321";
     private static final String TEST_SHA1 = "3128yr7n92tg3f7596fx5ncg524g";
     private static final String TEST_INCORRECT_SHA1 = "vharo78cnfiumx4qn34yxfv43498x";
-    private static final String TEST_CIPHER_TEXT = "ny3872m94nr0c3fxnpmoir2fxmejkwxrw";
     private static final ObjectId TEST_USER_ID = new ObjectId();
 
     @Autowired
@@ -39,9 +34,6 @@ public class UserAuthServiceTests {
 
     @MockBean
     private SecureService secureService;
-
-    @MockBean
-    private SessionService sessionService;
 
     @Test
     public void assertPhoneExistsTest() {
@@ -59,21 +51,6 @@ public class UserAuthServiceTests {
 
         when(userRepository.existsByUid(TEST_UID)).thenReturn(false);
         assertThrows(RuntimeException.class, () -> authService.assertUidExists(TEST_UID), "Should throw");
-    }
-
-    @Test
-    public void generateKeyPairTest() {
-        when(sessionService.generateKey(any(), anyInt())).thenReturn(TEST_PUBLIC_KEY);
-        assertEquals(TEST_PUBLIC_KEY, authService.generateKeyPair(null));
-    }
-
-    @Test
-    public void decryptTest() {
-        when(sessionService.decrypt(any(), eq(TEST_CIPHER_TEXT), anyLong())).thenReturn(TEST_PASSWORD);
-        Assertions.assertEquals(authService.decryptPassword(null, TEST_CIPHER_TEXT), TEST_PASSWORD);
-
-        when(sessionService.decrypt(any(), eq(TEST_CIPHER_TEXT), anyLong())).thenReturn(null);
-        assertThrows(RuntimeException.class, () -> authService.decryptPassword(null, TEST_CIPHER_TEXT), "Should throw");
     }
 
     @Test

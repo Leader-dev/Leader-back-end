@@ -140,7 +140,7 @@ public class SessionServiceTests {
     @Test
     public void generateKeyTest() {
         when(secureService.generateRSAKeyPair(anyInt())).thenReturn(TEST_KEY_PAIR);
-        assertArrayEquals(TEST_PUBLIC_KEY.getEncoded(), sessionService.generateKey(session, 0));
+        assertArrayEquals(TEST_PUBLIC_KEY.getEncoded(), sessionService.generateKeyIntoSession(session));
         assertEquals(TEST_PRIVATE_KEY, session.getAttribute("private_key"));
     }
 
@@ -151,13 +151,13 @@ public class SessionServiceTests {
         when(secureService.decryptRSA(TEST_CIPHER_TEXT, TEST_PRIVATE_KEY)).thenReturn(TEST_PLAIN_TEXT);
         when(secureService.generateRSAKeyPair(anyInt())).thenReturn(TEST_KEY_PAIR);
 
-        assertEquals(TEST_PLAIN_TEXT, sessionService.decrypt(session, TEST_CIPHER_TEXT, 0));
+        assertEquals(TEST_PLAIN_TEXT, sessionService.decryptUsingSession(session, TEST_CIPHER_TEXT));
         assertNull(session.getAttribute("private_key"));
         assertNull(session.getAttribute("private_key_timestamp"));
     }
 
     @Test
     public void decryptFailTest() {
-        assertNull(sessionService.decrypt(session, TEST_CIPHER_TEXT, 0));
+        assertThrows(RuntimeException.class, () -> sessionService.decryptUsingSession(session, TEST_CIPHER_TEXT));
     }
 }

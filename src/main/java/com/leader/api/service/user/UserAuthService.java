@@ -3,18 +3,13 @@ package com.leader.api.service.user;
 import com.leader.api.data.user.User;
 import com.leader.api.data.user.UserRepository;
 import com.leader.api.service.util.SecureService;
-import com.leader.api.service.util.SessionService;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.HttpSession;
-
 @Service
 public class UserAuthService {
 
-    private static final int RSA_KEYSIZE = 1024;
-    private static final long RSA_KEY_EXPIRE = 60000;
     private static final int UID_LENGTH = 8;
     private static final long UID_LENGTH_CAPACITY = 50000000;
     private static final int SALT_LENGTH = 16;
@@ -23,13 +18,10 @@ public class UserAuthService {
 
     private final SecureService secureService;
 
-    private final SessionService sessionService;
-
     @Autowired
-    public UserAuthService(UserRepository userRepository, SecureService secureService, SessionService sessionService) {
+    public UserAuthService(UserRepository userRepository, SecureService secureService) {
         this.userRepository = userRepository;
         this.secureService = secureService;
-        this.sessionService = sessionService;
     }
 
     private String generateNewUid() {
@@ -63,19 +55,7 @@ public class UserAuthService {
         }
     }
 
-    public byte[] generateKeyPair(HttpSession session) {
-        return sessionService.generateKey(session, RSA_KEYSIZE);
-    }
-
-    public String decryptPassword(HttpSession session, String password) {
-        String decryptedPassword = sessionService.decrypt(session, password, RSA_KEY_EXPIRE);
-        if (decryptedPassword == null) {
-            throw new RuntimeException("Key invalid");
-        }
-        return decryptedPassword;
-    }
-
-    public void createUser(String phone, String password, String nickname) {
+    public User createUser(String phone, String password, String nickname) {
         User user = new User();
         user.uid = generateNewUid();
         user.phone = phone;
@@ -83,7 +63,7 @@ public class UserAuthService {
         user.password = secureService.SHA1(password + salt);
         user.salt = salt;
         user.nickname = nickname;
-        userRepository.insert(user);
+        return userRepository.insert(user);
     }
 
     public boolean validateUser(String phone, String password) {

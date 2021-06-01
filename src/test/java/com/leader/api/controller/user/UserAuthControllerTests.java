@@ -1,5 +1,6 @@
 package com.leader.api.controller.user;
 
+import com.leader.api.data.user.User;
 import com.leader.api.service.user.UserAuthService;
 import com.leader.api.service.util.AuthCodeService;
 import com.leader.api.service.util.SessionService;
@@ -82,7 +83,7 @@ public class UserAuthControllerTests {
 
     @Test
     public void publicKeyTest() {
-        when(userAuthService.generateKeyPair(TEST_SESSION)).thenReturn(TEST_PUBLIC_KEY);
+        when(sessionService.generateKeyIntoSession(TEST_SESSION)).thenReturn(TEST_PUBLIC_KEY);
 
         response = userAuthController.getPublicKey(TEST_SESSION);
 
@@ -93,7 +94,7 @@ public class UserAuthControllerTests {
     @Test
     public void checkTest() {
         queryObject.password = TEST_PASSWORD;
-        when(userAuthService.decryptPassword(TEST_SESSION, TEST_PASSWORD)).thenReturn(TEST_PASSWORD);
+        when(sessionService.decryptUsingSession(TEST_SESSION, TEST_PASSWORD)).thenReturn(TEST_PASSWORD);
 
         response = userAuthController.checkText(queryObject, TEST_SESSION);
 
@@ -123,19 +124,23 @@ public class UserAuthControllerTests {
 
     @Test
     public void registerSuccessTest() {
+        User user = new User();
+        user.id = TEST_USER_ID;
         queryObject.nickname = TEST_NICKNAME;
         queryObject.phone = TEST_PHONE;
         queryObject.authcode = TEST_AUTHCODE;
         queryObject.password = TEST_PASSWORD;
         when(userAuthService.phoneExists(TEST_PHONE)).thenReturn(false);
         when(authCodeService.validateAuthCode(TEST_PHONE, TEST_AUTHCODE)).thenReturn(true);
-        when(userAuthService.decryptPassword(TEST_SESSION, TEST_PASSWORD)).thenReturn(TEST_PASSWORD);
+        when(sessionService.decryptUsingSession(TEST_SESSION, TEST_PASSWORD)).thenReturn(TEST_PASSWORD);
+        when(userAuthService.createUser(TEST_PHONE, TEST_PASSWORD, TEST_NICKNAME)).thenReturn(user);
 
         response = userAuthController.registerUser(queryObject, TEST_SESSION);
 
         assertSuccessResponse(response);
-        verify(userAuthService, atLeastOnce()).createUser(TEST_PHONE, TEST_PASSWORD, TEST_NICKNAME);
-        verify(authCodeService, atLeastOnce()).removeAuthCodeRecord(TEST_PHONE);
+        verify(userAuthService, times(1)).createUser(TEST_PHONE, TEST_PASSWORD, TEST_NICKNAME);
+        verify(authCodeService, times(1)).removeAuthCodeRecord(TEST_PHONE);
+        verify(sessionService, times(1)).saveUserIdToSession(TEST_SESSION, TEST_USER_ID);
     }
 
     @Test
@@ -147,7 +152,7 @@ public class UserAuthControllerTests {
 
         assertErrorResponse(response, "phone_exist");
         verify(userAuthService, never()).createUser(any(), any(), any());
-        verify(authCodeService, never()).removeAuthCodeRecord(TEST_PHONE);
+        verify(authCodeService, never()).removeAuthCodeRecord(any());
     }
 
     @Test
@@ -161,7 +166,7 @@ public class UserAuthControllerTests {
 
         assertErrorResponse(response, "authcode_incorrect");
         verify(userAuthService, never()).createUser(any(), any(), any());
-        verify(authCodeService, never()).removeAuthCodeRecord(TEST_PHONE);
+        verify(authCodeService, never()).removeAuthCodeRecord(any());
     }
 
     @Test
@@ -169,7 +174,7 @@ public class UserAuthControllerTests {
         queryObject.phone = TEST_PHONE;
         queryObject.password = TEST_PASSWORD;
         when(userAuthService.phoneExists(TEST_PHONE)).thenReturn(true);
-        when(userAuthService.decryptPassword(TEST_SESSION, TEST_PASSWORD)).thenReturn(TEST_PASSWORD);
+        when(sessionService.decryptUsingSession(TEST_SESSION, TEST_PASSWORD)).thenReturn(TEST_PASSWORD);
         when(userAuthService.validateUser(TEST_PHONE, TEST_PASSWORD)).thenReturn(true);
         when(userAuthService.getUserIdByPhone(TEST_PHONE)).thenReturn(TEST_USER_ID);
 
@@ -196,7 +201,7 @@ public class UserAuthControllerTests {
         queryObject.phone = TEST_PHONE;
         queryObject.password = TEST_PASSWORD;
         when(userAuthService.phoneExists(TEST_PHONE)).thenReturn(true);
-        when(userAuthService.decryptPassword(TEST_SESSION, TEST_PASSWORD)).thenReturn(TEST_PASSWORD);
+        when(sessionService.decryptUsingSession(TEST_SESSION, TEST_PASSWORD)).thenReturn(TEST_PASSWORD);
         when(userAuthService.validateUser(TEST_PHONE, TEST_PASSWORD)).thenReturn(false);
 
         response = userAuthController.login(queryObject, TEST_SESSION);
@@ -263,7 +268,6 @@ public class UserAuthControllerTests {
         assertEquals(TEST_USER_ID, response.get("userid"));
     }
 
-
     @Test
     public void changePasswordTest() {
         queryObject.phone = TEST_PHONE;
@@ -271,7 +275,7 @@ public class UserAuthControllerTests {
         queryObject.password = TEST_PASSWORD;
         when(userAuthService.phoneExists(TEST_PHONE)).thenReturn(true);
         when(authCodeService.validateAuthCode(TEST_PHONE, TEST_AUTHCODE)).thenReturn(true);
-        when(userAuthService.decryptPassword(TEST_SESSION, TEST_PASSWORD)).thenReturn(TEST_PASSWORD);
+        when(sessionService.decryptUsingSession(TEST_SESSION, TEST_PASSWORD)).thenReturn(TEST_PASSWORD);
 
         response = userAuthController.changePassword(queryObject, TEST_SESSION);
 

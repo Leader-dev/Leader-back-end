@@ -13,6 +13,9 @@ import java.util.Date;
 @Service
 public class SessionService {
 
+    private static final int RSA_KEYSIZE = 1024;
+    private static final long RSA_KEY_EXPIRE = 60000;
+
     public static final String USER_ID = "user_id";
 
     private final SecureService secureService;
@@ -67,9 +70,9 @@ public class SessionService {
         return key;
     }
 
-    public byte[] generateKey(HttpSession session, int keysize) {
+    public byte[] generateKeyIntoSession(HttpSession session) {
         // generate key
-        KeyPair keyPair = secureService.generateRSAKeyPair(keysize);
+        KeyPair keyPair = secureService.generateRSAKeyPair(RSA_KEYSIZE);
 
         // save private key to session
         savePrivateKeyToSession(session, keyPair.getPrivate());
@@ -77,14 +80,17 @@ public class SessionService {
         return keyPair.getPublic().getEncoded();
     }
 
-    public String decrypt(HttpSession session, String password, long expire) {
+    public String decryptUsingSession(HttpSession session, String password) {
         // get and validate private key
-        PrivateKey key = getPrivateKeyFromSession(session, expire);
-        if (key == null) {
-            return null;
+        PrivateKey key = getPrivateKeyFromSession(session, RSA_KEY_EXPIRE);
+        if (key != null) {
+            // decrypt
+            String decrypted = secureService.decryptRSA(password, key);
+            if (decrypted != null) {
+                return decrypted;
+            }
         }
 
-        // decrypt
-        return secureService.decryptRSA(password, key);
+        throw new RuntimeException("Password decryption failed.");
     }
 }

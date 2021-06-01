@@ -1,5 +1,6 @@
 package com.leader.api.controller.user;
 
+import com.leader.api.data.user.User;
 import com.leader.api.service.user.UserAuthService;
 import com.leader.api.service.util.AuthCodeService;
 import com.leader.api.service.util.SessionService;
@@ -51,7 +52,7 @@ public class UserAuthController {
     @PostMapping("/key")
     public Document getPublicKey(HttpSession session) {
         // generate public key
-        byte[] publicKey = userAuthService.generateKeyPair(session);
+        byte[] publicKey = sessionService.generateKeyIntoSession(session);
 
         // put public key in response
         Document response = new SuccessResponse();
@@ -62,7 +63,7 @@ public class UserAuthController {
     @PostMapping("/check")
     public Document checkText(@RequestBody UserQueryObject queryObject, HttpSession session) {
         // decrypt password
-        String text = userAuthService.decryptPassword(session, queryObject.password);
+        String text = sessionService.decryptUsingSession(session, queryObject.password);
 
         Document response = new SuccessResponse();
         response.append("text", text);
@@ -92,13 +93,16 @@ public class UserAuthController {
         }
 
         // decrypt password
-        String password = userAuthService.decryptPassword(session, queryObject.password);
+        String password = sessionService.decryptUsingSession(session, queryObject.password);
 
         // actually create user
-        userAuthService.createUser(queryObject.phone, password, queryObject.nickname);
+        User registeredUser = userAuthService.createUser(queryObject.phone, password, queryObject.nickname);
 
         // delete authcode record
         authCodeService.removeAuthCodeRecord(queryObject.phone);
+
+        // save user id to session
+        sessionService.saveUserIdToSession(session, registeredUser.id);
 
         return new SuccessResponse();
     }
@@ -112,7 +116,7 @@ public class UserAuthController {
 
         if (queryObject.password != null) {  // if chose to use password
             // decrypt password
-            String password = userAuthService.decryptPassword(session, queryObject.password);
+            String password = sessionService.decryptUsingSession(session, queryObject.password);
 
             // check password
             if (!userAuthService.validateUser(queryObject.phone, password)) {
@@ -165,7 +169,7 @@ public class UserAuthController {
         }
 
         // decrypt password
-        String password = userAuthService.decryptPassword(session, queryObject.password);
+        String password = sessionService.decryptUsingSession(session, queryObject.password);
 
         // update user
         userAuthService.updateUserPasswordByPhone(queryObject.phone, password);

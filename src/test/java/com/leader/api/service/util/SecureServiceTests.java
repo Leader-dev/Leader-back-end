@@ -32,25 +32,38 @@ public class SecureServiceTests {
     @Test
     public void generateRandomSaltTest() {
         when(randomUtil.nextInt(anyInt())).thenReturn(1, 2, 3, 4, 5);
-        assertEquals(secureService.generateRandomSalt(5), "BCDEF");
+
+        String result = secureService.generateRandomSalt(5);
+
+        assertEquals("BCDEF", result);
     }
 
     @Test
     public void generateRandomAuthCodeTest() {
         when(randomUtil.nextDouble()).thenReturn(0.04238143619);
-        assertEquals(secureService.generateRandomAuthCode(6), "042381");
+
+        String result = secureService.generateRandomAuthCode(6);
+
+        assertEquals("042381", result);
     }
 
     @Test
     public void generateRandomUidTest() {
         when(randomUtil.nextDouble()).thenReturn(0.04238143619, 0.0148263143, 0.1273172389142);
-        assertEquals(secureService.generateRandomUid(8), "12731723");
+
+        String result = secureService.generateRandomUid(8);
+
+        assertEquals("12731723", result);
         verify(randomUtil, times(3)).nextDouble();
     }
 
     @Test
     public void SHA1Test() {
-        assertEquals(secureService.SHA1(TEST_PLAIN_TEXT), TEST_SHA1);
+        // no pre-actions
+
+        String result = secureService.SHA1(TEST_PLAIN_TEXT);
+
+        assertEquals(TEST_SHA1, result);
     }
 
     @Test
@@ -58,6 +71,6 @@ public class SecureServiceTests {
         KeyPair keyPair = secureService.generateRSAKeyPair(1024);
         String cipherText = secureService.encryptRSA(TEST_PLAIN_TEXT, keyPair.getPublic());
         String result = secureService.decryptRSA(cipherText, keyPair.getPrivate());
-        assertEquals(result, TEST_PLAIN_TEXT);
+        assertEquals(TEST_PLAIN_TEXT, result);
     }
 }

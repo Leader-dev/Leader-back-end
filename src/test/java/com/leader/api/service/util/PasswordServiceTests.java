@@ -6,6 +6,7 @@ import com.leader.api.util.component.RandomUtil;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -102,8 +103,8 @@ public class PasswordServiceTests {
 
         passwordService.savePrivateKey(TEST_PRIVATE_KEY);
 
-        verify(clientDataUtil, atLeastOnce()).set(PasswordService.PRIVATE_KEY_ID, TEST_UUID);
-        verify(clientDataUtil, atLeastOnce()).set(PasswordService.PRIVATE_KEY_TIMESTAMP, TEST_DATE);
+        verify(clientDataUtil, times(1)).set(PasswordService.PRIVATE_KEY_ID, TEST_UUID);
+        verify(clientDataUtil, times(1)).set(PasswordService.PRIVATE_KEY_TIMESTAMP, TEST_DATE);
     }
 
     @Test
@@ -117,8 +118,8 @@ public class PasswordServiceTests {
         PrivateKey privateKey = passwordService.getPrivateKey();
 
         assertEquals(TEST_PRIVATE_KEY, privateKey);
-        verify(clientDataUtil, atLeastOnce()).remove(PasswordService.PRIVATE_KEY_ID);
-        verify(clientDataUtil, atLeastOnce()).remove(PasswordService.PRIVATE_KEY_TIMESTAMP);
+        verify(clientDataUtil, times(1)).remove(PasswordService.PRIVATE_KEY_ID);
+        verify(clientDataUtil, times(1)).remove(PasswordService.PRIVATE_KEY_TIMESTAMP);
     }
 
     @Test
@@ -141,8 +142,8 @@ public class PasswordServiceTests {
         PrivateKey privateKey = passwordService.getPrivateKey();
 
         assertNull(privateKey);
-        verify(clientDataUtil, atLeastOnce()).remove(PasswordService.PRIVATE_KEY_ID);
-        verify(clientDataUtil, atLeastOnce()).remove(PasswordService.PRIVATE_KEY_TIMESTAMP);
+        verify(clientDataUtil, times(1)).remove(PasswordService.PRIVATE_KEY_ID);
+        verify(clientDataUtil, times(1)).remove(PasswordService.PRIVATE_KEY_TIMESTAMP);
     }
 
     @Test
@@ -153,8 +154,8 @@ public class PasswordServiceTests {
         byte[] publicKey = passwordService.generateKey();
 
         assertArrayEquals(TEST_PUBLIC_KEY.getEncoded(), publicKey);
-        verify(clientDataUtil, atLeastOnce()).set(eq(PasswordService.PRIVATE_KEY_ID), any());
-        verify(clientDataUtil, atLeastOnce()).set(eq(PasswordService.PRIVATE_KEY_TIMESTAMP), eq(TEST_DATE));
+        verify(clientDataUtil, times(1)).set(eq(PasswordService.PRIVATE_KEY_ID), any());
+        verify(clientDataUtil, times(1)).set(eq(PasswordService.PRIVATE_KEY_TIMESTAMP), eq(TEST_DATE));
     }
 
     @Test
@@ -169,14 +170,16 @@ public class PasswordServiceTests {
         String decrypted = passwordService.decrypt(TEST_CIPHER_TEXT);
 
         assertEquals(TEST_PLAIN_TEXT, decrypted);
-        verify(clientDataUtil, atLeastOnce()).remove(PasswordService.PRIVATE_KEY_ID);
-        verify(clientDataUtil, atLeastOnce()).remove(PasswordService.PRIVATE_KEY_TIMESTAMP);
+        verify(clientDataUtil, times(1)).remove(PasswordService.PRIVATE_KEY_ID);
+        verify(clientDataUtil, times(1)).remove(PasswordService.PRIVATE_KEY_TIMESTAMP);
     }
 
     @Test
     public void decryptNoKeyTest() {
-        when(clientDataUtil.get(any())).thenReturn(null);
+        when(clientDataUtil.get(PasswordService.PRIVATE_KEY_ID, UUID.class)).thenReturn(null);
 
-        assertThrows(RuntimeException.class, () -> passwordService.decrypt(TEST_CIPHER_TEXT));
+        Executable action = () -> passwordService.decrypt(TEST_CIPHER_TEXT);
+
+        assertThrows(RuntimeException.class, action);
     }
 }

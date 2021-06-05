@@ -39,9 +39,12 @@ public class AuthCodeServiceTests {
     public void sendAuthCodeSuccessTest() {
         when(authCodeRecordRepository.findByPhone(TEST_PHONE)).thenReturn(null);
         when(secureService.generateRandomAuthCode(anyInt())).thenReturn(TEST_AUTHCODE);
-        assertTrue(authCodeService.sendAuthCode(TEST_PHONE), "Should send successfully");
-        verify(authCodeRecordRepository, atLeastOnce()).deleteByPhone(TEST_PHONE);
-        verify(authCodeRecordRepository, atLeastOnce()).insert(
+
+        boolean result = authCodeService.sendAuthCode(TEST_PHONE);
+
+        assertTrue(result);
+        verify(authCodeRecordRepository, times(1)).deleteByPhone(TEST_PHONE);
+        verify(authCodeRecordRepository, times(1)).insert(
                 argThat((AuthCodeRecord record) -> record.authcode.equals(TEST_AUTHCODE))
         );
     }
@@ -50,10 +53,12 @@ public class AuthCodeServiceTests {
     public void sendAuthCodeRejectTest() {
         AuthCodeRecord authCodeRecord = new AuthCodeRecord();
         authCodeRecord.timestamp = TEST_DATE;
-
         when(authCodeRecordRepository.findByPhone(TEST_PHONE)).thenReturn(authCodeRecord);
         when(dateUtil.getCurrentTime()).thenReturn(TEST_DATE.getTime() + 59990);
-        assertFalse(authCodeService.sendAuthCode(TEST_PHONE), "Should reject send");
+
+        boolean result = authCodeService.sendAuthCode(TEST_PHONE);
+
+        assertFalse(result);
         verify(authCodeRecordRepository, never()).deleteByPhone(TEST_PHONE);
         verify(authCodeRecordRepository, never()).insert((AuthCodeRecord) any());
     }
@@ -63,34 +68,55 @@ public class AuthCodeServiceTests {
         AuthCodeRecord authCodeRecord = new AuthCodeRecord();
         authCodeRecord.authcode = TEST_AUTHCODE;
         authCodeRecord.timestamp = TEST_DATE;
-
-        // success case
-
         when(authCodeRecordRepository.findByPhone(TEST_PHONE)).thenReturn(authCodeRecord);
-        when(dateUtil.getCurrentTime()).thenReturn(TEST_DATE.getTime() + 299990);
-        assertTrue(authCodeService.validateAuthCode(TEST_PHONE, TEST_AUTHCODE), "Should success");
+        when(dateUtil.getCurrentTime()).thenReturn(TEST_DATE.getTime() + 300000);
 
-        // incorrect case
+        boolean result = authCodeService.validateAuthCode(TEST_PHONE, TEST_AUTHCODE);
 
+        assertTrue(result);
+    }
+
+    @Test
+    public void validateAuthCodeIncorrectTest() {
+        AuthCodeRecord authCodeRecord = new AuthCodeRecord();
+        authCodeRecord.authcode = TEST_AUTHCODE;
+        authCodeRecord.timestamp = TEST_DATE;
         when(authCodeRecordRepository.findByPhone(TEST_PHONE)).thenReturn(authCodeRecord);
-        when(dateUtil.getCurrentTime()).thenReturn(TEST_DATE.getTime() + 299990);
-        assertFalse(authCodeService.validateAuthCode(TEST_PHONE, TEST_INCORRECT_AUTHCODE), "Should fail");
+        when(dateUtil.getCurrentTime()).thenReturn(TEST_DATE.getTime() + 300000);
 
-        // phone not exist case
+        boolean result = authCodeService.validateAuthCode(TEST_PHONE, TEST_INCORRECT_AUTHCODE);
 
+        assertFalse(result);
+    }
+
+    @Test
+    public void validateAuthCodePhoneNotExistTest() {
         when(authCodeRecordRepository.findByPhone(TEST_PHONE)).thenReturn(null);
-        assertFalse(authCodeService.validateAuthCode(TEST_PHONE, TEST_AUTHCODE), "Should fail");
 
-        // timed out case
+        boolean result = authCodeService.validateAuthCode(TEST_PHONE, TEST_INCORRECT_AUTHCODE);
 
+        assertFalse(result);
+    }
+
+    @Test
+    public void validateAuthCodeTimedOutTest() {
+        AuthCodeRecord authCodeRecord = new AuthCodeRecord();
+        authCodeRecord.authcode = TEST_AUTHCODE;
+        authCodeRecord.timestamp = TEST_DATE;
         when(authCodeRecordRepository.findByPhone(TEST_PHONE)).thenReturn(authCodeRecord);
-        when(dateUtil.getCurrentTime()).thenReturn(TEST_DATE.getTime() + 300010);
-        assertFalse(authCodeService.validateAuthCode(TEST_PHONE, TEST_AUTHCODE), "Should fail");
+        when(dateUtil.getCurrentTime()).thenReturn(TEST_DATE.getTime() + 300001);
+
+        boolean result = authCodeService.validateAuthCode(TEST_PHONE, TEST_INCORRECT_AUTHCODE);
+
+        assertFalse(result);
     }
 
     @Test
     public void removeAuthCodeRecordTest() {
+        // no pre-actions
+
         authCodeService.removeAuthCodeRecord(TEST_PHONE);
-        verify(authCodeRecordRepository, atLeastOnce()).deleteByPhone(TEST_PHONE);
+
+        verify(authCodeRecordRepository, times(1)).deleteByPhone(TEST_PHONE);
     }
 }

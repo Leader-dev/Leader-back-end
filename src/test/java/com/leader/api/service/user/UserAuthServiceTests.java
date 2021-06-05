@@ -4,8 +4,8 @@ import com.leader.api.data.user.User;
 import com.leader.api.data.user.UserRepository;
 import com.leader.api.service.util.SecureService;
 import org.bson.types.ObjectId;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -38,19 +38,37 @@ public class UserAuthServiceTests {
     @Test
     public void assertPhoneExistsTest() {
         when(userRepository.existsByPhone(TEST_PHONE)).thenReturn(true);
-        assertDoesNotThrow(() -> authService.assertPhoneExists(TEST_PHONE), "Should not throw");
 
+        Executable action = () -> authService.assertPhoneExists(TEST_PHONE);
+
+        assertDoesNotThrow(action);
+    }
+
+    @Test
+    public void assertPhoneNotExistsTest() {
         when(userRepository.existsByPhone(TEST_PHONE)).thenReturn(false);
-        assertThrows(RuntimeException.class, () -> authService.assertPhoneExists(TEST_PHONE), "Should throw");
+
+        Executable action = () -> authService.assertPhoneExists(TEST_PHONE);
+
+        assertThrows(RuntimeException.class, action);
     }
 
     @Test
     public void assertUidExistsTest() {
         when(userRepository.existsByUid(TEST_UID)).thenReturn(true);
-        assertDoesNotThrow(() -> authService.assertUidExists(TEST_UID), "Should not throw");
 
+        Executable action = () -> authService.assertUidExists(TEST_UID);
+
+        assertDoesNotThrow(action);
+    }
+
+    @Test
+    public void assertUidNotExistsTest() {
         when(userRepository.existsByUid(TEST_UID)).thenReturn(false);
-        assertThrows(RuntimeException.class, () -> authService.assertUidExists(TEST_UID), "Should throw");
+
+        Executable action = () -> authService.assertUidExists(TEST_UID);
+
+        assertThrows(RuntimeException.class, action);
     }
 
     @Test
@@ -59,8 +77,9 @@ public class UserAuthServiceTests {
         when(userRepository.existsByUid(any())).thenReturn(true, true, false);
         when(secureService.SHA1(any())).thenReturn(TEST_SHA1);
 
-        assertDoesNotThrow(() -> authService.createUser(TEST_PHONE, TEST_PASSWORD, TEST_NICKNAME), "Should success");
+        Executable action = () -> authService.createUser(TEST_PHONE, TEST_PASSWORD, TEST_NICKNAME);
 
+        assertDoesNotThrow(action);
         verify(userRepository, times(1)).count();
         verify(userRepository, times(3)).existsByUid(any());
         verify(userRepository, times(1)).insert(argThat((User user) -> user.password.equals(TEST_SHA1)));
@@ -69,31 +88,42 @@ public class UserAuthServiceTests {
     @Test
     public void createUserCapacityReachedTest() {
         when(userRepository.count()).thenReturn(50000010L);
-        assertThrows(RuntimeException.class, () -> authService.createUser(TEST_PHONE, TEST_PASSWORD, TEST_NICKNAME), "Should throw");
+
+        Executable action = () -> authService.createUser(TEST_PHONE, TEST_PASSWORD, TEST_NICKNAME);
+
+        assertThrows(RuntimeException.class, action);
         verify(userRepository, never()).insert((User) any());
     }
 
     @Test
-    public void validateUserTest() {
+    public void validateUserSuccessTest() {
         User user = new User();
         user.salt = TEST_SALT;
         user.password = TEST_SHA1;
-
         when(userRepository.existsByPhone(TEST_PHONE)).thenReturn(true);
         when(userRepository.findByPhone(TEST_PHONE)).thenReturn(user);
         when(secureService.generateRandomSalt(anyInt())).thenReturn(TEST_SALT);
-
-        // success case
-
         when(secureService.SHA1(TEST_PASSWORD + TEST_SALT)).thenReturn(TEST_SHA1);
-        assertTrue(authService.validateUser(TEST_PHONE, TEST_PASSWORD), "Should success");
+
+        boolean result = authService.validateUser(TEST_PHONE, TEST_PASSWORD);
+
+        assertTrue(result);
         verify(secureService, times(1)).SHA1(TEST_PASSWORD + TEST_SALT);
-        clearInvocations(secureService);
+    }
 
-        // incorrect case
-
+    @Test
+    public void validateUserFailTest() {
+        User user = new User();
+        user.salt = TEST_SALT;
+        user.password = TEST_SHA1;
+        when(userRepository.existsByPhone(TEST_PHONE)).thenReturn(true);
+        when(userRepository.findByPhone(TEST_PHONE)).thenReturn(user);
+        when(secureService.generateRandomSalt(anyInt())).thenReturn(TEST_SALT);
         when(secureService.SHA1(TEST_INCORRECT_PASSWORD + TEST_SALT)).thenReturn(TEST_INCORRECT_SHA1);
-        assertFalse(authService.validateUser(TEST_PHONE, TEST_INCORRECT_PASSWORD), "Should fail");
+
+        boolean result = authService.validateUser(TEST_PHONE, TEST_INCORRECT_PASSWORD);
+
+        assertFalse(result);
         verify(secureService, times(1)).SHA1(TEST_INCORRECT_PASSWORD + TEST_SALT);
     }
 
@@ -104,16 +134,19 @@ public class UserAuthServiceTests {
         when(secureService.SHA1(any())).thenReturn(TEST_SHA1);
 
         authService.updateUserPasswordByPhone(TEST_PHONE, TEST_PASSWORD);
-        verify(userRepository, atLeastOnce()).save(argThat(user1 -> user1.password.equals(TEST_SHA1)));
+
+        verify(userRepository, times(1)).save(argThat(user1 -> user1.password.equals(TEST_SHA1)));
     }
 
     @Test
     public void getUserIdTest() {
         User user = new User();
         user.id = TEST_USER_ID;
-
         when(userRepository.existsByPhone(TEST_PHONE)).thenReturn(true);
         when(userRepository.findByPhone(TEST_PHONE)).thenReturn(user);
-        Assertions.assertEquals(authService.getUserIdByPhone(TEST_PHONE), TEST_USER_ID);
+
+        ObjectId result = authService.getUserIdByPhone(TEST_PHONE);
+
+        assertEquals(TEST_USER_ID, result);
     }
 }

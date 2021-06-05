@@ -182,7 +182,7 @@ public class UserAuthControllerTests {
         response = userAuthController.login(queryObject);
 
         assertSuccessResponse(response);
-        verify(userIdService, atLeastOnce()).setCurrentUserId(TEST_USER_ID);
+        verify(userIdService, times(1)).setCurrentUserId(TEST_USER_ID);
     }
 
     @Test
@@ -221,8 +221,8 @@ public class UserAuthControllerTests {
         response = userAuthController.login(queryObject);
 
         assertSuccessResponse(response);
-        verify(authCodeService, atLeastOnce()).removeAuthCodeRecord(TEST_PHONE);
-        verify(userIdService, atLeastOnce()).setCurrentUserId(TEST_USER_ID);
+        verify(authCodeService, times(1)).removeAuthCodeRecord(TEST_PHONE);
+        verify(userIdService, times(1)).setCurrentUserId(TEST_USER_ID);
     }
 
     @Test
@@ -254,7 +254,7 @@ public class UserAuthControllerTests {
 
         userAuthController.logout();
 
-        verify(userIdService, atLeastOnce()).clearCurrentUserId();
+        verify(userIdService, times(1)).clearCurrentUserId();
     }
 
     @Test
@@ -279,8 +279,8 @@ public class UserAuthControllerTests {
         response = userAuthController.changePassword(queryObject);
 
         assertSuccessResponse(response);
-        verify(userAuthService, atLeastOnce()).updateUserPasswordByPhone(TEST_PHONE, TEST_PASSWORD);
-        verify(authCodeService, atLeastOnce()).removeAuthCodeRecord(TEST_PHONE);
+        verify(userAuthService, times(1)).updateUserPasswordByPhone(TEST_PHONE, TEST_PASSWORD);
+        verify(authCodeService, times(1)).removeAuthCodeRecord(TEST_PHONE);
         clearInvocations(userAuthService);
     }
 

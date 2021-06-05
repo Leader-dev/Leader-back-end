@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -29,7 +29,7 @@ public class UserIdServiceTests {
 
         userIdService.setCurrentUserId(TEST_USER_ID);
 
-        verify(clientDataUtil, Mockito.atLeastOnce()).set(UserIdService.USER_ID, TEST_USER_ID);
+        verify(clientDataUtil, Mockito.times(1)).set(UserIdService.USER_ID, TEST_USER_ID);
     }
 
     @Test
@@ -47,6 +47,24 @@ public class UserIdServiceTests {
 
         userIdService.clearCurrentUserId();
 
-        verify(clientDataUtil, Mockito.atLeastOnce()).remove(UserIdService.USER_ID);
+        verify(clientDataUtil, Mockito.times(1)).remove(UserIdService.USER_ID);
+    }
+
+    @Test
+    public void userIdExistsTrueTest() {
+        when(clientDataUtil.get(UserIdService.USER_ID, ObjectId.class)).thenReturn(TEST_USER_ID);
+
+        boolean exists = userIdService.currentUserExists();
+
+        assertTrue(exists);
+    }
+
+    @Test
+    public void userIdExistsFalseTest() {
+        when(clientDataUtil.get(UserIdService.USER_ID, ObjectId.class)).thenReturn(null);
+
+        boolean exists = userIdService.currentUserExists();
+
+        assertFalse(exists);
     }
 }

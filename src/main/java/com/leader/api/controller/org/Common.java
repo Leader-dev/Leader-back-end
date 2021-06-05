@@ -1,12 +1,15 @@
 package com.leader.api.controller.org;
 
-import com.leader.api.data.org.*;
+import com.leader.api.data.org.Organization;
+import com.leader.api.data.org.OrganizationLobbyOverview;
+import com.leader.api.data.org.OrganizationPosterOverview;
+import com.leader.api.data.org.OrganizationQueryObject;
 import com.leader.api.data.org.membership.OrganizationJoinedOverview;
 import com.leader.api.data.org.report.OrganizationReport;
+import com.leader.api.service.org.OrganizationService;
+import com.leader.api.service.util.UserIdService;
 import com.leader.api.util.response.ErrorResponse;
 import com.leader.api.util.response.SuccessResponse;
-import com.leader.api.service.org.OrganizationService;
-import com.leader.api.service.util.SessionService;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpSession;
 import java.util.List;
 
 @RestController
@@ -25,12 +27,12 @@ public class Common {
 
     private final OrganizationService organizationService;
 
-    private final SessionService sessionService;
+    private final UserIdService userIdService;
 
     @Autowired
-    public Common(OrganizationService organizationService, SessionService sessionService) {
+    public Common(OrganizationService organizationService, UserIdService userIdService) {
         this.organizationService = organizationService;
-        this.sessionService = sessionService;
+        this.userIdService = userIdService;
     }
 
     @PostMapping("/types")
@@ -81,8 +83,8 @@ public class Common {
     }
 
     @PostMapping("/create")
-    public Document createOrganization(@RequestBody Organization newOrganization, HttpSession session) {
-        ObjectId userid = sessionService.getUserIdFromSession(session);
+    public Document createOrganization(@RequestBody Organization newOrganization) {
+        ObjectId userid = userIdService.getCurrentUserId();
 
         // insert organization
         organizationService.createOrganization(newOrganization, userid);
@@ -91,8 +93,8 @@ public class Common {
     }
 
     @PostMapping("/joined")
-    public Document listJoinedOrganizations(HttpSession session) {
-        ObjectId userid = sessionService.getUserIdFromSession(session);
+    public Document listJoinedOrganizations() {
+        ObjectId userid = userIdService.getCurrentUserId();
 
         // get joined organizations
         List<OrganizationJoinedOverview> list = organizationService.findJoinedOrganizations(userid);
@@ -103,8 +105,8 @@ public class Common {
     }
 
     @PostMapping("/report")
-    public Document reportOrganization(@RequestBody OrganizationReport report, HttpSession session) {
-        report.senderUserId = sessionService.getUserIdFromSession(session);
+    public Document reportOrganization(@RequestBody OrganizationReport report) {
+        report.senderUserId = userIdService.getCurrentUserId();
         organizationService.sendReport(report);
 
         return new SuccessResponse();

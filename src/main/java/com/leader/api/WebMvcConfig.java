@@ -1,21 +1,19 @@
 package com.leader.api;
 
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.leader.api.service.util.UserIdService;
 import com.leader.api.util.UserAuthException;
 import com.leader.api.util.response.AuthErrorResponse;
 import com.leader.api.util.response.InternalErrorResponse;
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.session.web.http.CookieSerializer;
-import org.springframework.session.web.http.DefaultCookieSerializer;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -26,7 +24,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.util.List;
 
 @Configuration
@@ -34,24 +31,17 @@ import java.util.List;
 @ControllerAdvice
 public class WebMvcConfig implements WebMvcConfigurer {
 
+    private final UserIdService userIdService;
+
+    @Autowired
+    public WebMvcConfig(UserIdService userIdService) {
+        this.userIdService = userIdService;
+    }
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         // allow CORS for all paths
-        registry
-                .addMapping("/**")
-                .allowCredentials(true)
-                .allowedOriginPatterns("*");
-    }
-
-    @Value("${config.secure-cookie}")
-    private String useSecureCookie;
-
-    @Bean
-    public CookieSerializer httpSessionIdResolver(){
-        DefaultCookieSerializer cookieSerializer = new DefaultCookieSerializer();
-        cookieSerializer.setSameSite("None");
-        cookieSerializer.setUseSecureCookie(Boolean.parseBoolean(useSecureCookie));
-        return cookieSerializer;
+        registry.addMapping("/**");
     }
 
     @Override
@@ -60,9 +50,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry
                 .addInterceptor(new HandlerInterceptor() {
                     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-                        HttpSession session = request.getSession();
-                        Object userid = session.getAttribute("user_id");
-                        if (userid == null) {  // if userid does not exist in session, raise exception
+                        if (!userIdService.currentUserExists()) {
                             throw new UserAuthException();
                         }
                         return true;

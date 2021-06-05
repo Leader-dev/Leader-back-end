@@ -1,9 +1,11 @@
 package com.leader.api.controller.org;
 
-import com.leader.api.data.org.application.*;
-import com.leader.api.util.response.SuccessResponse;
+import com.leader.api.data.org.application.OrganizationApplicationDetail;
+import com.leader.api.data.org.application.OrganizationApplicationForm;
+import com.leader.api.data.org.application.OrganizationApplicationSentOverview;
 import com.leader.api.service.org.OrganizationApplicationService;
-import com.leader.api.service.util.SessionService;
+import com.leader.api.service.util.UserIdService;
+import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpSession;
 import java.util.List;
 
 @RestController
@@ -21,12 +22,12 @@ public class Apply {
 
     private final OrganizationApplicationService applicationService;
 
-    private final SessionService sessionService;
+    private final UserIdService userIdService;
 
     @Autowired
-    public Apply(OrganizationApplicationService applicationService, SessionService sessionService) {
+    public Apply(OrganizationApplicationService applicationService, UserIdService userIdService) {
         this.applicationService = applicationService;
-        this.sessionService = sessionService;
+        this.userIdService = userIdService;
     }
 
     private static class ApplyQueryObject {
@@ -38,8 +39,8 @@ public class Apply {
     }
 
     @PostMapping("/send")
-    public Document requestApplyForm(@RequestBody ApplyQueryObject queryObject, HttpSession session) {
-        ObjectId userid = sessionService.getUserIdFromSession(session);
+    public Document requestApplyForm(@RequestBody ApplyQueryObject queryObject) {
+        ObjectId userid = userIdService.getCurrentUserId();
         applicationService.sendApplication(
                 queryObject.organizationId,
                 queryObject.departmentId,
@@ -51,8 +52,8 @@ public class Apply {
     }
 
     @PostMapping("/list")
-    public Document listApplications(HttpSession session) {
-        ObjectId userid = sessionService.getUserIdFromSession(session);
+    public Document listApplications() {
+        ObjectId userid = userIdService.getCurrentUserId();
 
         List<OrganizationApplicationSentOverview> list = applicationService.getSentApplications(userid);
 
@@ -62,8 +63,8 @@ public class Apply {
     }
 
     @PostMapping("/detail")
-    public Document applicationDetail(@RequestBody ApplyQueryObject queryObject, HttpSession session) {
-        ObjectId userid = sessionService.getUserIdFromSession(session);
+    public Document applicationDetail(@RequestBody ApplyQueryObject queryObject) {
+        ObjectId userid = userIdService.getCurrentUserId();
 
         OrganizationApplicationDetail application = applicationService.getApplication(userid, queryObject.applicationId);
 
@@ -73,8 +74,8 @@ public class Apply {
     }
 
     @PostMapping("/reply")
-    public Document replyToApplication(@RequestBody ApplyQueryObject queryObject, HttpSession session) {
-        ObjectId userid = sessionService.getUserIdFromSession(session);
+    public Document replyToApplication(@RequestBody ApplyQueryObject queryObject) {
+        ObjectId userid = userIdService.getCurrentUserId();
 
         applicationService.replyToApplication(userid, queryObject.applicationId, queryObject.action);
 

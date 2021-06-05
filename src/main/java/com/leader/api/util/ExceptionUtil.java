@@ -12,4 +12,12 @@ public class ExceptionUtil {
             return null;
         }
     }
+
+    public static <T> T ignoreExceptionSilent(Callable<T> callable) {
+        try {
+            return callable.call();
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

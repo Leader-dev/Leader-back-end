@@ -3,7 +3,8 @@ package com.leader.api.controller.user;
 import com.leader.api.data.user.User;
 import com.leader.api.service.user.UserAuthService;
 import com.leader.api.service.util.AuthCodeService;
-import com.leader.api.service.util.SessionService;
+import com.leader.api.service.util.PasswordService;
+import com.leader.api.service.util.UserIdService;
 import com.leader.api.util.response.ErrorResponse;
 import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
@@ -14,23 +15,22 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpSession;
-
 @RestController
 @RequestMapping("/user")
 public class UserAuthController {
 
     private final UserAuthService userAuthService;
-
     private final AuthCodeService authCodeService;
-
-    private final SessionService sessionService;
+    private final PasswordService passwordService;
+    private final UserIdService userIdService;
 
     @Autowired
-    public UserAuthController(UserAuthService userAuthService, AuthCodeService authCodeService, SessionService sessionService) {
+    public UserAuthController(UserAuthService userAuthService, AuthCodeService authCodeService,
+                              PasswordService passwordService, UserIdService userIdService) {
         this.userAuthService = userAuthService;
         this.authCodeService = authCodeService;
-        this.sessionService = sessionService;
+        this.passwordService = passwordService;
+        this.userIdService = userIdService;
     }
 
     public static class UserQueryObject {
@@ -50,9 +50,9 @@ public class UserAuthController {
     }
 
     @PostMapping("/key")
-    public Document getPublicKey(HttpSession session) {
+    public Document getPublicKey() {
         // generate public key
-        byte[] publicKey = sessionService.generateKeyIntoSession(session);
+        byte[] publicKey = passwordService.generateKey();
 
         // put public key in response
         Document response = new SuccessResponse();
@@ -61,9 +61,9 @@ public class UserAuthController {
     }
 
     @PostMapping("/check")
-    public Document checkText(@RequestBody UserQueryObject queryObject, HttpSession session) {
+    public Document checkText(@RequestBody UserQueryObject queryObject) {
         // decrypt password
-        String text = sessionService.decryptUsingSession(session, queryObject.password);
+        String text = passwordService.decrypt(queryObject.password);
 
         Document response = new SuccessResponse();
         response.append("text", text);
@@ -81,7 +81,7 @@ public class UserAuthController {
     }
 
     @PostMapping("/register")
-    public Document registerUser(@RequestBody UserQueryObject queryObject, HttpSession session) {
+    public Document registerUser(@RequestBody UserQueryObject queryObject) {
         // check phone
         if (userAuthService.phoneExists(queryObject.phone)) {
             return new ErrorResponse("phone_exist");
@@ -93,7 +93,7 @@ public class UserAuthController {
         }
 
         // decrypt password
-        String password = sessionService.decryptUsingSession(session, queryObject.password);
+        String password = passwordService.decrypt(queryObject.password);
 
         // actually create user
         User registeredUser = userAuthService.createUser(queryObject.phone, password, queryObject.nickname);
@@ -101,14 +101,14 @@ public class UserAuthController {
         // delete authcode record
         authCodeService.removeAuthCodeRecord(queryObject.phone);
 
-        // save user id to session
-        sessionService.saveUserIdToSession(session, registeredUser.id);
+        // save user id
+        userIdService.setCurrentUserId(registeredUser.id);
 
         return new SuccessResponse();
     }
 
     @PostMapping("/login")
-    public Document login(@RequestBody UserQueryObject queryObject, HttpSession session) {
+    public Document login(@RequestBody UserQueryObject queryObject) {
         // check phone
         if (!userAuthService.phoneExists(queryObject.phone)) {
             return new ErrorResponse("user_not_exist");
@@ -116,7 +116,7 @@ public class UserAuthController {
 
         if (queryObject.password != null) {  // if chose to use password
             // decrypt password
-            String password = sessionService.decryptUsingSession(session, queryObject.password);
+            String password = passwordService.decrypt(queryObject.password);
 
             // check password
             if (!userAuthService.validateUser(queryObject.phone, password)) {
@@ -136,21 +136,21 @@ public class UserAuthController {
 
         // update session
         ObjectId userid = userAuthService.getUserIdByPhone(queryObject.phone);
-        sessionService.saveUserIdToSession(session, userid);
+        userIdService.setCurrentUserId(userid);
 
         return new SuccessResponse();
     }
 
     @PostMapping("/logout")
-    public Document logout(HttpSession session) {
-        sessionService.removeUserIdFromSession(session);
+    public Document logout() {
+        userIdService.clearCurrentUserId();
 
         return new SuccessResponse();
     }
 
     @PostMapping("/userid")
-    public Document userid(HttpSession session) {
-        ObjectId userid = sessionService.getUserIdFromSession(session);
+    public Document userid() {
+        ObjectId userid = userIdService.getCurrentUserId();
 
         Document response = new SuccessResponse();
         response.append("userid", userid);
@@ -158,7 +158,7 @@ public class UserAuthController {
     }
 
     @PostMapping("/changepassword")
-    public Document changePassword(@RequestBody UserQueryObject queryObject, HttpSession session) {
+    public Document changePassword(@RequestBody UserQueryObject queryObject) {
         // check phone
         if (!userAuthService.phoneExists(queryObject.phone)) {
             return new ErrorResponse("phone_not_exist");
@@ -169,7 +169,7 @@ public class UserAuthController {
         }
 
         // decrypt password
-        String password = sessionService.decryptUsingSession(session, queryObject.password);
+        String password = passwordService.decrypt(queryObject.password);
 
         // update user
         userAuthService.updateUserPasswordByPhone(queryObject.phone, password);

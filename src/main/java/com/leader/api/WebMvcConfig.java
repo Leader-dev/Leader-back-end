@@ -1,6 +1,7 @@
 package com.leader.api;
 
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.leader.api.service.org.member.OrgMemberIdService;
 import com.leader.api.service.util.UserIdService;
 import com.leader.api.util.UserAuthException;
 import com.leader.api.util.response.AuthErrorResponse;
@@ -31,11 +32,15 @@ import java.util.List;
 @ControllerAdvice
 public class WebMvcConfig implements WebMvcConfigurer {
 
+    public static String ORG_ID_PARAMETER_NAME = "orgId";
+
     private final UserIdService userIdService;
+    private final OrgMemberIdService orgMemberIdService;
 
     @Autowired
-    public WebMvcConfig(UserIdService userIdService) {
+    public WebMvcConfig(UserIdService userIdService, OrgMemberIdService orgMemberIdService) {
         this.userIdService = userIdService;
+        this.orgMemberIdService = orgMemberIdService;
     }
 
     @Override
@@ -43,7 +48,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // allow CORS for all paths
         registry
                 .addMapping("/**")
-                .exposedHeaders("set-api-token");
+                .exposedHeaders(APITokenFilter.SET_TOKEN_HEADER_KEY);
     }
 
     @Override
@@ -52,6 +57,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry
                 .addInterceptor(new HandlerInterceptor() {
                     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+                        // check if userId exists
                         if (!userIdService.currentUserExists()) {
                             throw new UserAuthException();
                         }
@@ -60,6 +66,20 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 })
                 .addPathPatterns("/**")
                 .excludePathPatterns("/user/**", "/api/info");
+        // add base orgId parameter handler for all routes in /org/manage/**
+        registry
+                .addInterceptor(new HandlerInterceptor() {
+                    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+                        String orgIdString = request.getParameter(ORG_ID_PARAMETER_NAME);
+                        if (orgIdString == null) {
+                            throw new RuntimeException("Missing required parameter " + ORG_ID_PARAMETER_NAME + ".");
+                        }
+                        ObjectId orgId = new ObjectId(orgIdString);
+                        orgMemberIdService.setOrgId(orgId);
+                        return true;
+                    }
+                })
+                .addPathPatterns("/org/manage/**");
     }
 
     @ExceptionHandler(Exception.class)

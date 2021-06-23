@@ -48,10 +48,10 @@ public class SecureServiceTests {
     }
 
     @Test
-    public void generateRandomUidTest() {
+    public void generateRandomNumberIdTest() {
         when(randomUtil.nextDouble()).thenReturn(0.04238143619, 0.0148263143, 0.1273172389142);
 
-        String result = secureService.generateRandomUid(8);
+        String result = secureService.generateRandomNumberId(8);
 
         assertEquals("12731723", result);
         verify(randomUtil, times(3)).nextDouble();

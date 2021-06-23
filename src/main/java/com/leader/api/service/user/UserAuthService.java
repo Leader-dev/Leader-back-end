@@ -30,7 +30,7 @@ public class UserAuthService {
         }
         String generated;
         do {  // ensure that generated uid doesn't exist
-            generated = secureService.generateRandomUid(UID_LENGTH);
+            generated = secureService.generateRandomNumberId(UID_LENGTH);
         } while (uidExists(generated));
         return generated;
     }

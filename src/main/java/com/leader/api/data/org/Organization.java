@@ -9,6 +9,10 @@ import java.util.ArrayList;
 @Document(collection = "org_list")
 public class Organization {
 
+    // states
+    public static final String PENDING = "pending";
+    public static final String RUNNING = "running";
+
     @Id
     public ObjectId id;
 
@@ -16,11 +20,11 @@ public class Organization {
     public String numberId;
     public Long memberCount;
     public String status;
+    public String addressAuth;
 
     // info
     public String name;
     public String address;
-    public String addressAuth;
     public String introduction;
     public ArrayList<String> phone;
     public ArrayList<String> email;
@@ -28,5 +32,5 @@ public class Organization {
     public String posterUrl;
 
     // application
-    public OrganizationApplicationScheme applicationScheme;
+    public OrgApplicationScheme applicationScheme;
 }

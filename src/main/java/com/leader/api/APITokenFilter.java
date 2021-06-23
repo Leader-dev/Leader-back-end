@@ -20,8 +20,8 @@ import static com.leader.api.util.ExceptionUtil.ignoreExceptionSilent;
 @Component
 public class APITokenFilter implements Filter {
 
-    private static final String TOKEN_HEADER_KEY = "API-Token";
-    private static final String SET_TOKEN_HEADER_KEY = "Set-API-Token";
+    public static final String TOKEN_HEADER_KEY = "API-Token";
+    public static final String SET_TOKEN_HEADER_KEY = "Set-API-Token";
 
     private static final long TOKEN_EXPIRE_MILLISECONDS = 2592000000L;
 

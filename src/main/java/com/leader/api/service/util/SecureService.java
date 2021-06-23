@@ -4,7 +4,7 @@ import com.leader.api.util.component.RandomUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.*;
+import javax.crypto.Cipher;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.util.Base64;
@@ -52,7 +52,7 @@ public class SecureService {
         });
     }
 
-    public String generateRandomUid(int length) {
+    public String generateRandomNumberId(int length) {
         String generated;
         do {  // ensure that first digit is not 0
             double randomNumber = randomUtil.nextDouble();

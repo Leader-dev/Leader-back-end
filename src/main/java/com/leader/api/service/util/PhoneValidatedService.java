@@ -1,5 +1,6 @@
 package com.leader.api.service.util;
 
+import com.leader.api.util.InternalErrorException;
 import com.leader.api.util.component.ClientDataUtil;
 import com.leader.api.util.component.DateUtil;
 import org.springframework.stereotype.Service;
@@ -31,14 +32,14 @@ public class PhoneValidatedService {
         String validatedPhone = clientDataUtil.get(PHONE_VALIDATED, String.class);
 
         if (validatedPhone == null || !validatedPhone.equals(phone)) {
-            throw new RuntimeException("Validation failed");
+            throw new InternalErrorException("Validation failed");
         }
 
         Date validatedDate = clientDataUtil.get(PHONE_VALIDATED_TIMESTAMP, Date.class);
         long timePassed = dateUtil.getCurrentTime() - validatedDate.getTime();
 
         if (timePassed > VALIDATION_EXPIRE) {
-            throw new RuntimeException("Validation failed");
+            throw new InternalErrorException("Validation failed");
         }
 
         clientDataUtil.remove(PHONE_VALIDATED);

@@ -3,6 +3,7 @@ package com.leader.api.service.org.member;
 import com.leader.api.data.org.member.OrgMember;
 import com.leader.api.data.org.member.OrgMemberRepository;
 import com.leader.api.service.util.UserIdService;
+import com.leader.api.util.InternalErrorException;
 import com.leader.api.util.component.ThreadDataUtil;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
@@ -38,7 +39,7 @@ public class OrgMemberIdService {
 
     public void assertMemberInCurrentOrganization(ObjectId memberId) {
         if (!isMemberInCurrentOrganization(memberId)) {
-            throw new RuntimeException("Member not in organization.");
+            throw new InternalErrorException("Member not in organization.");
         }
     }
 

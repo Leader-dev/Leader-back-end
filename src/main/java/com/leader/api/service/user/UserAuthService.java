@@ -3,6 +3,7 @@ package com.leader.api.service.user;
 import com.leader.api.data.user.User;
 import com.leader.api.data.user.UserRepository;
 import com.leader.api.service.util.SecureService;
+import com.leader.api.util.InternalErrorException;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ public class UserAuthService {
 
     private String generateNewUid() {
         if (userRepository.count() > UID_LENGTH_CAPACITY) {
-            throw new RuntimeException("Uid length capacity exceeded");
+            throw new InternalErrorException("Uid length capacity exceeded");
         }
         String generated;
         do {  // ensure that generated uid doesn't exist
@@ -41,7 +42,7 @@ public class UserAuthService {
 
     public void assertUidExists(String uid) {
         if (!uidExists(uid)) {
-            throw new RuntimeException("Uid not exist");
+            throw new InternalErrorException("Uid not exist");
         }
     }
 
@@ -51,7 +52,7 @@ public class UserAuthService {
 
     public void assertPhoneExists(String phone) {
         if (!phoneExists(phone)) {
-            throw new RuntimeException("Phone not exist");
+            throw new InternalErrorException("Phone not exist");
         }
     }
 

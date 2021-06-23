@@ -1,5 +1,6 @@
 package com.leader.api.service.util;
 
+import com.leader.api.util.InternalErrorException;
 import com.leader.api.util.component.ClientDataUtil;
 import com.leader.api.util.component.DateUtil;
 import com.leader.api.util.component.RandomUtil;
@@ -99,6 +100,6 @@ public class PasswordService {
             }
         }
 
-        throw new RuntimeException("Password decryption failed.");
+        throw new InternalErrorException("Password decryption failed.");
     }
 }

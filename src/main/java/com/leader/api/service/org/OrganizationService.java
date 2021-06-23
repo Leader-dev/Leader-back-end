@@ -3,6 +3,7 @@ package com.leader.api.service.org;
 import com.leader.api.data.org.OrgPublicInfo;
 import com.leader.api.data.org.Organization;
 import com.leader.api.data.org.OrganizationRepository;
+import com.leader.api.util.InternalErrorException;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,7 +41,7 @@ public class OrganizationService {
 
     public void assertOrganizationExists(ObjectId organizationId) {
         if (!organizationExists(organizationId)) {
-            throw new RuntimeException("Organization not exist");
+            throw new InternalErrorException("Organization not exist");
         }
     }
 

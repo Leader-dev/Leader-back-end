@@ -6,6 +6,7 @@ import com.leader.api.service.util.AuthCodeService;
 import com.leader.api.service.util.PasswordService;
 import com.leader.api.service.util.PhoneValidatedService;
 import com.leader.api.service.util.UserIdService;
+import com.leader.api.util.InternalErrorException;
 import com.leader.api.util.response.ErrorResponse;
 import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
@@ -135,7 +136,7 @@ public class UserAuthController {
             // invalidate current authcode
             authCodeService.removeAuthCodeRecord(queryObject.phone);
         } else {
-            throw new RuntimeException("Expect password or authcode attribute in request");
+            throw new InternalErrorException("Expect password or authcode attribute in request");
         }
 
         // update session

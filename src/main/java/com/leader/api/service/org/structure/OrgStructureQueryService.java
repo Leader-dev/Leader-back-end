@@ -6,6 +6,7 @@ import com.leader.api.data.org.member.OrgMember;
 import com.leader.api.data.org.member.OrgMemberOverview;
 import com.leader.api.data.org.member.OrgMemberRepository;
 import com.leader.api.data.org.member.OrgMemberRole;
+import com.leader.api.util.InternalErrorException;
 import org.bson.types.ObjectId;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
@@ -69,7 +70,7 @@ public class OrgStructureQueryService {
 
     public void assertDepartmentInOrganization(ObjectId orgId, ObjectId departmentId) {
         if (!isDepartmentInOrganization(orgId, departmentId)) {
-            throw new RuntimeException("Department not in organization.");
+            throw new InternalErrorException("Department not in organization.");
         }
     }
 

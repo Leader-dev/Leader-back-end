@@ -6,6 +6,7 @@ import com.leader.api.data.org.member.OrgMemberRepository;
 import com.leader.api.data.org.member.OrgMemberRole;
 import com.leader.api.service.org.member.OrgMemberIdService;
 import com.leader.api.service.org.structure.OrgStructureQueryService;
+import com.leader.api.util.InternalErrorException;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -66,7 +67,7 @@ public class OrgAuthorizationService {
     public void assertCurrentMemberHasAuthority(OrgAuthority authority, ObjectId departmentId) {
         boolean hasAuthority = currentMemberHasAuthorityIn(authority, departmentId);
         if (!hasAuthority) {
-            throw new RuntimeException("Member does not have authority.");
+            throw new InternalErrorException("Member does not have authority.");
         }
     }
 
@@ -91,7 +92,7 @@ public class OrgAuthorizationService {
     public void assertCurrentMemberCanManageAllMembers(List<ObjectId> memberIds) {
         boolean canManageAll = currentMemberCanManageAll(memberIds);
         if (!canManageAll) {
-            throw new RuntimeException("Member does not have authority to some member(s).");
+            throw new InternalErrorException("Member does not have authority to some member(s).");
         }
     }
 

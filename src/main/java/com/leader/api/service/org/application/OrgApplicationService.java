@@ -6,6 +6,7 @@ import com.leader.api.data.org.department.OrgDepartment;
 import com.leader.api.data.org.department.OrgDepartmentRepository;
 import com.leader.api.service.org.OrganizationService;
 import com.leader.api.service.org.member.OrgMemberService;
+import com.leader.api.util.InternalErrorException;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -43,11 +44,11 @@ public class OrgApplicationService {
         organizationService.assertOrganizationExists(organizationId);
         Organization organization = organizationService.getOrganization(organizationId);
         if (!organization.applicationScheme.open) {
-            throw new RuntimeException("Application not open");
+            throw new InternalErrorException("Application not open");
         }
         OrgDepartment department = departmentRepository.findById(departmentId).orElse(null);
         if (organization.applicationScheme.appointDepartment && department == null) {
-            throw new RuntimeException("Department not appointed");
+            throw new InternalErrorException("Department not appointed");
         }
 
         if (organization.applicationScheme.auth) {
@@ -84,11 +85,11 @@ public class OrgApplicationService {
                 applicationRepository.findByApplicantUserIdAndId(userid, applicationId);
 
         if (application == null) {
-            throw new RuntimeException("Application not exist.");
+            throw new InternalErrorException("Application not exist.");
         }
 
         if (PASSED.equals(application.status)) {
-            throw new RuntimeException("Application not passed.");
+            throw new InternalErrorException("Application not passed.");
         }
 
         if (ReplyAction.ACCEPT == action) {

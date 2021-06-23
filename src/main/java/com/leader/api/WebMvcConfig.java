@@ -3,6 +3,7 @@ package com.leader.api;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.leader.api.service.org.member.OrgMemberIdService;
 import com.leader.api.service.util.UserIdService;
+import com.leader.api.util.InternalErrorException;
 import com.leader.api.util.UserAuthException;
 import com.leader.api.util.response.AuthErrorResponse;
 import com.leader.api.util.response.InternalErrorResponse;
@@ -72,7 +73,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
                         String orgIdString = request.getParameter(ORG_ID_PARAMETER_NAME);
                         if (orgIdString == null) {
-                            throw new RuntimeException("Missing required parameter " + ORG_ID_PARAMETER_NAME + ".");
+                            throw new InternalErrorException("Missing required parameter " + ORG_ID_PARAMETER_NAME + ".");
                         }
                         ObjectId orgId = new ObjectId(orgIdString);
                         orgMemberIdService.setOrgId(orgId);
@@ -87,6 +88,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // Special handling for user auth failed, return auth error (403)
         if (ex instanceof UserAuthException) {
             return new ResponseEntity<>(new AuthErrorResponse(), HttpStatus.OK);
+        }
+        // if an exception other than defined types occur, print trace in console for debug
+        if (!(ex instanceof InternalErrorException)) {
+            ex.printStackTrace();
         }
         // whenever an exception occur, return internal error (500) along with the original message of the exception
         return new ResponseEntity<>(new InternalErrorResponse(ex.getMessage()), HttpStatus.OK);

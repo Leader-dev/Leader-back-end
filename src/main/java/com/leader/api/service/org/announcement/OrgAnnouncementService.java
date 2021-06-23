@@ -2,6 +2,7 @@ package com.leader.api.service.org.announcement;
 
 import com.leader.api.data.org.announcement.*;
 import com.leader.api.data.org.member.OrgMemberInfoOverview;
+import com.leader.api.util.InternalErrorException;
 import com.leader.api.util.component.DateUtil;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,7 +68,7 @@ public class OrgAnnouncementService {
 
     public void assertIsSentToMember(ObjectId memberId, ObjectId announceId) {
         if (!isSentToMember(memberId, announceId)) {
-            throw new RuntimeException("Announcement is not sent to member.");
+            throw new InternalErrorException("Announcement is not sent to member.");
         }
     }
 

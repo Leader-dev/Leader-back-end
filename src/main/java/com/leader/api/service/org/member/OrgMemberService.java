@@ -5,6 +5,7 @@ import com.leader.api.data.org.member.OrgJoinedOverview;
 import com.leader.api.data.org.member.OrgMember;
 import com.leader.api.data.org.member.OrgMemberRepository;
 import com.leader.api.service.util.SecureService;
+import com.leader.api.util.InternalErrorException;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,7 +37,7 @@ public class OrgMemberService {
 
     private OrgMember insertNewMembership(ObjectId organizationId, ObjectId userid) {
         if (isMember(organizationId, userid)) {
-            throw new RuntimeException("Already in organization");
+            throw new InternalErrorException("Already in organization");
         }
         OrgMember orgMembership = new OrgMember();
         orgMembership.numberId = secureService.generateRandomNumberId(MEMBER_NUMBER_ID_LENGTH);
@@ -63,7 +64,7 @@ public class OrgMemberService {
 
     public void assertIsMember(ObjectId organizationId, ObjectId userid) {
         if (!isMember(organizationId, userid)) {
-            throw new RuntimeException("User not in organization.");
+            throw new InternalErrorException("User not in organization.");
         }
     }
 

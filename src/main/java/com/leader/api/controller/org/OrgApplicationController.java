@@ -5,6 +5,7 @@ import com.leader.api.data.org.application.OrgApplicationForm;
 import com.leader.api.data.org.application.OrgApplicationSentOverview;
 import com.leader.api.service.org.application.OrgApplicationService;
 import com.leader.api.service.util.UserIdService;
+import com.leader.api.util.InternalErrorException;
 import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -88,7 +89,7 @@ public class OrgApplicationController {
         } else if (DECLINE_ACTION.equals(queryObject.action)) {
             applicationService.replyToApplication(userid, queryObject.applicationId, DECLINE);
         } else {
-            throw new RuntimeException("Invalid action.");
+            throw new InternalErrorException("Invalid action.");
         }
 
         return new SuccessResponse();

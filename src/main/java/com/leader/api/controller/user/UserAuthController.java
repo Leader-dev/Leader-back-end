@@ -4,6 +4,7 @@ import com.leader.api.data.user.User;
 import com.leader.api.service.user.UserAuthService;
 import com.leader.api.service.util.AuthCodeService;
 import com.leader.api.service.util.PasswordService;
+import com.leader.api.service.util.PhoneValidatedService;
 import com.leader.api.service.util.UserIdService;
 import com.leader.api.util.response.ErrorResponse;
 import com.leader.api.util.response.SuccessResponse;
@@ -23,14 +24,17 @@ public class UserAuthController {
     private final AuthCodeService authCodeService;
     private final PasswordService passwordService;
     private final UserIdService userIdService;
+    private final PhoneValidatedService phoneValidatedService;
 
     @Autowired
     public UserAuthController(UserAuthService userAuthService, AuthCodeService authCodeService,
-                              PasswordService passwordService, UserIdService userIdService) {
+                              PasswordService passwordService, UserIdService userIdService,
+                              PhoneValidatedService phoneValidatedService) {
         this.userAuthService = userAuthService;
         this.authCodeService = authCodeService;
         this.passwordService = passwordService;
         this.userIdService = userIdService;
+        this.phoneValidatedService = phoneValidatedService;
     }
 
     public static class UserQueryObject {
@@ -157,8 +161,8 @@ public class UserAuthController {
         return response;
     }
 
-    @PostMapping("/changepassword")
-    public Document changePassword(@RequestBody UserQueryObject queryObject) {
+    @PostMapping("/check-authcode")
+    public Document checkAuthCode(@RequestBody UserQueryObject queryObject) {
         // check phone
         if (!userAuthService.phoneExists(queryObject.phone)) {
             return new ErrorResponse("phone_not_exist");
@@ -168,14 +172,24 @@ public class UserAuthController {
             return new ErrorResponse("authcode_incorrect");
         }
 
+        // delete authcode record
+        authCodeService.removeAuthCodeRecord(queryObject.phone);
+
+        phoneValidatedService.setPhoneValidated(queryObject.phone);
+
+        return new SuccessResponse();
+    }
+
+    @PostMapping("/change-password")
+    public Document changePassword(@RequestBody UserQueryObject queryObject) {
+        // check phone validated
+        phoneValidatedService.assertValidated(queryObject.phone);
+
         // decrypt password
         String password = passwordService.decrypt(queryObject.password);
 
         // update user
         userAuthService.updateUserPasswordByPhone(queryObject.phone, password);
-
-        // delete authcode record
-        authCodeService.removeAuthCodeRecord(queryObject.phone);
 
         return new SuccessResponse();
     }

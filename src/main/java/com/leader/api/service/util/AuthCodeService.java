@@ -14,9 +14,7 @@ public class AuthCodeService {
     private static final long AUTHCODE_EXPIRE = 300000;
 
     private final AuthCodeRecordRepository authCodeRecordRepository;
-
     private final SecureService secureService;
-
     private final DateUtil dateUtil;
 
     @Autowired

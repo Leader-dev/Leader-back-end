@@ -4,6 +4,7 @@ import com.leader.api.data.user.User;
 import com.leader.api.service.user.UserAuthService;
 import com.leader.api.service.util.AuthCodeService;
 import com.leader.api.service.util.PasswordService;
+import com.leader.api.service.util.PhoneValidatedService;
 import com.leader.api.service.util.UserIdService;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -48,6 +49,9 @@ public class UserAuthControllerTests {
 
     @MockBean
     private UserIdService userIdService;
+
+    @MockBean
+    private PhoneValidatedService phoneValidatedService;
 
     private UserAuthController.UserQueryObject queryObject;
     private Document response;
@@ -268,45 +272,57 @@ public class UserAuthControllerTests {
     }
 
     @Test
-    public void changePasswordTest() {
+    public void checkAuthCodeTest() {
         queryObject.phone = TEST_PHONE;
         queryObject.authcode = TEST_AUTHCODE;
-        queryObject.password = TEST_PASSWORD;
         when(userAuthService.phoneExists(TEST_PHONE)).thenReturn(true);
         when(authCodeService.validateAuthCode(TEST_PHONE, TEST_AUTHCODE)).thenReturn(true);
+
+        response = userAuthController.checkAuthCode(queryObject);
+
+        assertSuccessResponse(response);
+        verify(authCodeService, times(1)).removeAuthCodeRecord(TEST_PHONE);
+        verify(phoneValidatedService, times(1)).setPhoneValidated(TEST_PHONE);
+    }
+
+    @Test
+    public void checkAuthCodePhoneNotExistTest() {
+        queryObject.phone = TEST_PHONE;
+        queryObject.password = TEST_PASSWORD;
+        when(userAuthService.phoneExists(TEST_PHONE)).thenReturn(false);
+
+        response = userAuthController.checkAuthCode(queryObject);
+
+        assertErrorResponse(response, "phone_not_exist");
+        verify(authCodeService, never()).removeAuthCodeRecord(TEST_PHONE);
+        verify(phoneValidatedService, never()).setPhoneValidated(TEST_PHONE);
+    }
+
+    @Test
+    public void checkAuthCodeIncorrectTest() {
+        queryObject.phone = TEST_PHONE;
+        queryObject.authcode = TEST_AUTHCODE;
+        when(userAuthService.phoneExists(TEST_PHONE)).thenReturn(true);
+        when(authCodeService.validateAuthCode(TEST_PHONE, TEST_AUTHCODE)).thenReturn(false);
+
+        response = userAuthController.checkAuthCode(queryObject);
+
+        assertErrorResponse(response, "authcode_incorrect");
+        verify(authCodeService, never()).removeAuthCodeRecord(TEST_PHONE);
+        verify(phoneValidatedService, never()).setPhoneValidated(TEST_PHONE);
+    }
+
+    @Test
+    public void changePasswordTest() {
+        queryObject.phone = TEST_PHONE;
+        queryObject.password = TEST_PASSWORD;
+        doNothing().when(phoneValidatedService).assertValidated(TEST_PHONE);
         when(passwordService.decrypt(TEST_PASSWORD)).thenReturn(TEST_PASSWORD);
 
         response = userAuthController.changePassword(queryObject);
 
         assertSuccessResponse(response);
         verify(userAuthService, times(1)).updateUserPasswordByPhone(TEST_PHONE, TEST_PASSWORD);
-        verify(authCodeService, times(1)).removeAuthCodeRecord(TEST_PHONE);
-        clearInvocations(userAuthService);
-    }
-
-    @Test
-    public void changePasswordPhoneNotExistTest() {
-        queryObject.phone = TEST_PHONE;
-        queryObject.password = TEST_PASSWORD;
-        when(userAuthService.phoneExists(TEST_PHONE)).thenReturn(false);
-
-        response = userAuthController.changePassword(queryObject);
-
-        assertErrorResponse(response, "phone_not_exist");
-        verify(userAuthService, never()).updateUserPasswordByPhone(TEST_PHONE, TEST_PASSWORD);
-    }
-
-    @Test
-    public void changePasswordAuthCodeIncorrectTest() {
-        queryObject.phone = TEST_PHONE;
-        queryObject.authcode = TEST_AUTHCODE;
-        queryObject.password = TEST_PASSWORD;
-        when(userAuthService.phoneExists(TEST_PHONE)).thenReturn(true);
-        when(authCodeService.validateAuthCode(TEST_PHONE, TEST_AUTHCODE)).thenReturn(false);
-
-        response = userAuthController.changePassword(queryObject);
-
-        assertErrorResponse(response, "authcode_incorrect");
-        verify(userAuthService, never()).updateUserPasswordByPhone(TEST_PHONE, TEST_PASSWORD);
+        verify(phoneValidatedService, times(1)).assertValidated(TEST_PHONE);
     }
 }

@@ -2,6 +2,7 @@ package com.leader.api;
 
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.leader.api.service.org.member.OrgMemberIdService;
+import com.leader.api.service.org.member.OrgMemberService;
 import com.leader.api.service.util.UserIdService;
 import com.leader.api.util.InternalErrorException;
 import com.leader.api.util.UserAuthException;
@@ -36,12 +37,14 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public static String ORG_ID_PARAMETER_NAME = "orgId";
 
     private final UserIdService userIdService;
-    private final OrgMemberIdService orgMemberIdService;
+    private final OrgMemberIdService memberIdService;
+    private final OrgMemberService memberService;
 
     @Autowired
-    public WebMvcConfig(UserIdService userIdService, OrgMemberIdService orgMemberIdService) {
+    public WebMvcConfig(UserIdService userIdService, OrgMemberIdService memberIdService, OrgMemberService memberService) {
         this.userIdService = userIdService;
-        this.orgMemberIdService = orgMemberIdService;
+        this.memberIdService = memberIdService;
+        this.memberService = memberService;
     }
 
     @Override
@@ -76,7 +79,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
                             throw new InternalErrorException("Missing required parameter " + ORG_ID_PARAMETER_NAME + ".");
                         }
                         ObjectId orgId = new ObjectId(orgIdString);
-                        orgMemberIdService.setOrgId(orgId);
+                        ObjectId userId = userIdService.getCurrentUserId();
+                        memberService.assertIsMember(orgId, userId);
+                        memberIdService.setOrgId(orgId);
                         return true;
                     }
                 })

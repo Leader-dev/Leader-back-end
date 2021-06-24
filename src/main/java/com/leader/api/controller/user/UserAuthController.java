@@ -1,7 +1,7 @@
 package com.leader.api.controller.user;
 
 import com.leader.api.data.user.User;
-import com.leader.api.service.user.UserAuthService;
+import com.leader.api.service.user.UserService;
 import com.leader.api.service.util.AuthCodeService;
 import com.leader.api.service.util.PasswordService;
 import com.leader.api.service.util.PhoneValidatedService;
@@ -21,17 +21,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/user")
 public class UserAuthController {
 
-    private final UserAuthService userAuthService;
+    private final UserService userService;
     private final AuthCodeService authCodeService;
     private final PasswordService passwordService;
     private final UserIdService userIdService;
     private final PhoneValidatedService phoneValidatedService;
 
     @Autowired
-    public UserAuthController(UserAuthService userAuthService, AuthCodeService authCodeService,
+    public UserAuthController(UserService userService, AuthCodeService authCodeService,
                               PasswordService passwordService, UserIdService userIdService,
                               PhoneValidatedService phoneValidatedService) {
-        this.userAuthService = userAuthService;
+        this.userService = userService;
         this.authCodeService = authCodeService;
         this.passwordService = passwordService;
         this.userIdService = userIdService;
@@ -47,7 +47,7 @@ public class UserAuthController {
 
     @PostMapping("/exist")
     public Document userExist(@RequestBody UserQueryObject queryObject) {
-        boolean exist = userAuthService.phoneExists(queryObject.phone);
+        boolean exist = userService.phoneExists(queryObject.phone);
 
         Document response = new SuccessResponse();
         response.append("exist", exist);
@@ -88,7 +88,7 @@ public class UserAuthController {
     @PostMapping("/register")
     public Document registerUser(@RequestBody UserQueryObject queryObject) {
         // check phone
-        if (userAuthService.phoneExists(queryObject.phone)) {
+        if (userService.phoneExists(queryObject.phone)) {
             return new ErrorResponse("phone_exist");
         }
 
@@ -101,7 +101,7 @@ public class UserAuthController {
         String password = passwordService.decrypt(queryObject.password);
 
         // actually create user
-        User registeredUser = userAuthService.createUser(queryObject.phone, password, queryObject.nickname);
+        User registeredUser = userService.createUser(queryObject.phone, password, queryObject.nickname);
 
         // delete authcode record
         authCodeService.removeAuthCodeRecord(queryObject.phone);
@@ -115,7 +115,7 @@ public class UserAuthController {
     @PostMapping("/login")
     public Document login(@RequestBody UserQueryObject queryObject) {
         // check phone
-        if (!userAuthService.phoneExists(queryObject.phone)) {
+        if (!userService.phoneExists(queryObject.phone)) {
             return new ErrorResponse("user_not_exist");
         }
 
@@ -124,7 +124,7 @@ public class UserAuthController {
             String password = passwordService.decrypt(queryObject.password);
 
             // check password
-            if (!userAuthService.validateUser(queryObject.phone, password)) {
+            if (!userService.validateUser(queryObject.phone, password)) {
                 return new ErrorResponse("password_incorrect");
             }
         } else if (queryObject.authcode != null) {  // if chose to use phone authcode
@@ -140,7 +140,7 @@ public class UserAuthController {
         }
 
         // update session
-        ObjectId userid = userAuthService.getUserIdByPhone(queryObject.phone);
+        ObjectId userid = userService.getUserIdByPhone(queryObject.phone);
         userIdService.setCurrentUserId(userid);
 
         return new SuccessResponse();
@@ -165,7 +165,7 @@ public class UserAuthController {
     @PostMapping("/check-authcode")
     public Document checkAuthCode(@RequestBody UserQueryObject queryObject) {
         // check phone
-        if (!userAuthService.phoneExists(queryObject.phone)) {
+        if (!userService.phoneExists(queryObject.phone)) {
             return new ErrorResponse("phone_not_exist");
         }
         // check authcode
@@ -190,7 +190,7 @@ public class UserAuthController {
         String password = passwordService.decrypt(queryObject.password);
 
         // update user
-        userAuthService.updateUserPasswordByPhone(queryObject.phone, password);
+        userService.updateUserPasswordByPhone(queryObject.phone, password);
 
         return new SuccessResponse();
     }

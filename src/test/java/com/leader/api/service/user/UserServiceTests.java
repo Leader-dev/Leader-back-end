@@ -10,11 +10,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
-public class UserAuthServiceTests {
+public class UserServiceTests {
 
     private static final String TEST_NICKNAME = "Raymond";
     private static final String TEST_PHONE = "13360097989";
@@ -27,7 +29,7 @@ public class UserAuthServiceTests {
     private static final ObjectId TEST_USER_ID = new ObjectId();
 
     @Autowired
-    private UserAuthService authService;
+    private UserService userService;
 
     @MockBean
     private UserRepository userRepository;
@@ -39,7 +41,7 @@ public class UserAuthServiceTests {
     public void assertPhoneExistsTest() {
         when(userRepository.existsByPhone(TEST_PHONE)).thenReturn(true);
 
-        Executable action = () -> authService.assertPhoneExists(TEST_PHONE);
+        Executable action = () -> userService.assertPhoneExists(TEST_PHONE);
 
         assertDoesNotThrow(action);
     }
@@ -48,7 +50,7 @@ public class UserAuthServiceTests {
     public void assertPhoneNotExistsTest() {
         when(userRepository.existsByPhone(TEST_PHONE)).thenReturn(false);
 
-        Executable action = () -> authService.assertPhoneExists(TEST_PHONE);
+        Executable action = () -> userService.assertPhoneExists(TEST_PHONE);
 
         assertThrows(RuntimeException.class, action);
     }
@@ -57,7 +59,7 @@ public class UserAuthServiceTests {
     public void assertUidExistsTest() {
         when(userRepository.existsByUid(TEST_UID)).thenReturn(true);
 
-        Executable action = () -> authService.assertUidExists(TEST_UID);
+        Executable action = () -> userService.assertUidExists(TEST_UID);
 
         assertDoesNotThrow(action);
     }
@@ -66,7 +68,7 @@ public class UserAuthServiceTests {
     public void assertUidNotExistsTest() {
         when(userRepository.existsByUid(TEST_UID)).thenReturn(false);
 
-        Executable action = () -> authService.assertUidExists(TEST_UID);
+        Executable action = () -> userService.assertUidExists(TEST_UID);
 
         assertThrows(RuntimeException.class, action);
     }
@@ -77,7 +79,7 @@ public class UserAuthServiceTests {
         when(userRepository.existsByUid(any())).thenReturn(true, true, false);
         when(secureService.SHA1(any())).thenReturn(TEST_SHA1);
 
-        Executable action = () -> authService.createUser(TEST_PHONE, TEST_PASSWORD, TEST_NICKNAME);
+        Executable action = () -> userService.createUser(TEST_PHONE, TEST_PASSWORD, TEST_NICKNAME);
 
         assertDoesNotThrow(action);
         verify(userRepository, times(1)).count();
@@ -89,7 +91,7 @@ public class UserAuthServiceTests {
     public void createUserCapacityReachedTest() {
         when(userRepository.count()).thenReturn(50000010L);
 
-        Executable action = () -> authService.createUser(TEST_PHONE, TEST_PASSWORD, TEST_NICKNAME);
+        Executable action = () -> userService.createUser(TEST_PHONE, TEST_PASSWORD, TEST_NICKNAME);
 
         assertThrows(RuntimeException.class, action);
         verify(userRepository, never()).insert((User) any());
@@ -105,7 +107,7 @@ public class UserAuthServiceTests {
         when(secureService.generateRandomSalt(anyInt())).thenReturn(TEST_SALT);
         when(secureService.SHA1(TEST_PASSWORD + TEST_SALT)).thenReturn(TEST_SHA1);
 
-        boolean result = authService.validateUser(TEST_PHONE, TEST_PASSWORD);
+        boolean result = userService.validateUser(TEST_PHONE, TEST_PASSWORD);
 
         assertTrue(result);
         verify(secureService, times(1)).SHA1(TEST_PASSWORD + TEST_SALT);
@@ -121,7 +123,7 @@ public class UserAuthServiceTests {
         when(secureService.generateRandomSalt(anyInt())).thenReturn(TEST_SALT);
         when(secureService.SHA1(TEST_INCORRECT_PASSWORD + TEST_SALT)).thenReturn(TEST_INCORRECT_SHA1);
 
-        boolean result = authService.validateUser(TEST_PHONE, TEST_INCORRECT_PASSWORD);
+        boolean result = userService.validateUser(TEST_PHONE, TEST_INCORRECT_PASSWORD);
 
         assertFalse(result);
         verify(secureService, times(1)).SHA1(TEST_INCORRECT_PASSWORD + TEST_SALT);
@@ -133,7 +135,7 @@ public class UserAuthServiceTests {
         when(userRepository.findByPhone(TEST_PHONE)).thenReturn(new User());
         when(secureService.SHA1(any())).thenReturn(TEST_SHA1);
 
-        authService.updateUserPasswordByPhone(TEST_PHONE, TEST_PASSWORD);
+        userService.updateUserPasswordByPhone(TEST_PHONE, TEST_PASSWORD);
 
         verify(userRepository, times(1)).save(argThat(user1 -> user1.password.equals(TEST_SHA1)));
     }
@@ -145,8 +147,29 @@ public class UserAuthServiceTests {
         when(userRepository.existsByPhone(TEST_PHONE)).thenReturn(true);
         when(userRepository.findByPhone(TEST_PHONE)).thenReturn(user);
 
-        ObjectId result = authService.getUserIdByPhone(TEST_PHONE);
+        ObjectId result = userService.getUserIdByPhone(TEST_PHONE);
 
         assertEquals(TEST_USER_ID, result);
+    }
+
+    @Test
+    public void getUserInfoTest() {
+        User user = new User();
+        when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
+
+        User result = userService.getUserInfo(TEST_USER_ID);
+
+        assertEquals(result, user);
+    }
+
+    @Test
+    public void updateUserNicknameTest() {
+        User user = new User();
+        when(userRepository.findById(TEST_USER_ID)).thenReturn(Optional.of(user));
+
+        userService.updateNickname(TEST_USER_ID, TEST_NICKNAME);
+
+        assertEquals(TEST_NICKNAME, user.nickname);
+        verify(userRepository, times(1)).save(user);
     }
 }

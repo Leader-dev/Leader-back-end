@@ -1,6 +1,5 @@
 package com.leader.api.service.org.authorization;
 
-import com.leader.api.data.org.member.OrgMember;
 import com.leader.api.data.org.member.OrgMemberOverview;
 import com.leader.api.data.org.member.OrgMemberRepository;
 import com.leader.api.data.org.member.OrgMemberRole;
@@ -11,11 +10,8 @@ import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,15 +36,6 @@ public class OrgAuthorizationService {
 
     private List<OrgMemberRole> findRolesIn(ObjectId memberId) {
         return membershipRepository.lookupRolesByMemberId(memberId);
-    }
-
-    private void operateAndSaveMembership(OrgMember member, Consumer<OrgMember> callable) {
-        callable.accept(member);
-        membershipRepository.save(member);
-    }
-
-    private void operateAndSaveMembership(ObjectId memberId, Consumer<OrgMember> callable) {
-        membershipRepository.findById(memberId).ifPresent(member -> operateAndSaveMembership(member, callable));
     }
 
     public boolean hasAuthorityIn(OrgAuthority authority, ObjectId departmentId, ObjectId memberId) {
@@ -120,37 +107,5 @@ public class OrgAuthorizationService {
 
     public List<ObjectId> listManageableManagerIdsOfCurrentMember() {
         return listManageableManagersOfCurrentMember().stream().map(member -> member.id).collect(Collectors.toList());
-    }
-
-    // use when you want to erase all previous ones and set a completely new group of roles
-    public void setRolesIn(ObjectId memberId, OrgMemberRole... roles) {
-        operateAndSaveMembership(memberId, membership -> membership.roles = new ArrayList<>(Arrays.asList(roles)));
-    }
-
-    // use when you want to keep all previous ones and roles
-    public void addRoleIn(ObjectId memberId, OrgMemberRole... roles) {
-        operateAndSaveMembership(memberId, membership -> membership.roles.addAll(Arrays.asList(roles)));
-    }
-
-    // use when you want to update one specific role with the same name as given one
-    // if no role with same name, than insert the new role
-    // throws exception when multiple roles with same name is found
-    public void updateRoleDepartmentIdIn(ObjectId memberId, OrgMemberRole role) {
-        operateAndSaveMembership(memberId, membership -> {
-            OrgMemberRole existingRole = OrgRoleUtil.findRoleIn(membership.roles, role.name);
-            if (existingRole != null) {
-                membership.roles.remove(existingRole);
-            }
-            membership.roles.add(role);
-        });
-    }
-
-    // use when you want to remove all roles with specific names
-    public void removeRolesIn(ObjectId memberId, String... names) {
-        operateAndSaveMembership(memberId, membership -> {
-            for (String name: names) {
-                membership.roles.removeIf(role -> name.equals(role.name));
-            }
-        });
     }
 }

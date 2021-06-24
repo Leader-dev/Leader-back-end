@@ -5,7 +5,7 @@ import com.leader.api.data.org.department.OrgDepartmentRepository;
 import com.leader.api.data.org.member.OrgMember;
 import com.leader.api.data.org.member.OrgMemberRepository;
 import com.leader.api.data.org.member.OrgMemberRole;
-import com.leader.api.service.org.authorization.OrgAuthorizationService;
+import com.leader.api.service.org.authorization.OrgRoleService;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
@@ -16,13 +16,13 @@ import static com.leader.api.data.org.member.OrgMemberRole.*;
 @Service
 public class OrgStructureService extends OrgStructureQueryService {
 
-    private final OrgAuthorizationService authorizationService;
+    private final OrgRoleService roleService;
 
     public OrgStructureService(OrgDepartmentRepository departmentRepository,
                                OrgMemberRepository memberRepository,
-                               OrgAuthorizationService authorizationService) {
+                               OrgRoleService roleService) {
         super(memberRepository, departmentRepository);
-        this.authorizationService = authorizationService;
+        this.roleService = roleService;
     }
 
     public void createDepartment(ObjectId organizationId, ObjectId parentId, String name) {
@@ -44,19 +44,23 @@ public class OrgStructureService extends OrgStructureQueryService {
         departmentRepository.deleteById(departmentId);
     }
 
+    public void setMemberToPresident(ObjectId memberId) {
+        roleService.setRolesIn(memberId, president());
+    }
+
     public void setMemberToGeneralManager(ObjectId memberId) {
-        authorizationService.removeRolesIn(memberId, DEPARTMENT_MANAGER, MEMBER);
-        authorizationService.updateRoleDepartmentIdIn(memberId, generalManager());
+        roleService.removeRolesIn(memberId, DEPARTMENT_MANAGER, MEMBER);
+        roleService.updateRoleDepartmentIdIn(memberId, generalManager());
     }
 
     public void setMemberToDepartmentManager(ObjectId departmentId, ObjectId memberId) {
-        authorizationService.removeRolesIn(memberId, GENERAL_MANAGER);
-        authorizationService.updateRoleDepartmentIdIn(memberId, departmentManager(departmentId));
-        authorizationService.updateRoleDepartmentIdIn(memberId, member(departmentId));
+        roleService.removeRolesIn(memberId, GENERAL_MANAGER);
+        roleService.updateRoleDepartmentIdIn(memberId, departmentManager(departmentId));
+        roleService.updateRoleDepartmentIdIn(memberId, member(departmentId));
     }
 
     public void setMemberToMember(ObjectId departmentId, ObjectId memberId) {
-        authorizationService.removeRolesIn(memberId, GENERAL_MANAGER, DEPARTMENT_MANAGER);
-        authorizationService.updateRoleDepartmentIdIn(memberId, member(departmentId));
+        roleService.removeRolesIn(memberId, GENERAL_MANAGER, DEPARTMENT_MANAGER);
+        roleService.updateRoleDepartmentIdIn(memberId, member(departmentId));
     }
 }

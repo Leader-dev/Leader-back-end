@@ -9,18 +9,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UserAuthService {
+public class UserService {
 
     private static final int UID_LENGTH = 8;
     private static final long UID_LENGTH_CAPACITY = 50000000;
     private static final int SALT_LENGTH = 16;
 
     private final UserRepository userRepository;
-
     private final SecureService secureService;
 
     @Autowired
-    public UserAuthService(UserRepository userRepository, SecureService secureService) {
+    public UserService(UserRepository userRepository, SecureService secureService) {
         this.userRepository = userRepository;
         this.secureService = secureService;
     }
@@ -88,5 +87,16 @@ public class UserAuthService {
         assertPhoneExists(phone);
         User user = userRepository.findByPhone(phone);
         return user.id;
+    }
+
+    public User getUserInfo(ObjectId id) {
+        return userRepository.findById(id).orElse(null);
+    }
+
+    public void updateNickname(ObjectId id, String nickname) {
+        userRepository.findById(id).ifPresent(user -> {
+            user.nickname = nickname;
+            userRepository.save(user);
+        });
     }
 }

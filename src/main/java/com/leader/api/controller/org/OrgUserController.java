@@ -41,12 +41,17 @@ public class OrgUserController {
         this.reportService = reportService;
     }
 
+    public static class QueryObject {
+        OrgPublicInfo publicInfo;
+        OrgReport reportInfo;
+    }
+
     @PostMapping("/create")
-    public Document createOrganization(@RequestBody OrgPublicInfo newOrganization) {
+    public Document createOrganization(@RequestBody QueryObject queryObject) {
         ObjectId userid = userIdService.getCurrentUserId();
 
         // create and join organization
-        Organization organization = organizationService.createNewOrganization(newOrganization);
+        Organization organization = organizationService.createNewOrganization(queryObject.publicInfo);
         OrgMember member = membershipService.joinOrganization(organization.id, userid);
         authorizationService.setRolesIn(member.id, OrgMemberRole.president());
 
@@ -66,9 +71,9 @@ public class OrgUserController {
     }
 
     @PostMapping("/report")
-    public Document reportOrganization(@RequestBody OrgReport report) {
-        report.senderUserId = userIdService.getCurrentUserId();
-        reportService.sendReport(report);
+    public Document reportOrganization(@RequestBody QueryObject queryObject) {
+        queryObject.reportInfo.senderUserId = userIdService.getCurrentUserId();
+        reportService.sendReport(queryObject.reportInfo);
 
         return new SuccessResponse();
     }

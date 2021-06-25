@@ -67,7 +67,7 @@ public class OrgApplicationService {
 
             applicationRepository.insert(application);
         } else {
-            membershipService.joinOrganization(organizationId, userid);
+            membershipService.joinOrganization(organizationId, userid, null);
         }
     }
 
@@ -94,7 +94,7 @@ public class OrgApplicationService {
 
         if (ReplyAction.ACCEPT == action) {
             application.status = ACCEPTED;
-            membershipService.joinOrganization(application.orgId, userid);
+            membershipService.joinOrganization(application.orgId, userid, null);
         }
         if (ReplyAction.DECLINE == action) {
             application.status = DECLINED;

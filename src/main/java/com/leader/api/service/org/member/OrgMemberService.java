@@ -35,7 +35,7 @@ public class OrgMemberService {
         return membershipRepository.existsByOrgIdAndUserId(orgId, userId);
     }
 
-    private OrgMember insertNewMembership(ObjectId organizationId, ObjectId userid) {
+    private OrgMember insertNewMembership(ObjectId organizationId, ObjectId userid, String name) {
         if (isMember(organizationId, userid)) {
             throw new InternalErrorException("Already in organization");
         }
@@ -44,6 +44,7 @@ public class OrgMemberService {
         orgMembership.orgId = organizationId;
         orgMembership.userId = userid;
         orgMembership.roles = new ArrayList<>();
+        orgMembership.name = name;
         return membershipRepository.insert(orgMembership);
     }
 
@@ -72,8 +73,8 @@ public class OrgMemberService {
         return membershipRepository.lookupJoinedOrganizationsByUserId(userid);
     }
 
-    public OrgMember joinOrganization(ObjectId organizationId, ObjectId userId) {
-        OrgMember member = insertNewMembership(organizationId, userId);
+    public OrgMember joinOrganization(ObjectId organizationId, ObjectId userId, String name) {
+        OrgMember member = insertNewMembership(organizationId, userId, name);
         updateOrganizationMemberCount(organizationId);
         return member;
     }

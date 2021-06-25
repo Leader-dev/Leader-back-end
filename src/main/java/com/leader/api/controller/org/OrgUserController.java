@@ -9,6 +9,7 @@ import com.leader.api.service.org.OrganizationService;
 import com.leader.api.service.org.member.OrgMemberService;
 import com.leader.api.service.org.report.OrgReportService;
 import com.leader.api.service.org.structure.OrgStructureService;
+import com.leader.api.service.user.UserService;
 import com.leader.api.service.util.UserIdService;
 import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
@@ -25,15 +26,17 @@ import java.util.List;
 public class OrgUserController {
 
     private final UserIdService userIdService;
+    private final UserService userService;
     private final OrganizationService organizationService;
     private final OrgMemberService membershipService;
     private final OrgReportService reportService;
     private final OrgStructureService structureService;
 
-    public OrgUserController(UserIdService userIdService, OrganizationService organizationService,
+    public OrgUserController(UserIdService userIdService, UserService userService, OrganizationService organizationService,
                              OrgMemberService membershipService, OrgReportService reportService,
                              OrgStructureService structureService) {
         this.userIdService = userIdService;
+        this.userService = userService;
         this.organizationService = organizationService;
         this.membershipService = membershipService;
         this.reportService = reportService;
@@ -41,17 +44,18 @@ public class OrgUserController {
     }
 
     public static class QueryObject {
-        OrgPublicInfo publicInfo;
-        OrgReport reportInfo;
+        public OrgPublicInfo publicInfo;
+        public OrgReport reportInfo;
     }
 
     @PostMapping("/create")
     public Document createOrganization(@RequestBody QueryObject queryObject) {
         ObjectId userid = userIdService.getCurrentUserId();
+        String nickname = userService.getUserInfo(userid).nickname;
 
         // create and join organization
         Organization organization = organizationService.createNewOrganization(queryObject.publicInfo);
-        OrgMember member = membershipService.joinOrganization(organization.id, userid);
+        OrgMember member = membershipService.joinOrganization(organization.id, userid, nickname);
         structureService.setMemberToPresident(member.id);
 
         return new SuccessResponse();

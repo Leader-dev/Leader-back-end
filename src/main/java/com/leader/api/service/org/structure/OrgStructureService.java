@@ -1,5 +1,6 @@
 package com.leader.api.service.org.structure;
 
+import com.leader.api.data.org.OrganizationRepository;
 import com.leader.api.data.org.department.OrgDepartment;
 import com.leader.api.data.org.department.OrgDepartmentRepository;
 import com.leader.api.data.org.member.OrgMember;
@@ -16,13 +17,25 @@ import static com.leader.api.data.org.member.OrgMemberRole.*;
 @Service
 public class OrgStructureService extends OrgStructureQueryService {
 
+    private final OrganizationRepository organizationRepository;
     private final OrgRoleService roleService;
 
     public OrgStructureService(OrgDepartmentRepository departmentRepository,
                                OrgMemberRepository memberRepository,
+                               OrganizationRepository organizationRepository,
                                OrgRoleService roleService) {
         super(memberRepository, departmentRepository);
+        this.organizationRepository = organizationRepository;
         this.roleService = roleService;
+    }
+
+    public void updatePresidentInfo(ObjectId orgId) {
+        OrgMemberRole role = president();
+        OrgMember member = memberRepository.findByOrgIdAndRolesContaining(orgId, role).get(0);
+        organizationRepository.findById(orgId).ifPresent(organization -> {
+            organization.presidentName = member.name;
+            organizationRepository.save(organization);
+        });
     }
 
     public void createDepartment(ObjectId organizationId, ObjectId parentId, String name) {
@@ -45,7 +58,10 @@ public class OrgStructureService extends OrgStructureQueryService {
     }
 
     public void setMemberToPresident(ObjectId memberId) {
-        roleService.setRolesIn(memberId, president());
+        memberRepository.findById(memberId).ifPresent(member -> {
+            roleService.setRolesIn(memberId, president());
+            updatePresidentInfo(member.orgId);
+        });
     }
 
     public void setMemberToGeneralManager(ObjectId memberId) {

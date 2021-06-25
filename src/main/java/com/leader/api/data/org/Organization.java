@@ -21,6 +21,7 @@ public class Organization {
     public Long memberCount;
     public String status;
     public String addressAuth;
+    public String presidentName;
 
     // info
     public String name;

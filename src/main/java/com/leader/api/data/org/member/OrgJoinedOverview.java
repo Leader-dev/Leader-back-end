@@ -14,5 +14,6 @@ public class OrgJoinedOverview {
     public String typeAlias;
     public String posterUrl;
     public String status;
+    public String presidentName;
     public Long memberCount;
 }

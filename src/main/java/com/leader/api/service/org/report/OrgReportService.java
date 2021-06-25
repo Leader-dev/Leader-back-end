@@ -17,11 +17,11 @@ public class OrgReportService {
     }
 
     public void sendReport(OrgReport report) {
-        organizationService.assertOrganizationExists(report.organizationId);
+        organizationService.assertOrganizationExists(report.orgId);
 
         // ensure id field is not set
         OrgReport newReport = new OrgReport();
-        newReport.organizationId = report.organizationId;
+        newReport.orgId = report.orgId;
         newReport.senderUserId = report.senderUserId;
         newReport.description = report.description;
         newReport.imageUrls = report.imageUrls;

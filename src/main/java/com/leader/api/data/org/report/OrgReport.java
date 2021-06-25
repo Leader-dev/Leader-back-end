@@ -11,7 +11,7 @@ public class OrgReport {
 
     @Id
     public ObjectId id;
-    public ObjectId organizationId;
+    public ObjectId orgId;
     public ObjectId senderUserId;
     public String description;
     public ArrayList<String> imageUrls;

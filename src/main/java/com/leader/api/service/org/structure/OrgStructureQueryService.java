@@ -6,6 +6,7 @@ import com.leader.api.data.org.member.OrgMember;
 import com.leader.api.data.org.member.OrgMemberOverview;
 import com.leader.api.data.org.member.OrgMemberRepository;
 import com.leader.api.data.org.member.OrgMemberRole;
+import com.leader.api.service.org.authorization.OrgRoleService;
 import com.leader.api.util.InternalErrorException;
 import org.bson.types.ObjectId;
 import org.springframework.context.annotation.Primary;
@@ -26,13 +27,16 @@ public class OrgStructureQueryService {
 
     protected final OrgMemberRepository memberRepository;
     protected final OrgDepartmentRepository departmentRepository;
+    protected final OrgRoleService roleService;
 
     private final Function<OrgMember, OrgMemberOverview> mapper;
 
     public OrgStructureQueryService(OrgMemberRepository memberRepository,
-                                    OrgDepartmentRepository departmentRepository) {
+                                    OrgDepartmentRepository departmentRepository,
+                                    OrgRoleService roleService) {
         this.memberRepository = memberRepository;
         this.departmentRepository = departmentRepository;
+        this.roleService = roleService;
 
         this.mapper = membership -> {
             OrgMemberOverview overview = new OrgMemberOverview();
@@ -74,14 +78,14 @@ public class OrgStructureQueryService {
         }
     }
 
-    public boolean isNotPresident(ObjectId memberId) {
+    public boolean isPresident(ObjectId memberId) {
         OrgMemberRole role = OrgMemberRole.president();
-        return !memberRepository.existsByRolesContainingAndId(role, memberId);
+        return memberRepository.existsByRolesContainingAndId(role, memberId);
     }
 
     public boolean isAllNotPresident(List<ObjectId> memberIds) {
         for (ObjectId memberId : memberIds) {
-            if (!isNotPresident(memberId)) {
+            if (isPresident(memberId)) {
                 return false;
             }
         }
@@ -115,6 +119,14 @@ public class OrgStructureQueryService {
         return true;
     }
 
+    public OrgDepartment getMemberDepartment(ObjectId memberId) {
+        OrgMemberRole role = roleService.findRole(memberId, MEMBER);
+        if (role == null) {
+            return null;
+        }
+        return departmentRepository.findById(role.departmentId).orElse(null);
+    }
+
     public List<OrgDepartment> listDepartments(ObjectId organizationId, ObjectId parentId) {
         return departmentRepository.findByOrgIdAndParentId(organizationId, parentId);
     }
@@ -135,6 +147,6 @@ public class OrgStructureQueryService {
     }
 
     public List<OrgMemberOverview> searchMembers(ObjectId orgId, String searchText) {
-        return memberRepository.findByOrgIdAndNameContaining(orgId, searchText);
+        return memberRepository.findByOrgIdAndNameContaining(orgId, searchText, OrgMemberOverview.class);
     }
 }

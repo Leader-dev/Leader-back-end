@@ -1,9 +1,11 @@
 package com.leader.api.controller.org.manage;
 
 import com.leader.api.data.org.department.OrgDepartment;
+import com.leader.api.data.org.member.OrgMemberInfo;
 import com.leader.api.data.org.member.OrgMemberOverview;
 import com.leader.api.service.org.authorization.OrgAuthorizationService;
 import com.leader.api.service.org.member.OrgMemberIdService;
+import com.leader.api.service.org.member.OrgMemberInfoService;
 import com.leader.api.service.org.structure.OrgStructureService;
 import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
@@ -25,13 +27,16 @@ public class OrgStructureController {
     private final OrgAuthorizationService authorizationService;
     private final OrgStructureService structureService;
     private final OrgMemberIdService memberIdService;
+    private final OrgMemberInfoService memberInfoService;
 
     public OrgStructureController(OrgAuthorizationService authorizationService,
                                   OrgStructureService structureService,
-                                  OrgMemberIdService memberIdService) {
+                                  OrgMemberIdService memberIdService,
+                                  OrgMemberInfoService memberInfoService) {
         this.authorizationService = authorizationService;
         this.structureService = structureService;
         this.memberIdService = memberIdService;
+        this.memberInfoService = memberInfoService;
     }
 
     public static class QueryObject {
@@ -41,6 +46,7 @@ public class OrgStructureController {
         public ObjectId memberId;
         public String name;
         public String searchText;
+        public String title;
     }
 
     @PostMapping("/list-members")
@@ -77,6 +83,17 @@ public class OrgStructureController {
 
         Document response = new SuccessResponse();
         response.append("members", members);
+        return response;
+    }
+
+    @PostMapping("/member-info")
+    public Document showMemberInfo(@RequestBody QueryObject queryObject) {
+        authorizationService.assertCurrentMemberHasAuthority(BASIC);
+
+        OrgMemberInfo info = memberInfoService.getMemberInfo(queryObject.memberId);
+
+        Document response = new SuccessResponse();
+        response.append("memberInfo", info);
         return response;
     }
 
@@ -127,6 +144,15 @@ public class OrgStructureController {
 
         memberIdService.assertMemberInCurrentOrganization(queryObject.memberId);
         structureService.setMemberToMember(queryObject.departmentId, queryObject.memberId);
+
+        return new SuccessResponse();
+    }
+
+    @PostMapping("/update-title")
+    public Document updateMemberTitle(@RequestBody QueryObject queryObject) {
+        authorizationService.assertCurrentMemberHasAuthority(STRUCTURE_MANAGEMENT);
+
+        memberInfoService.updateMemberTitle(queryObject.memberId, queryObject.title);
 
         return new SuccessResponse();
     }

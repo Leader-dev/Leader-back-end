@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.Consumer;
 
 @Service
@@ -21,6 +22,10 @@ public class OrgRoleService {
         this.memberRepository = memberRepository;
     }
 
+    private List<OrgMemberRole> findRoles(ObjectId memberId) {
+        return memberRepository.lookupRolesByMemberId(memberId);
+    }
+
     private void operateAndSaveMembership(OrgMember member, Consumer<OrgMember> callable) {
         callable.accept(member);
         memberRepository.save(member);
@@ -30,13 +35,21 @@ public class OrgRoleService {
         memberRepository.findById(memberId).ifPresent(member -> operateAndSaveMembership(member, callable));
     }
 
+    public OrgMemberRole findRole(ObjectId memberId, String name) {
+        return OrgRoleUtil.findRoleIn(findRoles(memberId), name);
+    }
+
+    public boolean hasRole(ObjectId memberId, String name) {
+        return OrgRoleUtil.roleExistsIn(findRoles(memberId), name);
+    }
+
     // use when you want to erase all previous roles and set a completely new group of roles
     public void setRolesIn(ObjectId memberId, OrgMemberRole... roles) {
         operateAndSaveMembership(memberId, membership -> membership.roles = new ArrayList<>(Arrays.asList(roles)));
     }
 
     // use when you want to keep all previous roles and append a group of roles
-    public void addRoleIn(ObjectId memberId, OrgMemberRole... roles) {
+    public void addRolesIn(ObjectId memberId, OrgMemberRole... roles) {
         operateAndSaveMembership(memberId, membership -> membership.roles.addAll(Arrays.asList(roles)));
     }
 

@@ -18,23 +18,21 @@ import static com.leader.api.data.org.member.OrgMemberRole.*;
 public class OrgStructureService extends OrgStructureQueryService {
 
     private final OrganizationRepository organizationRepository;
-    private final OrgRoleService roleService;
 
     public OrgStructureService(OrgDepartmentRepository departmentRepository,
                                OrgMemberRepository memberRepository,
                                OrganizationRepository organizationRepository,
                                OrgRoleService roleService) {
-        super(memberRepository, departmentRepository);
+        super(memberRepository, departmentRepository, roleService);
         this.organizationRepository = organizationRepository;
-        this.roleService = roleService;
     }
 
-    public void updatePresidentInfo(ObjectId orgId) {
-        OrgMemberRole role = president();
-        OrgMember member = memberRepository.findByOrgIdAndRolesContaining(orgId, role).get(0);
-        organizationRepository.findById(orgId).ifPresent(organization -> {
-            organization.presidentName = member.name;
-            organizationRepository.save(organization);
+    public void setOrgPresidentInfo(ObjectId memberId) {
+        memberRepository.findById(memberId).ifPresent(member -> {
+            organizationRepository.findById(member.orgId).ifPresent(organization -> {
+                organization.presidentName = member.name;
+                organizationRepository.save(organization);
+            });
         });
     }
 
@@ -58,10 +56,12 @@ public class OrgStructureService extends OrgStructureQueryService {
     }
 
     public void setMemberToPresident(ObjectId memberId) {
-        memberRepository.findById(memberId).ifPresent(member -> {
-            roleService.setRolesIn(memberId, president());
-            updatePresidentInfo(member.orgId);
-        });
+        roleService.setRolesIn(memberId, president());
+        setOrgPresidentInfo(memberId);
+    }
+
+    public void removeMemberFromPresident(ObjectId memberId) {
+        roleService.removeRolesIn(memberId, PRESIDENT);
     }
 
     public void setMemberToGeneralManager(ObjectId memberId) {

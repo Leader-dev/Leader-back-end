@@ -121,7 +121,7 @@ public class OrgStructureQueryService {
 
     public OrgDepartment getMemberDepartment(ObjectId memberId) {
         OrgMemberRole role = roleService.findRole(memberId, MEMBER);
-        if (role == null) {
+        if (role == null || role.departmentId == null) {
             return null;
         }
         return departmentRepository.findById(role.departmentId).orElse(null);

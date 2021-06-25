@@ -47,26 +47,30 @@ public class OrgStructureService extends OrgStructureQueryService {
     public void deleteDepartment(ObjectId departmentId) {
         // remove all members of the department
         OrgMemberRole role = member(departmentId);
-        List<OrgMember> memberships = memberRepository.findByRolesContaining(role);
-        memberships.forEach(membership -> membership.roles.removeIf(role1 -> MEMBER.equals(role1.name)));
-        memberRepository.saveAll(memberships);
+        List<OrgMember> members = memberRepository.findByRolesContaining(role);
+        for (OrgMember member : members) {
+            member.roles.removeIf(role1 -> DEPARTMENT_MANAGER.equals(role1.name) || MEMBER.equals(role1.name));
+            member.roles.add(member());
+        }
+        memberRepository.saveAll(members);
 
         // remove department itself
         departmentRepository.deleteById(departmentId);
     }
 
     public void setMemberToPresident(ObjectId memberId) {
-        roleService.setRolesIn(memberId, president());
+        roleService.setRolesIn(memberId, president(), member());
         setOrgPresidentInfo(memberId);
     }
 
-    public void removeMemberFromPresident(ObjectId memberId) {
-        roleService.removeRolesIn(memberId, PRESIDENT);
+    public void setMemberToNoDepartmentMember(ObjectId memberId) {
+        roleService.setRolesIn(memberId, member());
     }
 
     public void setMemberToGeneralManager(ObjectId memberId) {
-        roleService.removeRolesIn(memberId, DEPARTMENT_MANAGER, MEMBER);
+        roleService.removeRolesIn(memberId, DEPARTMENT_MANAGER);
         roleService.updateRoleDepartmentIdIn(memberId, generalManager());
+        roleService.updateRoleDepartmentIdIn(memberId, member());
     }
 
     public void setMemberToDepartmentManager(ObjectId departmentId, ObjectId memberId) {

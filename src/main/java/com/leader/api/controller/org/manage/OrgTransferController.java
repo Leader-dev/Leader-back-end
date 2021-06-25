@@ -76,7 +76,7 @@ public class OrgTransferController {
 
         ObjectId memberId = memberIdService.getCurrentMemberId();
         structureService.setMemberToPresident(queryObject.newPresidentUserId);
-        structureService.removeMemberFromPresident(memberId);
+        structureService.setMemberToNoDepartmentMember(memberId);
 
         return new SuccessResponse();
     }

@@ -51,7 +51,7 @@ public class SecureServiceTests {
     public void generateRandomNumberIdTest() {
         when(randomUtil.nextDouble()).thenReturn(0.04238143619, 0.0148263143, 0.1273172389142);
 
-        String result = secureService.generateRandomNumberId(8);
+        String result = secureService.generateRandomNumberId(8, numberId -> false);
 
         assertEquals("12731723", result);
         verify(randomUtil, times(3)).nextDouble();

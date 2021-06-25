@@ -76,14 +76,13 @@ public class UserServiceTests {
     @Test
     public void createUserSuccessTest() {
         when(userRepository.count()).thenReturn(0L);
-        when(userRepository.existsByUid(any())).thenReturn(true, true, false);
+        when(secureService.generateRandomNumberId(anyInt(), any())).thenReturn(TEST_UID);
         when(secureService.SHA1(any())).thenReturn(TEST_SHA1);
 
         Executable action = () -> userService.createUser(TEST_PHONE, TEST_PASSWORD, TEST_NICKNAME);
 
         assertDoesNotThrow(action);
         verify(userRepository, times(1)).count();
-        verify(userRepository, times(3)).existsByUid(any());
         verify(userRepository, times(1)).insert(argThat((User user) -> user.password.equals(TEST_SHA1)));
     }
 

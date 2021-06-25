@@ -3,6 +3,7 @@ package com.leader.api.service.org;
 import com.leader.api.data.org.OrgPublicInfo;
 import com.leader.api.data.org.Organization;
 import com.leader.api.data.org.OrganizationRepository;
+import com.leader.api.service.util.SecureService;
 import com.leader.api.util.InternalErrorException;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,11 +12,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class OrganizationService {
 
+    public static final int ORG_NUMBER_ID_LENGTH = 6;
+
     private final OrganizationRepository organizationRepository;
+    private final SecureService secureService;
 
     @Autowired
-    public OrganizationService(OrganizationRepository organizationRepository) {
+    public OrganizationService(OrganizationRepository organizationRepository, SecureService secureService) {
         this.organizationRepository = organizationRepository;
+        this.secureService = secureService;
     }
 
     private void copyValidItemsTo(Organization target, OrgPublicInfo source) {
@@ -49,7 +54,10 @@ public class OrganizationService {
         Organization org = copyValidItems(newOrganization);
 
         // set items
-        // TODO Generate number ID
+        org.numberId = secureService.generateRandomNumberId(
+                ORG_NUMBER_ID_LENGTH,
+                organizationRepository::existsByNumberId
+        );
         org.status = "pending";  // must be pending state
         org.memberCount = 0L;  // no member is initially in the organization
 

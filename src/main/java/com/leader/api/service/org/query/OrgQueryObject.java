@@ -1,10 +1,8 @@
 package com.leader.api.service.org.query;
 
-import org.bson.types.ObjectId;
-
 public class OrgQueryObject {
 
-    public ObjectId orgId;
+    public String numberId;
     public String queryName;
     public String typeAlias;
     public Long minMemberCount;

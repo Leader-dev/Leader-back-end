@@ -10,6 +10,7 @@ import com.leader.api.service.org.query.OrgQueryService;
 import com.leader.api.util.response.ErrorResponse;
 import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,6 +35,10 @@ public class OrgCommonController {
         this.organizationService = organizationService;
         this.typeService = typeService;
         this.queryService = queryService;
+    }
+
+    public static class QueryObject {
+        public ObjectId orgId;
     }
 
     @PostMapping("/types")
@@ -71,7 +76,7 @@ public class OrgCommonController {
     }
 
     @PostMapping("/detail")
-    public Document organizationDetail(@RequestBody OrgQueryObject queryObject) {
+    public Document organizationDetail(@RequestBody QueryObject queryObject) {
         // find organization
         Organization detail = organizationService.getOrganization(queryObject.orgId);
         if (detail == null) {

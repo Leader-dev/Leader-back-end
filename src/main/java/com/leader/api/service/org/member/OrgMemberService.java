@@ -40,7 +40,10 @@ public class OrgMemberService {
             throw new InternalErrorException("Already in organization");
         }
         OrgMember orgMembership = new OrgMember();
-        orgMembership.numberId = secureService.generateRandomNumberId(MEMBER_NUMBER_ID_LENGTH);
+        orgMembership.numberId = secureService.generateRandomNumberId(
+                MEMBER_NUMBER_ID_LENGTH,
+                membershipRepository::existsByNumberId
+        );
         orgMembership.orgId = organizationId;
         orgMembership.userId = userid;
         orgMembership.roles = new ArrayList<>();

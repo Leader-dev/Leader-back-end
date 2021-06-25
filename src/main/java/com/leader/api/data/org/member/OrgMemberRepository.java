@@ -8,6 +8,8 @@ import java.util.List;
 
 public interface OrgMemberRepository extends MongoRepository<OrgMember, ObjectId> {
 
+    boolean existsByNumberId(String numberId);
+
     List<OrgMember> findAllByOrgId(ObjectId organizationId);
 
     long countByOrgId(ObjectId organizationId);

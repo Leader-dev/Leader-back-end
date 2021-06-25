@@ -28,11 +28,10 @@ public class UserService {
         if (userRepository.count() > UID_LENGTH_CAPACITY) {
             throw new InternalErrorException("Uid length capacity exceeded");
         }
-        String generated;
-        do {  // ensure that generated uid doesn't exist
-            generated = secureService.generateRandomNumberId(UID_LENGTH);
-        } while (uidExists(generated));
-        return generated;
+        return secureService.generateRandomNumberId(
+                UID_LENGTH,
+                this::uidExists
+        );
     }
 
     public boolean uidExists(String uid) {

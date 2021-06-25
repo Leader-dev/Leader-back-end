@@ -11,6 +11,8 @@ public interface OrganizationRepository extends MongoRepository<Organization, Ob
 
     Organization findByNumberId(String numberId);
 
+    boolean existsByNumberId(String numberId);
+
     Organization findByIdAndStatus(ObjectId id, String status);
 
     <T> T findFirstById(ObjectId id);

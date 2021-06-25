@@ -30,6 +30,9 @@ public class OrgQueryService {
     public Page<OrgLobbyOverview> findRunningOrganizationsByQueryObject(OrgQueryObject queryObject) {
         Document query = new Document();
         query.append("status", "running");
+        if (queryObject.numberId != null) {
+            query.append("numberId", queryObject.queryName);
+        }
         if (queryObject.queryName != null) {
             query.append("name", new Regex(".*" + queryObject.queryName + ".*"));
         }

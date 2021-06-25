@@ -8,6 +8,7 @@ import javax.crypto.Cipher;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.util.Base64;
+import java.util.function.Predicate;
 
 import static com.leader.api.util.ExceptionUtil.ignoreException;
 
@@ -52,12 +53,12 @@ public class SecureService {
         });
     }
 
-    public String generateRandomNumberId(int length) {
+    public String generateRandomNumberId(int length, Predicate<String> regenerate) {
         String generated;
         do {  // ensure that first digit is not 0
             double randomNumber = randomUtil.nextDouble();
             generated = String.valueOf(randomNumber).substring(2, 2 + length);
-        } while (generated.startsWith("0"));
+        } while (generated.startsWith("0") || regenerate.test(generated));
         return generated;
     }
 

@@ -1,11 +1,12 @@
 package com.leader.api.controller.org.manage;
 
-import com.leader.api.data.org.OrgApplicationScheme;
-import com.leader.api.data.org.Organization;
-import com.leader.api.data.org.OrganizationRepository;
+import com.leader.api.data.org.application.OrgApplicationDetail;
+import com.leader.api.data.org.application.OrgApplicationReceivedOverview;
+import com.leader.api.data.org.application.notification.OrgApplicationNotification;
+import com.leader.api.service.org.application.OrgApplicationManageService;
 import com.leader.api.service.org.authorization.OrgAuthorizationService;
 import com.leader.api.service.org.member.OrgMemberIdService;
-import com.leader.api.util.response.ErrorResponse;
+import com.leader.api.util.InternalErrorException;
 import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -15,44 +16,97 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import static com.leader.api.service.org.authorization.OrgAuthority.RECRUIT_SETTING;
+import java.util.List;
+
+import static com.leader.api.service.org.application.OrgApplicationManageService.ApplicationResult.PASS;
+import static com.leader.api.service.org.application.OrgApplicationManageService.ApplicationResult.REJECT;
+import static com.leader.api.service.org.authorization.OrgAuthority.RECRUIT;
 
 @RestController
 @RequestMapping("/org/manage/apply")
 public class OrgApplicationManageController {
 
-    private final OrganizationRepository organizationRepository;
+    public static final String PASS_RESULT = "pass";
+    public static final String REJECT_RESULT = "reject";
+
     private final OrgAuthorizationService authorizationService;
     private final OrgMemberIdService memberIdService;
+    private final OrgApplicationManageService applicationManageService;
 
     @Autowired
-    public OrgApplicationManageController(OrganizationRepository organizationRepository,
-                                          OrgAuthorizationService authorizationService,
-                                          OrgMemberIdService memberIdService) {
-        this.organizationRepository = organizationRepository;
+    public OrgApplicationManageController(OrgAuthorizationService authorizationService,
+                                          OrgMemberIdService memberIdService,
+                                          OrgApplicationManageService applicationManageService) {
         this.authorizationService = authorizationService;
         this.memberIdService = memberIdService;
+        this.applicationManageService = applicationManageService;
     }
 
-    private static class QueryObject {
-        OrgApplicationScheme scheme;
+    public static class QueryObject {
+        public ObjectId applicationId;
+        public OrgApplicationNotification notification;
+        public String result;
     }
 
-    @PostMapping("/updatescheme")
-    public Document updateApplicationScheme(@RequestBody QueryObject queryObject) {
-        authorizationService.assertCurrentMemberHasAuthority(
-                RECRUIT_SETTING,
-                null
-        );
+    @PostMapping("/list-received")
+    public Document listReceivedApplications() {
+        authorizationService.assertCurrentMemberHasAuthority(RECRUIT);
 
-        ObjectId orgId = memberIdService.getCurrentOrgId();
-        Organization organization = organizationRepository.findById(orgId).orElse(null);
-        if (organization == null) {
-            return new ErrorResponse("invalid_organization");
-        }
-        organization.applicationScheme = queryObject.scheme;
-        organizationRepository.save(organization);
+        ObjectId memberId = memberIdService.getCurrentMemberId();
+        List<OrgApplicationReceivedOverview> list = applicationManageService.listReceived(memberId);
+
+        Document response = new SuccessResponse();
+        response.append("list", list);
+        return response;
+    }
+
+    @PostMapping("/detail")
+    public Document getApplicationDetail(@RequestBody QueryObject queryObject) {
+        authorizationService.assertCurrentMemberHasAuthority(RECRUIT);
+
+        ObjectId memberId = memberIdService.getCurrentMemberId();
+        OrgApplicationDetail detail = applicationManageService.getDetail(memberId, queryObject.applicationId);
+
+        Document response = new SuccessResponse();
+        response.append("detail", detail);
+        return response;
+    }
+
+    @PostMapping("/send-notification")
+    public Document sendApplicationNotification(@RequestBody QueryObject queryObject) {
+        authorizationService.assertCurrentMemberHasAuthority(RECRUIT);
+
+        ObjectId memberId = memberIdService.getCurrentMemberId();
+        applicationManageService.sendNotification(memberId, queryObject.applicationId, queryObject.notification);
 
         return new SuccessResponse();
+    }
+
+    @PostMapping("/send-result")
+    public Document sendApplicationResult(@RequestBody QueryObject queryObject) {
+        authorizationService.assertCurrentMemberHasAuthority(RECRUIT);
+
+        ObjectId memberId = memberIdService.getCurrentMemberId();
+        if (PASS_RESULT.equals(queryObject.result)) {
+            applicationManageService.sendResult(memberId, queryObject.applicationId, PASS);
+        } else if (REJECT_RESULT.equals(queryObject.result)) {
+            applicationManageService.sendResult(memberId, queryObject.applicationId, REJECT);
+        } else {
+            throw new InternalErrorException("Invalid result.");
+        }
+
+        return new SuccessResponse();
+    }
+
+    @PostMapping("/list-operated")
+    public Document listOperatedApplications() {
+        authorizationService.assertCurrentMemberHasAuthority(RECRUIT);
+
+        ObjectId memberId = memberIdService.getCurrentMemberId();
+        List<OrgApplicationReceivedOverview> list = applicationManageService.listOperated(memberId);
+
+        Document response = new SuccessResponse();
+        response.append("list", list);
+        return response;
     }
 }

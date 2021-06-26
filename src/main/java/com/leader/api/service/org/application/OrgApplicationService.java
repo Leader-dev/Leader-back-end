@@ -4,14 +4,17 @@ import com.leader.api.data.org.Organization;
 import com.leader.api.data.org.application.*;
 import com.leader.api.data.org.department.OrgDepartment;
 import com.leader.api.data.org.department.OrgDepartmentRepository;
+import com.leader.api.data.org.member.OrgMember;
 import com.leader.api.service.org.OrganizationService;
 import com.leader.api.service.org.member.OrgMemberService;
+import com.leader.api.service.org.structure.OrgStructureService;
+import com.leader.api.service.user.UserService;
 import com.leader.api.util.InternalErrorException;
+import com.leader.api.util.component.DateUtil;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
 import java.util.List;
 
 import static com.leader.api.data.org.application.OrgApplication.*;
@@ -19,10 +22,15 @@ import static com.leader.api.data.org.application.OrgApplication.*;
 @Service
 public class OrgApplicationService {
 
+    public static final String NAME_QUESTION = "name";
+
     private final OrgDepartmentRepository departmentRepository;
     private final OrgApplicationRepository applicationRepository;
     private final OrganizationService organizationService;
     private final OrgMemberService membershipService;
+    private final OrgStructureService structureService;
+    private final UserService userService;
+    private final DateUtil dateUtil;
 
     public enum ReplyAction {
         ACCEPT,
@@ -33,28 +41,81 @@ public class OrgApplicationService {
     public OrgApplicationService(OrgDepartmentRepository departmentRepository,
                                  OrgApplicationRepository applicationRepository,
                                  OrganizationService organizationService,
-                                 OrgMemberService membershipService) {
+                                 OrgMemberService membershipService,
+                                 OrgStructureService structureService,
+                                 UserService userService,
+                                 DateUtil dateUtil) {
         this.departmentRepository = departmentRepository;
         this.applicationRepository = applicationRepository;
         this.organizationService = organizationService;
         this.membershipService = membershipService;
+        this.structureService = structureService;
+        this.userService = userService;
+        this.dateUtil = dateUtil;
     }
 
-    public void sendApplication(ObjectId organizationId, ObjectId departmentId, OrgApplicationForm applicationForm, ObjectId userid) {
-        organizationService.assertOrganizationExists(organizationId);
-        Organization organization = organizationService.getOrganization(organizationId);
-        if (!organization.applicationScheme.open) {
-            throw new InternalErrorException("Application not open");
+    private static String getNameFromApplicationForm(OrgApplicationForm applicationForm) {
+        if (applicationForm == null || applicationForm.size() == 0) {
+            return null;
         }
-        OrgDepartment department = departmentRepository.findById(departmentId).orElse(null);
-        if (organization.applicationScheme.appointDepartment && department == null) {
-            throw new InternalErrorException("Department not appointed");
+        for (OrgApplicationItem item : applicationForm) {
+            if (NAME_QUESTION.equals(item.question)) {
+                return item.answer;
+            }
+        }
+        return null;
+    }
+
+    private static boolean compareQuestions(OrgApplicationForm applicationForm, List<String> questions) {
+        if (applicationForm.size() != questions.size() + 1) {
+            return false;
+        }
+        for (int i = 0; i < questions.size(); i++) {
+            if (!applicationForm.get(i + 1).question.equals(questions.get(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void sendApplication(ObjectId orgId, ObjectId departmentId, OrgApplicationForm applicationForm, ObjectId userid) {
+        organizationService.assertOrganizationExists(orgId);
+        if (membershipService.isMember(orgId, userid)) {
+            throw new InternalErrorException("User already in organization.");
+        }
+        Organization organization = organizationService.getOrganization(orgId);
+        if (!organization.applicationScheme.open) {
+            throw new InternalErrorException("Application not open.");
+        }
+        if (organization.applicationScheme.maximumApplication != -1 &&
+                applicationRepository.countByOrgIdAndStatus(orgId, PENDING) >= organization.applicationScheme.maximumApplication) {
+            throw new InternalErrorException("Application full.");
+        }
+        String name;
+        if (organization.applicationScheme.requireQuestions) {
+            name = getNameFromApplicationForm(applicationForm);
+            if (name == null || !compareQuestions(applicationForm, organization.applicationScheme.questions)) {
+                throw new InternalErrorException("Invalid application questions.");
+            }
+        } else {
+            name = userService.getUserInfo(userid).nickname;
+        }
+        OrgDepartment department = null;
+        if (organization.applicationScheme.appointDepartment) {
+            if (departmentId == null) {
+                throw new InternalErrorException("Department not appointed.");
+            }
+            department = departmentRepository.findById(departmentId).orElse(null);
+            if (department == null) {
+                throw new InternalErrorException("Invalid department.");
+            }
         }
 
         if (organization.applicationScheme.auth) {
             OrgApplication application = new OrgApplication();
 
-            application.orgId = organizationId;
+            application.name = name;
+            application.orgId = orgId;
             application.applicantUserId = userid;
 
             if (department != null) {
@@ -62,22 +123,25 @@ public class OrgApplicationService {
             }
 
             application.applicationForm = applicationForm;
-            application.timestamp = new Date();
-            application.status = "pending";
+            application.sendDate = dateUtil.getCurrentDate();
+            application.status = PENDING;
 
             applicationRepository.insert(application);
         } else {
-            membershipService.joinOrganization(organizationId, userid, null);
+            membershipService.joinOrganization(orgId, userid, name);
         }
     }
 
     public List<OrgApplicationSentOverview> getSentApplications(ObjectId userid) {
-        return applicationRepository.findAllByApplicantUserIdIncludeInfo(userid, OrgApplicationSentOverview.class);
+        return applicationRepository.lookupByApplicantUserIdIncludeOrgInfo(userid, OrgApplicationSentOverview.class);
     }
 
     public OrgApplicationDetail getApplication(ObjectId userid, ObjectId applicationId) {
-        return applicationRepository.findByApplicantUserIdAndIdIncludeInfo(
-                userid, applicationId, OrgApplicationDetail.class);
+        OrgApplicationDetail detail = applicationRepository.lookupByIdIncludeInfo(applicationId);
+        if (!userid.equals(detail.applicantUserId)) {
+            throw new InternalErrorException("Invalid application.");
+        }
+        return detail;
     }
 
     public void replyToApplication(ObjectId userid, ObjectId applicationId, ReplyAction action) {
@@ -88,13 +152,16 @@ public class OrgApplicationService {
             throw new InternalErrorException("Application not exist.");
         }
 
-        if (PASSED.equals(application.status)) {
+        if (!PASSED.equals(application.status)) {
             throw new InternalErrorException("Application not passed.");
         }
 
         if (ReplyAction.ACCEPT == action) {
             application.status = ACCEPTED;
-            membershipService.joinOrganization(application.orgId, userid, null);
+            OrgMember member = membershipService.joinOrganization(application.orgId, userid, application.name);
+            if (application.departmentId != null) {
+                structureService.setMemberToMember(member.id, application.departmentId);
+            }
         }
         if (ReplyAction.DECLINE == action) {
             application.status = DECLINED;

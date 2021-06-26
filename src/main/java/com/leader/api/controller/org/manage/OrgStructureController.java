@@ -133,7 +133,7 @@ public class OrgStructureController {
         authorizationService.assertCurrentMemberHasAuthority(STRUCTURE_MANAGEMENT);
 
         memberIdService.assertMemberInCurrentOrganization(queryObject.memberId);
-        structureService.setMemberToDepartmentManager(queryObject.departmentId, queryObject.memberId);
+        structureService.setMemberToDepartmentManager(queryObject.memberId, queryObject.departmentId);
 
         return new SuccessResponse();
     }
@@ -143,7 +143,7 @@ public class OrgStructureController {
         authorizationService.assertCurrentMemberHasAuthority(STRUCTURE_MANAGEMENT);
 
         memberIdService.assertMemberInCurrentOrganization(queryObject.memberId);
-        structureService.setMemberToMember(queryObject.departmentId, queryObject.memberId);
+        structureService.setMemberToMember(queryObject.memberId, queryObject.departmentId);
 
         return new SuccessResponse();
     }

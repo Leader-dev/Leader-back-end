@@ -9,17 +9,20 @@ import java.util.Date;
 @Document(collection = "org_application")
 public class OrgApplication {
 
-    public static String PASSED = "passed";
     public static String PENDING = "pending";
+    public static String PASSED = "passed";
+    public static String REJECTED = "rejected";
     public static String ACCEPTED = "accepted";
     public static String DECLINED = "declined";
 
     @Id
     public ObjectId id;
     public ObjectId orgId;
+    public String name;
     public ObjectId applicantUserId;
     public ObjectId departmentId;
     public OrgApplicationForm applicationForm;
-    public Date timestamp;
+    public Date sendDate;
     public String status;
+    public ObjectId operateMemberId;
 }

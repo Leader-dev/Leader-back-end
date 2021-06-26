@@ -4,6 +4,7 @@ import com.leader.api.data.org.OrganizationRepository;
 import com.leader.api.data.org.member.OrgJoinedOverview;
 import com.leader.api.data.org.member.OrgMember;
 import com.leader.api.data.org.member.OrgMemberRepository;
+import com.leader.api.data.org.member.OrgMemberRole;
 import com.leader.api.service.util.SecureService;
 import com.leader.api.util.InternalErrorException;
 import org.bson.types.ObjectId;
@@ -48,6 +49,8 @@ public class OrgMemberService {
         orgMembership.userId = userid;
         orgMembership.roles = new ArrayList<>();
         orgMembership.name = name;
+        orgMembership.roles = new ArrayList<>();
+        orgMembership.roles.add(OrgMemberRole.member());
         return membershipRepository.insert(orgMembership);
     }
 
@@ -70,6 +73,14 @@ public class OrgMemberService {
         if (!isMember(organizationId, userid)) {
             throw new InternalErrorException("User not in organization.");
         }
+    }
+
+    public OrgMember getMember(ObjectId memberId) {
+        return membershipRepository.findById(memberId).orElse(null);
+    }
+
+    public ObjectId getOrgId(ObjectId memberId) {
+        return getMember(memberId).orgId;
     }
 
     public List<OrgJoinedOverview> findJoinedOrganizations(ObjectId userid) {

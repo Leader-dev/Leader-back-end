@@ -17,5 +17,5 @@ public class OrgApplicationNotification {
     public String content;
     public ArrayList<String> imageUrls;
     public boolean unread;
-    public Date timestamp;
+    public Date sendDate;
 }

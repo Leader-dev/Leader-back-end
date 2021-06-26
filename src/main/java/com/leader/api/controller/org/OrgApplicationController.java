@@ -38,11 +38,11 @@ public class OrgApplicationController {
     }
 
     private static class ApplyQueryObject {
-        ObjectId orgId;
-        ObjectId departmentId;
-        OrgApplicationForm applicationForm;
-        ObjectId applicationId;
-        String action;
+        public ObjectId orgId;
+        public ObjectId departmentId;
+        public OrgApplicationForm applicationForm;
+        public ObjectId applicationId;
+        public String action;
     }
 
     @PostMapping("/send")

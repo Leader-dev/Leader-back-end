@@ -13,8 +13,7 @@ import java.util.List;
 
 import static com.leader.api.data.org.member.OrgMemberRole.*;
 import static com.leader.api.service.org.authorization.OrgAuthority.*;
-import static com.leader.api.service.org.authorization.OrgRoleUtil.findRoleIn;
-import static com.leader.api.service.org.authorization.OrgRoleUtil.roleExistsInStrict;
+import static com.leader.api.service.org.authorization.OrgRoleUtil.*;
 
 @Service
 public class OrgRoleAuthorityService {
@@ -59,11 +58,11 @@ public class OrgRoleAuthorityService {
                 GENERAL_MANAGER_AUTHORITIES.contains(authority)) {
             return true;
         }
-        if (roleExistsInStrict(roles, OrgMemberRole.departmentManager(departmentId)) &&
+        if (roleExistsInStrict(roles, departmentManager(departmentId)) &&
                 DEPARTMENT_MANAGER_AUTHORITIES.contains(authority)) {
             return true;
         }
-        if (roleExistsInStrict(roles, OrgMemberRole.recruitManager(departmentId)) &&
+        if (roleExistsIn(roles, recruitManager()) &&
                 RECRUIT_MANAGER_AUTHORITIES.contains(authority)) {
             return true;
         }

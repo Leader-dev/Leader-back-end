@@ -10,8 +10,9 @@ public class OrgApplicationSentOverview {
 
     @Id
     public ObjectId id;
-    public ObjectId organizationId;
-    public OrgLobbyOverview organizationInfo;
-    public Date timestamp;
+    public ObjectId orgId;
+    public OrgLobbyOverview orgInfo;
+    public Date sendData;
+    public Integer unreadCount;
     public String status;
 }

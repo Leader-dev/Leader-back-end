@@ -1,5 +1,6 @@
 package com.leader.api.data.org.application;
 
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -24,11 +25,11 @@ public interface OrgApplicationRepository extends MongoRepository<OrgApplication
             "   $unwind: '$orgInfo'" +
             "}"
     })
-    <T> List<T> findAllByApplicantUserIdIncludeInfo(ObjectId applicationUserId, Class<T> type);
+    <T> List<T> lookupByApplicantUserIdIncludeOrgInfo(ObjectId applicationUserId, Class<T> type);
 
     @Aggregation(pipeline = {
             "{" +
-            "   $match: { applicantUserId: ?0, _id: ?1 }" +
+            "   $match: { _id: ?0 }" +
             "}",
             "{" +
             "   $lookup: {" +
@@ -48,13 +49,58 @@ public interface OrgApplicationRepository extends MongoRepository<OrgApplication
             "       foreignField: 'applicationId'" +
             "       as: 'notifications'" +
             "   }" +
-            "}",
+            "}"
     })
-    <T> T findByApplicantUserIdAndIdIncludeInfo(ObjectId applicationUserId, ObjectId id, Class<T> type);
+    OrgApplicationDetail lookupByIdIncludeInfo(ObjectId id);
+
+    @Aggregation(pipeline = {
+            "{" +
+            "   $match: ?0" +
+            "}",
+            "{" +
+            "   $lookup: {" +
+            "       from: 'user_list'," +
+            "       localField: 'applicantUserId'," +
+            "       foreignField: '_id'" +
+            "       as: 'applicantUserInfo'" +
+            "   }" +
+            "}",
+            "{" +
+            "   $unwind: '$applicantUserInfo'" +
+            "}",
+            "{" +
+            "   $lookup: {" +
+            "       from: 'org_member'," +
+            "       localField: 'operateMemberId'," +
+            "       foreignField: '_id'" +
+            "       as: 'operateMemberInfo'" +
+            "   }" +
+            "}",
+            "{" +
+            "   $set: { operateMemberInfo: { $first: '$operateMemberInfo' } }" +
+            "}"
+    })
+    List<OrgApplicationReceivedOverview> lookupByQuery(Document query);
 
     boolean existsByApplicantUserIdAndId(ObjectId applicationUserId, ObjectId id);
 
     OrgApplication findByApplicantUserIdAndId(ObjectId applicationUserId, ObjectId id);
 
     List<OrgApplication> findByOrgId(ObjectId orgId);
+
+    long countByOrgIdAndStatus(ObjectId orgId, String status);
+
+    default List<OrgApplicationReceivedOverview> lookupByOrgIdAndStatus(ObjectId orgId, String... status) {
+        Document query = new Document();
+        query.append("orgId", orgId);
+        query.append("status", new Document("$in", status));
+        return lookupByQuery(query);
+    }
+
+    default List<OrgApplicationReceivedOverview> lookupByDepartmentIdInAndStatus(List<ObjectId> departmentIds, String... status) {
+        Document query = new Document();
+        query.append("departmentId", new Document("$in", departmentIds));
+        query.append("status", new Document("$in", status));
+        return lookupByQuery(query);
+    }
 }

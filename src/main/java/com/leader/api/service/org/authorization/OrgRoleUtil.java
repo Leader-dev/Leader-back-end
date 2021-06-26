@@ -1,7 +1,10 @@
 package com.leader.api.service.org.authorization;
 
 import com.leader.api.data.org.member.OrgMemberRole;
+import org.bson.types.ObjectId;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class OrgRoleUtil {
@@ -13,6 +16,27 @@ public class OrgRoleUtil {
             }
         }
         return null;
+    }
+
+    public static List<OrgMemberRole> findAllRoleIn(List<OrgMemberRole> roles, String name) {
+        ArrayList<OrgMemberRole> list = new ArrayList<>();
+        for (OrgMemberRole role : roles) {
+            if (name.equals(role.name)) {
+                list.add(role);
+            }
+        }
+        return list;
+    }
+
+    public static List<ObjectId> findAllRoleDepartmentIds(List<OrgMemberRole> roles, String... names) {
+        ArrayList<ObjectId> list = new ArrayList<>();
+        List<String> nameList = Arrays.asList(names);
+        for (OrgMemberRole role : roles) {
+            if (nameList.contains(role.name) && !list.contains(role.departmentId)) {
+                list.add(role.departmentId);
+            }
+        }
+        return list;
     }
 
     public static boolean roleExistsIn(List<OrgMemberRole> roles, String name) {

@@ -39,8 +39,16 @@ public class OrgRoleService {
         return OrgRoleUtil.findRoleIn(findRoles(memberId), name);
     }
 
-    public boolean hasRole(ObjectId memberId, String name) {
-        return OrgRoleUtil.roleExistsIn(findRoles(memberId), name);
+    public List<ObjectId> findAllRoleDepartmentIds(ObjectId memberId, String... names) {
+        return OrgRoleUtil.findAllRoleDepartmentIds(findRoles(memberId), names);
+    }
+
+    public boolean hasRole(ObjectId memberId, String... names) {
+        return OrgRoleUtil.anyRoleExistIn(findRoles(memberId), names);
+    }
+
+    public boolean hasRole(ObjectId memberId, OrgMemberRole... roles) {
+        return OrgRoleUtil.anyRoleExistIn(findRoles(memberId), roles);
     }
 
     // use when you want to erase all previous roles and set a completely new group of roles
@@ -63,6 +71,14 @@ public class OrgRoleService {
                 membership.roles.remove(existingRole);
             }
             membership.roles.add(role);
+        });
+    }
+
+    public void removeRolesIn(ObjectId memberId, OrgMemberRole... roles) {
+        operateAndSaveMembership(memberId, membership -> {
+            for (OrgMemberRole role : roles) {
+                membership.roles.remove(role);
+            }
         });
     }
 

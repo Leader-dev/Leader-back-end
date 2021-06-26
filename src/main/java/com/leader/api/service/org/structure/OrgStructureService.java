@@ -73,13 +73,13 @@ public class OrgStructureService extends OrgStructureQueryService {
         roleService.updateRoleDepartmentIdIn(memberId, member());
     }
 
-    public void setMemberToDepartmentManager(ObjectId departmentId, ObjectId memberId) {
+    public void setMemberToDepartmentManager(ObjectId memberId, ObjectId departmentId) {
         roleService.removeRolesIn(memberId, GENERAL_MANAGER);
         roleService.updateRoleDepartmentIdIn(memberId, departmentManager(departmentId));
         roleService.updateRoleDepartmentIdIn(memberId, member(departmentId));
     }
 
-    public void setMemberToMember(ObjectId departmentId, ObjectId memberId) {
+    public void setMemberToMember(ObjectId memberId, ObjectId departmentId) {
         roleService.removeRolesIn(memberId, GENERAL_MANAGER, DEPARTMENT_MANAGER);
         roleService.updateRoleDepartmentIdIn(memberId, member(departmentId));
     }

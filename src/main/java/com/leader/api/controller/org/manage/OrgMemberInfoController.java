@@ -32,7 +32,6 @@ public class OrgMemberInfoController {
     }
 
     public static class QueryObject {
-        public ObjectId memberId;
         public OrgMemberInfo memberInfo;
     }
 

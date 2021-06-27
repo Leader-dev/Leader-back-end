@@ -1,7 +1,7 @@
 package com.leader.api.service.org.application;
 
 import com.leader.api.data.org.application.OrgApplication;
-import com.leader.api.data.org.application.OrgApplicationDetail;
+import com.leader.api.data.org.application.OrgApplicationReceivedDetail;
 import com.leader.api.data.org.application.OrgApplicationReceivedOverview;
 import com.leader.api.data.org.application.OrgApplicationRepository;
 import com.leader.api.data.org.application.notification.OrgApplicationNotification;
@@ -83,6 +83,18 @@ public class OrgApplicationManageService {
         throw new InternalErrorException("Invalid application.");
     }
 
+    public void assertCanSeeApplication(ObjectId memberId, ObjectId applicationId) {
+        OrgApplication application = applicationRepository.findById(applicationId).orElseThrow(
+                () -> new InternalErrorException("Invalid application."));
+        if (roleService.hasRole(memberId, PRESIDENT, GENERAL_MANAGER)) {
+            return;
+        }
+        if (getManageableDepartments(memberId).contains(application.departmentId)) {
+            return;
+        }
+        throw new InternalErrorException("Invalid application.");
+    }
+
     public List<OrgApplicationReceivedOverview> listReceived(ObjectId memberId) {
         if (roleService.hasRole(memberId, PRESIDENT)) {
             ObjectId orgId = findOrgIdOfMember(memberId);
@@ -92,9 +104,9 @@ public class OrgApplicationManageService {
         return applicationRepository.lookupByDepartmentIdInAndStatus(departmentIds, PENDING);
     }
 
-    public OrgApplicationDetail getDetail(ObjectId memberId, ObjectId applicationId) {
-        assertCanManageApplication(memberId, applicationId);
-        return applicationRepository.lookupByIdIncludeInfo(applicationId);
+    public OrgApplicationReceivedDetail getDetail(ObjectId memberId, ObjectId applicationId) {
+        assertCanSeeApplication(memberId, applicationId);
+        return applicationRepository.lookupByIdIncludeUserInfo(applicationId);
     }
 
     public void sendNotification(ObjectId memberId, ObjectId applicationId, OrgApplicationNotification notification) {

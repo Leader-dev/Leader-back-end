@@ -1,17 +1,15 @@
 package com.leader.api.data.org.application;
 
 import com.leader.api.data.org.application.notification.OrgApplicationNotification;
-import com.leader.api.data.org.department.OrgDepartment;
+import com.leader.api.data.org.department.OrgDepartmentOverview;
 import org.bson.types.ObjectId;
 
 import java.util.List;
 
-public class OrgApplicationDetail extends OrgApplicationSentOverview {
+public class OrgApplicationReceivedDetail extends OrgApplicationReceivedOverview {
 
-    public String name;
-    public ObjectId applicantUserId;
     public OrgApplicationForm applicationForm;
     public ObjectId departmentId;
-    public OrgDepartment departmentInfo;
+    public OrgDepartmentOverview departmentInfo;
     public List<OrgApplicationNotification> notifications;
 }

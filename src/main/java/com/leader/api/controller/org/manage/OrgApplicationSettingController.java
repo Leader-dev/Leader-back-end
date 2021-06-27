@@ -73,7 +73,7 @@ public class OrgApplicationSettingController {
         if (queryObject.departmentId != null) {
             memberId = settingService.getDepartmentRecruitManagerId(queryObject.departmentId);
         }
-        List<OrgDepartment> departments = structureService.listDepartments(orgId, queryObject.departmentId);
+        List<OrgDepartment> departments = structureService.listDepartments(orgId, queryObject.departmentId, OrgDepartment.class);
         List<OrgDepartmentRecruitInfo> departmentsInfo = settingService.getDepartmentsRecruitManagerInfo(departments);
 
         Document response = new SuccessResponse();

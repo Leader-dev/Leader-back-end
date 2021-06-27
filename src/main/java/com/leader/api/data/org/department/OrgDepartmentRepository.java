@@ -11,7 +11,7 @@ public interface OrgDepartmentRepository extends MongoRepository<OrgDepartment, 
 
     List<OrgDepartment> findByParentId(ObjectId parentId);
 
-    List<OrgDepartment> findByOrgIdAndParentId(ObjectId organizationId, ObjectId parentId);
+    <T> List<T> findByOrgIdAndParentId(ObjectId organizationId, ObjectId parentId, Class<T> type);
 
     boolean existsByOrgIdAndId(ObjectId organizationId, ObjectId id);
 }

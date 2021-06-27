@@ -14,8 +14,8 @@ public class OrgApplicationReceivedOverview {
     public String name;
     public ObjectId applicantUserId;
     public UserOverview applicantUserInfo;
+    public ObjectId operateMemberId;
     public OrgMemberInfoOverview operateMemberInfo;
     public Date sendDate;
     public String status;
-    public ObjectId operateMemberId;
 }

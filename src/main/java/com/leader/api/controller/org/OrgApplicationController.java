@@ -1,7 +1,7 @@
 package com.leader.api.controller.org;
 
-import com.leader.api.data.org.application.OrgApplicationDetail;
 import com.leader.api.data.org.application.OrgApplicationForm;
+import com.leader.api.data.org.application.OrgApplicationSentDetail;
 import com.leader.api.data.org.application.OrgApplicationSentOverview;
 import com.leader.api.service.org.application.OrgApplicationService;
 import com.leader.api.service.util.UserIdService;
@@ -37,16 +37,17 @@ public class OrgApplicationController {
         this.userIdService = userIdService;
     }
 
-    private static class ApplyQueryObject {
+    private static class QueryObject {
         public ObjectId orgId;
         public ObjectId departmentId;
         public OrgApplicationForm applicationForm;
         public ObjectId applicationId;
+        public ObjectId notificationId;
         public String action;
     }
 
     @PostMapping("/send")
-    public Document requestApplyForm(@RequestBody ApplyQueryObject queryObject) {
+    public Document requestApplyForm(@RequestBody QueryObject queryObject) {
         ObjectId userid = userIdService.getCurrentUserId();
         applicationService.sendApplication(
                 queryObject.orgId,
@@ -70,18 +71,27 @@ public class OrgApplicationController {
     }
 
     @PostMapping("/detail")
-    public Document applicationDetail(@RequestBody ApplyQueryObject queryObject) {
+    public Document applicationDetail(@RequestBody QueryObject queryObject) {
         ObjectId userid = userIdService.getCurrentUserId();
 
-        OrgApplicationDetail application = applicationService.getApplication(userid, queryObject.applicationId);
+        OrgApplicationSentDetail application = applicationService.getApplication(userid, queryObject.applicationId);
 
         Document response = new SuccessResponse();
         response.append("detail", application);
         return response;
     }
 
+    @PostMapping("/read-notification")
+    public Document readNotification(@RequestBody QueryObject queryObject) {
+        ObjectId userid = userIdService.getCurrentUserId();
+
+        applicationService.readNotification(userid, queryObject.notificationId);
+
+        return new SuccessResponse();
+    }
+
     @PostMapping("/reply")
-    public Document replyToApplication(@RequestBody ApplyQueryObject queryObject) {
+    public Document replyToApplication(@RequestBody QueryObject queryObject) {
         ObjectId userid = userIdService.getCurrentUserId();
 
         if (ACCEPT_ACTION.equals(queryObject.action)) {

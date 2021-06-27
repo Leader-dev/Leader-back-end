@@ -44,6 +44,17 @@ public interface OrgApplicationRepository extends MongoRepository<OrgApplication
             "}",
             "{" +
             "   $lookup: {" +
+            "       from: 'org_department'," +
+            "       localField: 'departmentId'," +
+            "       foreignField: '_id'" +
+            "       as: 'departmentInfo'" +
+            "   }" +
+            "}",
+            "{" +
+            "   $set: { departmentInfo: { $first: '$departmentInfo' } }" +
+            "}",
+            "{" +
+            "   $lookup: {" +
             "       from: 'org_application_notification'," +
             "       localField: '_id'," +
             "       foreignField: 'applicationId'" +
@@ -51,7 +62,55 @@ public interface OrgApplicationRepository extends MongoRepository<OrgApplication
             "   }" +
             "}"
     })
-    OrgApplicationDetail lookupByIdIncludeInfo(ObjectId id);
+    OrgApplicationSentDetail lookupByIdIncludeOrgInfo(ObjectId id);
+
+    @Aggregation(pipeline = {
+            "{" +
+            "   $match: { _id: ?0 }" +
+            "}",
+            "{" +
+            "   $lookup: {" +
+            "       from: 'user_list'," +
+            "       localField: 'applicantUserId'," +
+            "       foreignField: '_id'" +
+            "       as: 'applicantUserInfo'" +
+            "   }" +
+            "}",
+            "{" +
+            "   $unwind: '$applicantUserInfo'" +
+            "}",
+            "{" +
+            "   $lookup: {" +
+            "       from: 'org_department'," +
+            "       localField: 'departmentId'," +
+            "       foreignField: '_id'" +
+            "       as: 'departmentInfo'" +
+            "   }" +
+            "}",
+            "{" +
+            "   $set: { departmentInfo: { $first: '$departmentInfo' } }" +
+            "}",
+            "{" +
+            "   $lookup: {" +
+            "       from: 'org_member'," +
+            "       localField: 'operateMemberId'," +
+            "       foreignField: '_id'" +
+            "       as: 'operateMemberInfo'" +
+            "   }" +
+            "}",
+            "{" +
+            "   $set: { operateMemberInfo: { $first: '$operateMemberInfo' } }" +
+            "}",
+            "{" +
+            "   $lookup: {" +
+            "       from: 'org_application_notification'," +
+            "       localField: '_id'," +
+            "       foreignField: 'applicationId'" +
+            "       as: 'notifications'" +
+            "   }" +
+            "}"
+    })
+    OrgApplicationReceivedDetail lookupByIdIncludeUserInfo(ObjectId id);
 
     @Aggregation(pipeline = {
             "{" +

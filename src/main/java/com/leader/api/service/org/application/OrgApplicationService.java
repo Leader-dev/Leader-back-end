@@ -2,6 +2,7 @@ package com.leader.api.service.org.application;
 
 import com.leader.api.data.org.Organization;
 import com.leader.api.data.org.application.*;
+import com.leader.api.data.org.application.notification.OrgApplicationNotificationRepository;
 import com.leader.api.data.org.department.OrgDepartment;
 import com.leader.api.data.org.department.OrgDepartmentRepository;
 import com.leader.api.data.org.member.OrgMember;
@@ -26,6 +27,7 @@ public class OrgApplicationService {
 
     private final OrgDepartmentRepository departmentRepository;
     private final OrgApplicationRepository applicationRepository;
+    private final OrgApplicationNotificationRepository notificationRepository;
     private final OrganizationService organizationService;
     private final OrgMemberService membershipService;
     private final OrgStructureService structureService;
@@ -40,6 +42,7 @@ public class OrgApplicationService {
     @Autowired
     public OrgApplicationService(OrgDepartmentRepository departmentRepository,
                                  OrgApplicationRepository applicationRepository,
+                                 OrgApplicationNotificationRepository notificationRepository,
                                  OrganizationService organizationService,
                                  OrgMemberService membershipService,
                                  OrgStructureService structureService,
@@ -47,6 +50,7 @@ public class OrgApplicationService {
                                  DateUtil dateUtil) {
         this.departmentRepository = departmentRepository;
         this.applicationRepository = applicationRepository;
+        this.notificationRepository = notificationRepository;
         this.organizationService = organizationService;
         this.membershipService = membershipService;
         this.structureService = structureService;
@@ -136,12 +140,22 @@ public class OrgApplicationService {
         return applicationRepository.lookupByApplicantUserIdIncludeOrgInfo(userid, OrgApplicationSentOverview.class);
     }
 
-    public OrgApplicationDetail getApplication(ObjectId userid, ObjectId applicationId) {
-        OrgApplicationDetail detail = applicationRepository.lookupByIdIncludeInfo(applicationId);
+    public OrgApplicationSentDetail getApplication(ObjectId userid, ObjectId applicationId) {
+        OrgApplicationSentDetail detail = applicationRepository.lookupByIdIncludeOrgInfo(applicationId);
         if (!userid.equals(detail.applicantUserId)) {
             throw new InternalErrorException("Invalid application.");
         }
         return detail;
+    }
+
+    public void readNotification(ObjectId userid, ObjectId notificationId) {
+        notificationRepository.findById(notificationId).ifPresent(notification -> {
+            if (!applicationRepository.existsByApplicantUserIdAndId(userid, notification.applicationId)) {
+                throw new InternalErrorException("Invalid application.");
+            }
+            notification.unread = false;
+            notificationRepository.save(notification);
+        });
     }
 
     public void replyToApplication(ObjectId userid, ObjectId applicationId, ReplyAction action) {

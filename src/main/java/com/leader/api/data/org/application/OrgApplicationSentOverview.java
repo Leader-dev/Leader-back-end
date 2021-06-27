@@ -12,7 +12,7 @@ public class OrgApplicationSentOverview {
     public ObjectId id;
     public ObjectId orgId;
     public OrgLobbyOverview orgInfo;
-    public Date sendData;
+    public Date sendDate;
     public Integer unreadCount;
     public String status;
 }

@@ -1,6 +1,6 @@
 package com.leader.api.controller.org.manage;
 
-import com.leader.api.data.org.application.OrgApplicationDetail;
+import com.leader.api.data.org.application.OrgApplicationReceivedDetail;
 import com.leader.api.data.org.application.OrgApplicationReceivedOverview;
 import com.leader.api.data.org.application.notification.OrgApplicationNotification;
 import com.leader.api.service.org.application.OrgApplicationManageService;
@@ -65,7 +65,7 @@ public class OrgApplicationManageController {
         authorizationService.assertCurrentMemberHasAuthority(RECRUIT);
 
         ObjectId memberId = memberIdService.getCurrentMemberId();
-        OrgApplicationDetail detail = applicationManageService.getDetail(memberId, queryObject.applicationId);
+        OrgApplicationReceivedDetail detail = applicationManageService.getDetail(memberId, queryObject.applicationId);
 
         Document response = new SuccessResponse();
         response.append("detail", detail);

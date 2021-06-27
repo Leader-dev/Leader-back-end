@@ -127,8 +127,8 @@ public class OrgStructureQueryService {
         return departmentRepository.findById(role.departmentId).orElse(null);
     }
 
-    public List<OrgDepartment> listDepartments(ObjectId organizationId, ObjectId parentId) {
-        return departmentRepository.findByOrgIdAndParentId(organizationId, parentId);
+    public <T> List<T> listDepartments(ObjectId orgId, ObjectId parentId, Class<T> type) {
+        return departmentRepository.findByOrgIdAndParentId(orgId, parentId, type);
     }
 
     public List<OrgMemberOverview> listMembers(ObjectId orgId, ObjectId departmentId) {

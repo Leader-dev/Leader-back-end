@@ -1,6 +1,6 @@
 package com.leader.api.controller.org.manage;
 
-import com.leader.api.data.org.department.OrgDepartment;
+import com.leader.api.data.org.department.OrgDepartmentOverview;
 import com.leader.api.data.org.member.OrgMemberInfo;
 import com.leader.api.data.org.member.OrgMemberOverview;
 import com.leader.api.service.org.authorization.OrgAuthorizationService;
@@ -66,8 +66,8 @@ public class OrgStructureController {
         authorizationService.assertCurrentMemberHasAuthority(BASIC);
 
         ObjectId orgId = memberIdService.getCurrentOrgId();
-        List<OrgDepartment> departments =
-                structureService.listDepartments(orgId, queryObject.parentId);
+        List<OrgDepartmentOverview> departments =
+                structureService.listDepartments(orgId, queryObject.parentId, OrgDepartmentOverview.class);
 
         Document response = new SuccessResponse();
         response.append("departments", departments);
@@ -90,6 +90,7 @@ public class OrgStructureController {
     public Document showMemberInfo(@RequestBody QueryObject queryObject) {
         authorizationService.assertCurrentMemberHasAuthority(BASIC);
 
+        memberIdService.assertMemberInCurrentOrganization(queryObject.memberId);
         OrgMemberInfo info = memberInfoService.getMemberInfo(queryObject.memberId);
 
         Document response = new SuccessResponse();

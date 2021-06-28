@@ -84,11 +84,11 @@ public class OrgAnnouncementService {
     }
 
     public List<OrgAnnouncementOverview> listSentAnnouncements(ObjectId senderMemberId) {
-        return announcementRepository.findBySenderMemberId(senderMemberId);
+        return announcementRepository.findBySenderMemberId(senderMemberId, OrgAnnouncementOverview.class);
     }
 
     public List<OrgAnnouncementOverview> listSentAnnouncements(List<ObjectId> senderMemberIds) {
-        return announcementRepository.findBySenderMemberIdIsIn(senderMemberIds);
+        return announcementRepository.findBySenderMemberIdIsIn(senderMemberIds, OrgAnnouncementOverview.class);
     }
 
     public void sendAnnouncement(ObjectId senderMemberId, List<ObjectId> toMemberIds, OrgAnnouncementBasicInfo basicInfo) {

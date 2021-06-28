@@ -72,10 +72,10 @@ public class OrganizationService {
     }
 
     public Organization getOrganization(ObjectId organizationId) {
-        return organizationRepository.findFirstById(organizationId);
+        return organizationRepository.findFirstById(organizationId, Organization.class);
     }
 
     public OrgPublicInfo getPublicInfo(ObjectId organizationId) {
-        return organizationRepository.findFirstById(organizationId);
+        return organizationRepository.findFirstById(organizationId, OrgPublicInfo.class);
     }
 }

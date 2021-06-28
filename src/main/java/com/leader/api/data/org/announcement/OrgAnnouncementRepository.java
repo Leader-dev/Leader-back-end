@@ -8,9 +8,9 @@ import java.util.List;
 
 public interface OrgAnnouncementRepository extends MongoRepository<OrgAnnouncement, ObjectId> {
 
-    <T> List<T> findBySenderMemberId(ObjectId senderUserId);
+    <T> List<T> findBySenderMemberId(ObjectId senderUserId, Class<T> type);
 
-    <T> List<T> findBySenderMemberIdIsIn(List<ObjectId> senderUserIds);
+    <T> List<T> findBySenderMemberIdIsIn(List<ObjectId> senderUserIds, Class<T> type);
 
     boolean existsBySenderMemberIdAndId(ObjectId senderUserId, ObjectId announceId);
 

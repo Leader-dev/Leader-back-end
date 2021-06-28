@@ -15,7 +15,7 @@ public interface OrganizationRepository extends MongoRepository<Organization, Ob
 
     Organization findByIdAndStatus(ObjectId id, String status);
 
-    <T> T findFirstById(ObjectId id);
+    <T> T findFirstById(ObjectId id, Class<T> type);
 
     @Query("?0")
     <T> Page<T> findByQuery(

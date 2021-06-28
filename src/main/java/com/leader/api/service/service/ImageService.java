@@ -131,7 +131,32 @@ public class ImageService {
         return imageUrls;
     }
 
+    public void assertUploadedTempImage(String imageUrl) {
+        if (imageUrl == null)
+            return;
+
+        ObjectId userId = userIdService.getCurrentUserId();
+        if (!imageRecordRepository.existsByUploadUserIdAndImageUrlAndStatus(userId, imageUrl, TEMP)) {
+            throw new InternalErrorException("Image not uploaded.");
+        }
+    }
+
+    public void assertUploadedTempImages(List<String> imageUrls) {
+        if (imageUrls == null)
+            return;
+
+        ObjectId userId = userIdService.getCurrentUserId();
+        for (String imageUrl: imageUrls) {
+            if (imageRecordRepository.existsByUploadUserIdAndImageUrlAndStatus(userId, imageUrl, TEMP)) {
+                throw new InternalErrorException("Images not uploaded.");
+            }
+        }
+    }
+
     public void confirmUploadImage(String imageUrl) {
+        if (imageUrl == null)
+            return;
+
         ObjectId userId = userIdService.getCurrentUserId();
         ImageRecord record = imageRecordRepository.findByUploadUserIdAndImageUrlAndStatus(userId, imageUrl, TEMP);
         if (record == null) {
@@ -142,6 +167,9 @@ public class ImageService {
     }
 
     public void confirmUploadImages(List<String> imageUrls) {
+        if (imageUrls == null)
+            return;
+
         ObjectId userId = userIdService.getCurrentUserId();
         ArrayList<ImageRecord> records = new ArrayList<>();
         for (String imageUrl: imageUrls) {
@@ -156,10 +184,16 @@ public class ImageService {
     }
 
     public void deleteImage(String imageUrl) {
+        if (imageUrl == null)
+            return;
+
         deleteFile(imageUrl);
     }
 
     public void deleteImages(List<String> imageUrls) {
+        if (imageUrls == null)
+            return;
+
         CountDownLatch latch = new CountDownLatch(imageUrls.size());
         for (String imageUrl: imageUrls) {
             new Thread(() -> {

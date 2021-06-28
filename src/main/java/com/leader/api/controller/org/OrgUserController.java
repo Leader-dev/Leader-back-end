@@ -9,6 +9,7 @@ import com.leader.api.service.org.OrganizationService;
 import com.leader.api.service.org.member.OrgMemberService;
 import com.leader.api.service.org.report.OrgReportService;
 import com.leader.api.service.org.structure.OrgStructureService;
+import com.leader.api.service.service.ImageService;
 import com.leader.api.service.user.UserService;
 import com.leader.api.service.util.UserIdService;
 import com.leader.api.util.response.SuccessResponse;
@@ -31,16 +32,18 @@ public class OrgUserController {
     private final OrgMemberService membershipService;
     private final OrgReportService reportService;
     private final OrgStructureService structureService;
+    private final ImageService imageService;
 
     public OrgUserController(UserIdService userIdService, UserService userService, OrganizationService organizationService,
                              OrgMemberService membershipService, OrgReportService reportService,
-                             OrgStructureService structureService) {
+                             OrgStructureService structureService, ImageService imageService) {
         this.userIdService = userIdService;
         this.userService = userService;
         this.organizationService = organizationService;
         this.membershipService = membershipService;
         this.reportService = reportService;
         this.structureService = structureService;
+        this.imageService = imageService;
     }
 
     public static class QueryObject {
@@ -50,6 +53,8 @@ public class OrgUserController {
 
     @PostMapping("/create")
     public Document createOrganization(@RequestBody QueryObject queryObject) {
+        imageService.assertUploadedTempImage(queryObject.publicInfo.posterUrl);
+
         ObjectId userid = userIdService.getCurrentUserId();
         String nickname = userService.getUserInfo(userid).nickname;
 
@@ -57,6 +62,8 @@ public class OrgUserController {
         Organization organization = organizationService.createNewOrganization(queryObject.publicInfo);
         OrgMember member = membershipService.joinOrganization(organization.id, userid, nickname);
         structureService.setMemberToPresident(member.id);
+
+        imageService.confirmUploadImage(queryObject.publicInfo.posterUrl);
 
         return new SuccessResponse();
     }
@@ -75,8 +82,12 @@ public class OrgUserController {
 
     @PostMapping("/report")
     public Document reportOrganization(@RequestBody QueryObject queryObject) {
+        imageService.assertUploadedTempImages(queryObject.reportInfo.imageUrls);
+
         queryObject.reportInfo.senderUserId = userIdService.getCurrentUserId();
         reportService.sendReport(queryObject.reportInfo);
+
+        imageService.confirmUploadImages(queryObject.reportInfo.imageUrls);
 
         return new SuccessResponse();
     }

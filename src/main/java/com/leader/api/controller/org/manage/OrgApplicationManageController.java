@@ -6,6 +6,7 @@ import com.leader.api.data.org.application.notification.OrgApplicationNotificati
 import com.leader.api.service.org.application.OrgApplicationManageService;
 import com.leader.api.service.org.authorization.OrgAuthorizationService;
 import com.leader.api.service.org.member.OrgMemberIdService;
+import com.leader.api.service.service.ImageService;
 import com.leader.api.util.InternalErrorException;
 import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
@@ -32,14 +33,17 @@ public class OrgApplicationManageController {
     private final OrgAuthorizationService authorizationService;
     private final OrgMemberIdService memberIdService;
     private final OrgApplicationManageService applicationManageService;
+    private final ImageService imageService;
 
     @Autowired
     public OrgApplicationManageController(OrgAuthorizationService authorizationService,
                                           OrgMemberIdService memberIdService,
-                                          OrgApplicationManageService applicationManageService) {
+                                          OrgApplicationManageService applicationManageService,
+                                          ImageService imageService) {
         this.authorizationService = authorizationService;
         this.memberIdService = memberIdService;
         this.applicationManageService = applicationManageService;
+        this.imageService = imageService;
     }
 
     public static class QueryObject {
@@ -74,10 +78,14 @@ public class OrgApplicationManageController {
 
     @PostMapping("/send-notification")
     public Document sendApplicationNotification(@RequestBody QueryObject queryObject) {
+        imageService.assertUploadedTempImages(queryObject.notification.imageUrls);
+
         authorizationService.assertCurrentMemberHasAuthority(RECRUIT);
 
         ObjectId memberId = memberIdService.getCurrentMemberId();
         applicationManageService.sendNotification(memberId, queryObject.applicationId, queryObject.notification);
+
+        imageService.confirmUploadImages(queryObject.notification.imageUrls);
 
         return new SuccessResponse();
     }

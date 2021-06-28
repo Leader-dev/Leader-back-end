@@ -8,6 +8,7 @@ import com.leader.api.data.org.member.OrgMemberInfoOverview;
 import com.leader.api.service.org.announcement.OrgAnnouncementService;
 import com.leader.api.service.org.authorization.OrgAuthorizationService;
 import com.leader.api.service.org.member.OrgMemberIdService;
+import com.leader.api.service.service.ImageService;
 import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -29,13 +30,16 @@ public class OrgAnnouncementController {
     private final OrgAnnouncementService announcementService;
     private final OrgMemberIdService memberIdService;
     private final OrgAuthorizationService authorizationService;
+    private final ImageService imageService;
 
     public OrgAnnouncementController(OrgAnnouncementService announcementService,
                                      OrgMemberIdService memberIdService,
-                                     OrgAuthorizationService authorizationService) {
+                                     OrgAuthorizationService authorizationService,
+                                     ImageService imageService) {
         this.announcementService = announcementService;
         this.memberIdService = memberIdService;
         this.authorizationService = authorizationService;
+        this.imageService = imageService;
     }
 
     public static class QueryObject {
@@ -92,11 +96,17 @@ public class OrgAnnouncementController {
 
     @PostMapping("/send")
     public Document sendAnnouncement(@RequestBody QueryObject queryObject) {
+        imageService.assertUploadedTempImage(queryObject.announceInfo.coverUrl);
+        imageService.assertUploadedTempImages(queryObject.announceInfo.imageUrls);
+
         authorizationService.assertCurrentMemberHasAuthority(ANNOUNCEMENT_MANAGEMENT);
         authorizationService.assertCurrentMemberCanManageAllMembers(queryObject.toMemberIds);
 
         ObjectId memberId = memberIdService.getCurrentMemberId();
         announcementService.sendAnnouncement(memberId, queryObject.toMemberIds, queryObject.announceInfo);
+
+        imageService.confirmUploadImage(queryObject.announceInfo.coverUrl);
+        imageService.confirmUploadImages(queryObject.announceInfo.imageUrls);
 
         return new SuccessResponse();
     }
@@ -121,6 +131,9 @@ public class OrgAnnouncementController {
         OrgAnnouncement announcement = announcementService.getAnnouncement(queryObject.announceId);
         authorizationService.assertCurrentMemberCanManageMember(announcement.senderMemberId);
         announcementService.deleteAnnouncement(announcement.id);
+
+        imageService.deleteImage(announcement.coverUrl);
+        imageService.deleteImages(announcement.imageUrls);
 
         return new SuccessResponse();
     }

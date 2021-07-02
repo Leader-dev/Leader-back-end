@@ -9,7 +9,7 @@ import com.leader.api.data.org.member.OrgMember;
 import com.leader.api.service.org.OrganizationService;
 import com.leader.api.service.org.member.OrgMemberService;
 import com.leader.api.service.org.structure.OrgStructureService;
-import com.leader.api.service.user.UserService;
+import com.leader.api.service.user.UserInfoService;
 import com.leader.api.util.InternalErrorException;
 import com.leader.api.util.component.DateUtil;
 import org.bson.types.ObjectId;
@@ -31,7 +31,7 @@ public class OrgApplicationService {
     private final OrganizationService organizationService;
     private final OrgMemberService membershipService;
     private final OrgStructureService structureService;
-    private final UserService userService;
+    private final UserInfoService userInfoService;
     private final DateUtil dateUtil;
 
     public enum ReplyAction {
@@ -46,7 +46,7 @@ public class OrgApplicationService {
                                  OrganizationService organizationService,
                                  OrgMemberService membershipService,
                                  OrgStructureService structureService,
-                                 UserService userService,
+                                 UserInfoService userInfoService,
                                  DateUtil dateUtil) {
         this.departmentRepository = departmentRepository;
         this.applicationRepository = applicationRepository;
@@ -54,7 +54,7 @@ public class OrgApplicationService {
         this.organizationService = organizationService;
         this.membershipService = membershipService;
         this.structureService = structureService;
-        this.userService = userService;
+        this.userInfoService = userInfoService;
         this.dateUtil = dateUtil;
     }
 
@@ -102,7 +102,7 @@ public class OrgApplicationService {
                 throw new InternalErrorException("Invalid application questions.");
             }
         } else {
-            name = userService.getUserInfo(userid).nickname;
+            name = userInfoService.getUserNickname(userid);
         }
         OrgDepartment department = null;
         if (organization.applicationScheme.appointDepartment) {

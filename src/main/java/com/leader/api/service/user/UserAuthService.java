@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UserService {
+public class UserAuthService {
 
     private static final int UID_LENGTH = 8;
     private static final long UID_LENGTH_CAPACITY = 50000000;
@@ -19,7 +19,7 @@ public class UserService {
     private final SecureService secureService;
 
     @Autowired
-    public UserService(UserRepository userRepository, SecureService secureService) {
+    public UserAuthService(UserRepository userRepository, SecureService secureService) {
         this.userRepository = userRepository;
         this.secureService = secureService;
     }
@@ -88,14 +88,11 @@ public class UserService {
         return user.id;
     }
 
-    public User getUserInfo(ObjectId id) {
-        return userRepository.findById(id).orElse(null);
-    }
-
-    public void updateNickname(ObjectId id, String nickname) {
-        userRepository.findById(id).ifPresent(user -> {
-            user.nickname = nickname;
-            userRepository.save(user);
-        });
+    public String getUserPhoneById(ObjectId id) {
+        User user = userRepository.findById(id).orElse(null);
+        if (user == null) {
+            return null;
+        }
+        return user.phone;
     }
 }

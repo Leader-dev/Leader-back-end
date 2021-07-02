@@ -3,7 +3,7 @@ package com.leader.api.controller.org.manage;
 import com.leader.api.service.org.authorization.OrgAuthorizationService;
 import com.leader.api.service.org.member.OrgMemberIdService;
 import com.leader.api.service.org.structure.OrgStructureService;
-import com.leader.api.service.user.UserService;
+import com.leader.api.service.user.UserAuthService;
 import com.leader.api.service.util.AuthCodeService;
 import com.leader.api.service.util.PasswordService;
 import com.leader.api.service.util.UserIdService;
@@ -30,39 +30,39 @@ public class OrgTransferController {
     private final OrgMemberIdService memberIdService;
     private final AuthCodeService authCodeService;
     private final PasswordService passwordService;
-    private final UserService userService;
+    private final UserAuthService userAuthService;
 
     @Autowired
     public OrgTransferController(OrgAuthorizationService authorizationService, OrgStructureService structureService,
                                  UserIdService userIdService, OrgMemberIdService memberIdService,
                                  AuthCodeService authCodeService, PasswordService passwordService,
-                                 UserService userService) {
+                                 UserAuthService userAuthService) {
         this.authorizationService = authorizationService;
         this.structureService = structureService;
         this.userIdService = userIdService;
         this.memberIdService = memberIdService;
         this.authCodeService = authCodeService;
         this.passwordService = passwordService;
-        this.userService = userService;
+        this.userAuthService = userAuthService;
     }
 
     public static class QueryObject {
-        public ObjectId newPresidentUserId;
+        public ObjectId newPresidentMemberId;
         public String authcode;
         public String password;
     }
 
-    @PostMapping("/")
+    @PostMapping("/perform")
     public Document transferPresident(@RequestBody QueryObject queryObject) {
         authorizationService.assertCurrentMemberHasAuthority(PRESIDENT_TRANSFER);
-        authorizationService.assertCurrentMemberCanManageMember(queryObject.newPresidentUserId);
+        authorizationService.assertCurrentMemberCanManageMember(queryObject.newPresidentMemberId);
 
         ObjectId userId = userIdService.getCurrentUserId();
-        String phone = userService.getUserInfo(userId).phone;
+        String phone = userAuthService.getUserPhoneById(userId);
 
         if (queryObject.password != null) {
             String password = passwordService.decrypt(queryObject.password);
-            if (!userService.validateUser(phone, password)) {
+            if (!userAuthService.validateUser(phone, password)) {
                 return new ErrorResponse("password_incorrect");
             }
         } else if (queryObject.authcode != null) {
@@ -75,7 +75,7 @@ public class OrgTransferController {
         }
 
         ObjectId memberId = memberIdService.getCurrentMemberId();
-        structureService.setMemberToPresident(queryObject.newPresidentUserId);
+        structureService.setMemberToPresident(queryObject.newPresidentMemberId);
         structureService.setMemberToNoDepartmentMember(memberId);
 
         return new SuccessResponse();

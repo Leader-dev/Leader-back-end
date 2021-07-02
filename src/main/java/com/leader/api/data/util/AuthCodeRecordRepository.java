@@ -1,4 +1,4 @@
-package com.leader.api.data.user;
+package com.leader.api.data.util;
 
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.MongoRepository;

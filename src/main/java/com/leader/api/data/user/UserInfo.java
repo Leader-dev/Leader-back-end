@@ -2,18 +2,12 @@ package com.leader.api.data.user;
 
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "user_list")
-public class User {
+public class UserInfo {
 
     @Id
     public ObjectId id;
     public String uid;
-    public String password;
-    public String phone;
-    public String salt;
-
     public String nickname;
     public String portraitUrl;
 }

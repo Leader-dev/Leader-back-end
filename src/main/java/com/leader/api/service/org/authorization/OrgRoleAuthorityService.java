@@ -23,7 +23,7 @@ public class OrgRoleAuthorityService {
     private static final List<OrgAuthority> GENERAL_MANAGER_AUTHORITIES = Arrays.asList(
             ADMIN_FUNCTIONS,
             ATTENDANCE,
-            BULLETIN_MANAGEMENT,
+            ANNOUNCEMENT_MANAGEMENT,
             TIMELINE_MANAGEMENT,
             TASK,
             STRUCTURE_MANAGEMENT
@@ -32,6 +32,7 @@ public class OrgRoleAuthorityService {
     private static final List<OrgAuthority> DEPARTMENT_MANAGER_AUTHORITIES = Arrays.asList(
             ADMIN_FUNCTIONS,
             ATTENDANCE,
+            ANNOUNCEMENT_MANAGEMENT,
             TIMELINE_MANAGEMENT,
             TASK,
             STRUCTURE_MANAGEMENT

@@ -1,7 +1,7 @@
 package com.leader.api.service.util;
 
-import com.leader.api.data.user.AuthCodeRecord;
-import com.leader.api.data.user.AuthCodeRecordRepository;
+import com.leader.api.data.util.AuthCodeRecord;
+import com.leader.api.data.util.AuthCodeRecordRepository;
 import com.leader.api.util.component.DateUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

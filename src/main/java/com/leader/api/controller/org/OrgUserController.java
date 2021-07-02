@@ -10,7 +10,7 @@ import com.leader.api.service.org.member.OrgMemberService;
 import com.leader.api.service.org.report.OrgReportService;
 import com.leader.api.service.org.structure.OrgStructureService;
 import com.leader.api.service.service.ImageService;
-import com.leader.api.service.user.UserService;
+import com.leader.api.service.user.UserInfoService;
 import com.leader.api.service.util.UserIdService;
 import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
@@ -27,18 +27,18 @@ import java.util.List;
 public class OrgUserController {
 
     private final UserIdService userIdService;
-    private final UserService userService;
+    private final UserInfoService userInfoService;
     private final OrganizationService organizationService;
     private final OrgMemberService membershipService;
     private final OrgReportService reportService;
     private final OrgStructureService structureService;
     private final ImageService imageService;
 
-    public OrgUserController(UserIdService userIdService, UserService userService, OrganizationService organizationService,
+    public OrgUserController(UserIdService userIdService, UserInfoService userInfoService, OrganizationService organizationService,
                              OrgMemberService membershipService, OrgReportService reportService,
                              OrgStructureService structureService, ImageService imageService) {
         this.userIdService = userIdService;
-        this.userService = userService;
+        this.userInfoService = userInfoService;
         this.organizationService = organizationService;
         this.membershipService = membershipService;
         this.reportService = reportService;
@@ -56,7 +56,7 @@ public class OrgUserController {
         imageService.assertUploadedTempImage(queryObject.publicInfo.posterUrl);
 
         ObjectId userid = userIdService.getCurrentUserId();
-        String nickname = userService.getUserInfo(userid).nickname;
+        String nickname = userInfoService.getUserNickname(userid);
 
         // create and join organization
         Organization organization = organizationService.createNewOrganization(queryObject.publicInfo);

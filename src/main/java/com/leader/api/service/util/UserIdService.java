@@ -1,5 +1,6 @@
 package com.leader.api.service.util;
 
+import com.leader.api.util.UserAuthException;
 import com.leader.api.util.component.ClientDataUtil;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +23,11 @@ public class UserIdService {
     }
 
     public ObjectId getCurrentUserId() {
-        return clientDataUtil.get(USER_ID, ObjectId.class);
+        ObjectId userId = clientDataUtil.get(USER_ID, ObjectId.class);
+        if (userId == null) {
+            throw new UserAuthException();
+        }
+        return userId;
     }
 
     public void clearCurrentUserId() {

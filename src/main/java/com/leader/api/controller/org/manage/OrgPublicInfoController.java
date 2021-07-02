@@ -54,13 +54,23 @@ public class OrgPublicInfoController {
     public Document setPublicInfo(@RequestBody QueryObject queryObject) {
         authorizationService.assertCurrentMemberHasAuthority(PUBLIC_INFO_MANAGEMENT);
 
-        queryObject.publicInfo.posterUrl = imageService.getUploadedTempImage();
+        ObjectId orgId = orgMemberIdService.getCurrentOrgId();
+        organizationService.updateOrganizationPublicInfo(orgId, queryObject.publicInfo);
+
+        return new SuccessResponse();
+    }
+
+    @PostMapping("/set-poster")
+    public Document setPoster() {
+        authorizationService.assertCurrentMemberHasAuthority(PUBLIC_INFO_MANAGEMENT);
+
+        String posterUrl = imageService.getUploadedTempImage();
 
         ObjectId orgId = orgMemberIdService.getCurrentOrgId();
         String prevPosterUrl = organizationService.getPublicInfo(orgId).posterUrl;
-        organizationService.updateOrganizationPublicInfo(orgId, queryObject.publicInfo);
+        organizationService.updateOrganizationPoster(orgId, posterUrl);
 
-        imageService.confirmUploadImage(queryObject.publicInfo.posterUrl);
+        imageService.confirmUploadImage(posterUrl);
         imageService.deleteImage(prevPosterUrl);
 
         return new SuccessResponse();

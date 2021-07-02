@@ -31,51 +31,58 @@ public class OrganizationService {
         target.phone = source.phone;
         target.email = source.email;
         target.typeAliases = source.typeAliases;
-        target.posterUrl = source.posterUrl;
     }
 
     private Organization copyValidItems(OrgPublicInfo organization) {
-        Organization org = new Organization();
-        copyValidItemsTo(org, organization);
-        return org;
+        Organization newOrganization = new Organization();
+        copyValidItemsTo(newOrganization, organization);
+        return newOrganization;
     }
 
-    public boolean organizationExists(ObjectId organizationId) {
-        return organizationRepository.existsById(organizationId);
+    public boolean organizationExists(ObjectId orgId) {
+        return organizationRepository.existsById(orgId);
     }
 
-    public void assertOrganizationExists(ObjectId organizationId) {
-        if (!organizationExists(organizationId)) {
+    public void assertOrganizationExists(ObjectId orgId) {
+        if (!organizationExists(orgId)) {
             throw new InternalErrorException("Organization not exist");
         }
     }
 
-    public Organization createNewOrganization(OrgPublicInfo newOrganization) {
-        Organization org = copyValidItems(newOrganization);
+    public Organization createNewOrganization(OrgPublicInfo orgInfo) {
+        Organization newOrganization = copyValidItems(orgInfo);
+        newOrganization.posterUrl = orgInfo.posterUrl;
 
         // set items
-        org.numberId = secureService.generateRandomNumberId(
+        newOrganization.numberId = secureService.generateRandomNumberId(
                 ORG_NUMBER_ID_LENGTH,
                 organizationRepository::existsByNumberId
         );
-        org.status = "pending";  // must be pending state
-        org.memberCount = 0L;  // no member is initially in the organization
+        newOrganization.status = "pending";  // must be pending state
+        newOrganization.memberCount = 0L;  // no member is initially in the organization
 
-        return organizationRepository.insert(org);
+        return organizationRepository.insert(newOrganization);
     }
 
-    public void updateOrganizationPublicInfo(ObjectId organizationId, OrgPublicInfo publicInfo) {
-        organizationRepository.findById(organizationId).ifPresent(org -> {
-            copyValidItemsTo(org, publicInfo);
-            organizationRepository.save(org);
+    public void updateOrganizationPublicInfo(ObjectId orgId, OrgPublicInfo publicInfo) {
+        organizationRepository.findById(orgId).ifPresent(organization -> {
+            copyValidItemsTo(organization, publicInfo);
+            organizationRepository.save(organization);
         });
     }
 
-    public Organization getOrganization(ObjectId organizationId) {
-        return organizationRepository.findFirstById(organizationId, Organization.class);
+    public void updateOrganizationPoster(ObjectId orgId, String posterUrl) {
+        organizationRepository.findById(orgId).ifPresent(organization -> {
+            organization.posterUrl = posterUrl;
+            organizationRepository.save(organization);
+        });
     }
 
-    public OrgPublicInfo getPublicInfo(ObjectId organizationId) {
-        return organizationRepository.findFirstById(organizationId, OrgPublicInfo.class);
+    public Organization getOrganization(ObjectId orgId) {
+        return organizationRepository.findFirstById(orgId, Organization.class);
+    }
+
+    public OrgPublicInfo getPublicInfo(ObjectId orgId) {
+        return organizationRepository.findFirstById(orgId, OrgPublicInfo.class);
     }
 }

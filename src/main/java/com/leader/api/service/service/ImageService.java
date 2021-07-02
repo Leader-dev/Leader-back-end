@@ -17,7 +17,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.leader.api.data.service.ImageRecord.TEMP;
 import static com.leader.api.data.service.ImageRecord.USING;
@@ -53,104 +55,149 @@ public class ImageService {
         return true;
     }
 
-    private void uploadFile(ObjectId userId, String imageUrl, InputStream inputStream) {
-        resourceStorage.storeFile(imageUrl, inputStream);
+    private ImageRecord newRecord(ObjectId userId, String imageUrl) {
         ImageRecord record = new ImageRecord();
         record.uploadUserId = userId;
         record.imageUrl = imageUrl;
         record.status = TEMP;
-        imageRecordRepository.save(record);
+        return record;
     }
 
-    private void deleteFile(String imageUrl) {
+    private void deleteFileAndEraseRecord(String imageUrl) {
         resourceStorage.deleteFile(imageUrl);
         imageRecordRepository.deleteByImageUrl(imageUrl);
     }
 
-    public String uploadTempImage(MultipartFile file) throws IOException {
+    // atomic operation, success or fail
+    public void uploadTempImage(MultipartFile file) throws IOException {
         ObjectId userId = userIdService.getCurrentUserId();
         long count = imageRecordRepository.countByUploadUserIdAndStatus(userId, TEMP);
-        if (count >= MAXIMUM_TEMP_UPLOAD_COUNT) {
+
+        // check if file count is in range
+        if (count + 1 > MAXIMUM_TEMP_UPLOAD_COUNT) {
             throw new InternalErrorException("Too many temp images.");
         }
 
+        // check if file is valid
         if (extensionInvalid(file.getOriginalFilename())) {
             throw new InternalErrorException("Invalid image.");
         }
 
+        // generate new url
         String imageUrl;
         do {
             imageUrl = FILE_PREFIX + secureService.generateRandomSalt(RANDOM_SALT_LENGTH);
-        } while (resourceStorage.fileExists(imageUrl));
-        uploadFile(userId, imageUrl, file.getInputStream());
+        } while (imageRecordRepository.existsByImageUrl(imageUrl));
 
-        return imageUrl;
+        // upload
+        resourceStorage.storeFile(imageUrl, file.getInputStream());
+
+        // update database record
+        try {
+            imageRecordRepository.insert(newRecord(userId, imageUrl));
+        } catch (Exception e) {  // rollback if exception occur
+            e.printStackTrace();
+            deleteImage(imageUrl);
+            throw new InternalErrorException("Upload failed.", e);
+        }
     }
 
-    public List<String> uploadTempImages(List<MultipartFile> files) throws IOException {
+    // atomic operation, all success or all fail
+    public void uploadTempImages(List<MultipartFile> files) throws IOException {
+        if (files.size() == 0) {
+            return;
+        }
+        if (files.size() == 1) {
+            uploadTempImage(files.get(0));
+            return;
+        }
+
         ObjectId userId = userIdService.getCurrentUserId();
         long count = imageRecordRepository.countByUploadUserIdAndStatus(userId, TEMP);
         int newFileCount = files.size();
+
+        // check if file count is in range
         if (count + newFileCount > MAXIMUM_TEMP_UPLOAD_COUNT) {
             throw new InternalErrorException("Too many temp images.");
         }
 
+        // check if all files are valid
         for (MultipartFile file : files) {
             if (extensionInvalid(file.getOriginalFilename())) {
                 throw new InternalErrorException("Invalid file.");
             }
         }
 
+        // prepare all urls and streams
         ArrayList<String> imageUrls = new ArrayList<>(newFileCount);
         ArrayList<InputStream> inputStreams = new ArrayList<>(newFileCount);
         for (MultipartFile file : files) {
             String imageUrl;
             do {
                 imageUrl = FILE_PREFIX + secureService.generateRandomSalt(RANDOM_SALT_LENGTH);
-            } while (imageUrls.contains(imageUrl) || resourceStorage.fileExists(imageUrl));
+            } while (imageUrls.contains(imageUrl) || imageRecordRepository.existsByImageUrl(imageUrl));
             imageUrls.add(imageUrl);
             inputStreams.add(file.getInputStream());
         }
 
-        // upload file using multi-process
-        CountDownLatch latch = new CountDownLatch(newFileCount);
+        // upload files using multi-process
+        AtomicReference<Exception> exceptionOccurred = new AtomicReference<>(null);  // signal if any exception occur
+        CountDownLatch latch = new CountDownLatch(newFileCount);  // thread counter
         for (int i = 0; i < newFileCount; i++) {
+            // copy to variable for lambda to catch
             String imageUrl = imageUrls.get(i);
             InputStream inputStream = inputStreams.get(i);
+            // create new thread and start
             new Thread(() -> {
-                uploadFile(userId, imageUrl, inputStream);
-                latch.countDown();
+                try {
+                    resourceStorage.storeFile(imageUrl, inputStream);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    exceptionOccurred.set(e);
+                } finally {
+                    latch.countDown();
+                }
             }).start();
         }
         try {
-            latch.await();
+            latch.await();  // wait for all thread to end
         } catch (InterruptedException e) {
             e.printStackTrace();
+            exceptionOccurred.set(e);
+        }
+        if (exceptionOccurred.get() != null) {  // if any exception occur, rollback all changes
+            deleteImages(imageUrls);
+            throw new InternalErrorException("Upload failed.", exceptionOccurred.get());
         }
 
-        return imageUrls;
+        // update database record
+        try {
+            ArrayList<ImageRecord> records = new ArrayList<>();
+            for (String imageUrl : imageUrls) {
+                records.add(newRecord(userId, imageUrl));
+            }
+            imageRecordRepository.insert(records);
+        } catch (Exception e) {  // rollback if exception occur
+            e.printStackTrace();
+            deleteImages(imageUrls);
+            throw new InternalErrorException("Upload failed.", e);
+        }
     }
 
-    public void assertUploadedTempImage(String imageUrl) {
-        if (imageUrl == null)
-            return;
-
+    public String getUploadedTempImage() {  // asserts at least one image uploaded
         ObjectId userId = userIdService.getCurrentUserId();
-        if (!imageRecordRepository.existsByUploadUserIdAndImageUrlAndStatus(userId, imageUrl, TEMP)) {
+        List<ImageRecord> imageRecords = imageRecordRepository.findByUploadUserIdAndStatus(userId, TEMP);
+        if (imageRecords.size() < 1) {
             throw new InternalErrorException("Image not uploaded.");
         }
+        return imageRecords.get(0).imageUrl;
     }
 
-    public void assertUploadedTempImages(List<String> imageUrls) {
-        if (imageUrls == null)
-            return;
-
+    public ArrayList<String> getUploadedTempImages() {
         ObjectId userId = userIdService.getCurrentUserId();
-        for (String imageUrl: imageUrls) {
-            if (imageRecordRepository.existsByUploadUserIdAndImageUrlAndStatus(userId, imageUrl, TEMP)) {
-                throw new InternalErrorException("Images not uploaded.");
-            }
-        }
+        List<ImageRecord> imageRecords = imageRecordRepository.findByUploadUserIdAndStatus(userId, TEMP);
+        Stream<String> imageUrlStream = imageRecords.stream().map(imageRecord -> imageRecord.imageUrl);
+        return imageUrlStream.collect(Collectors.toCollection(ArrayList::new));
     }
 
     public void confirmUploadImage(String imageUrl) {
@@ -187,7 +234,7 @@ public class ImageService {
         if (imageUrl == null)
             return;
 
-        deleteFile(imageUrl);
+        deleteFileAndEraseRecord(imageUrl);
     }
 
     public void deleteImages(List<String> imageUrls) {
@@ -197,7 +244,7 @@ public class ImageService {
         CountDownLatch latch = new CountDownLatch(imageUrls.size());
         for (String imageUrl: imageUrls) {
             new Thread(() -> {
-                deleteFile(imageUrl);
+                deleteFileAndEraseRecord(imageUrl);
                 latch.countDown();
             }).start();
         }
@@ -205,6 +252,7 @@ public class ImageService {
             latch.await();
         } catch (InterruptedException e) {
             e.printStackTrace();
+            throw new InternalErrorException("Delete failed.", e);
         }
     }
 

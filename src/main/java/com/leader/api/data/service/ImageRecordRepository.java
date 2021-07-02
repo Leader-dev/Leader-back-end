@@ -11,9 +11,9 @@ public interface ImageRecordRepository extends MongoRepository<ImageRecord, Obje
 
     ImageRecord findByUploadUserIdAndImageUrlAndStatus(ObjectId uploadUserId, String imageName, String status);
 
-    boolean existsByUploadUserIdAndImageUrlAndStatus(ObjectId uploadUserId, String imageName, String status);
-
     long countByUploadUserIdAndStatus(ObjectId uploadUserId, String status);
+
+    boolean existsByImageUrl(String imageUrl);
 
     void deleteByImageUrl(String imageName);
 }

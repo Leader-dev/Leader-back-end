@@ -30,7 +30,6 @@ public class UserInfoController {
 
     public static class QueryObject {
         public String nickname;
-        public String portraitUrl;
     }
 
     @PostMapping("/get")
@@ -52,14 +51,14 @@ public class UserInfoController {
     }
 
     @PostMapping("/update-portrait")
-    public Document updatePortrait(@RequestBody QueryObject queryObject) {
-        imageService.assertUploadedTempImage(queryObject.portraitUrl);
+    public Document updatePortrait() {
+        String portraitUrl = imageService.getUploadedTempImage();
 
         ObjectId userId = userIdService.getCurrentUserId();
         String prevPortraitUrl = userInfoService.getPortrait(userId);
-        userInfoService.updatePortrait(userId, queryObject.portraitUrl);
+        userInfoService.updatePortrait(userId, portraitUrl);
 
-        imageService.confirmUploadImage(queryObject.portraitUrl);
+        imageService.confirmUploadImage(portraitUrl);
         imageService.deleteImage(prevPortraitUrl);
 
         return new SuccessResponse();

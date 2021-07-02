@@ -53,7 +53,7 @@ public class OrgUserController {
 
     @PostMapping("/create")
     public Document createOrganization(@RequestBody QueryObject queryObject) {
-        imageService.assertUploadedTempImage(queryObject.publicInfo.posterUrl);
+        queryObject.publicInfo.posterUrl = imageService.getUploadedTempImage();
 
         ObjectId userid = userIdService.getCurrentUserId();
         String nickname = userInfoService.getUserNickname(userid);
@@ -82,7 +82,7 @@ public class OrgUserController {
 
     @PostMapping("/report")
     public Document reportOrganization(@RequestBody QueryObject queryObject) {
-        imageService.assertUploadedTempImages(queryObject.reportInfo.imageUrls);
+        queryObject.reportInfo.imageUrls = imageService.getUploadedTempImages();
 
         queryObject.reportInfo.senderUserId = userIdService.getCurrentUserId();
         reportService.sendReport(queryObject.reportInfo);

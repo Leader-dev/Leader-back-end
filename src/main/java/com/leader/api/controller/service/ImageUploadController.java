@@ -13,7 +13,6 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 @RestController
 @RequestMapping("/service/image")
@@ -41,12 +40,9 @@ public class ImageUploadController {
 
         String originalFilename = request.getFileNames().next();
         MultipartFile file = request.getFile(originalFilename);
+        imageService.uploadTempImage(file);
 
-        String imageUrl = imageService.uploadTempImage(file);
-
-        Document response = new SuccessResponse();
-        response.append("imageUrl", imageUrl);
-        return response;
+        return new SuccessResponse();
     }
 
     @PostMapping("/upload-multiple")
@@ -58,12 +54,9 @@ public class ImageUploadController {
             String filename = it.next();
             files.addAll(request.getFiles(filename));
         }
+        imageService.uploadTempImages(files);
 
-        List<String> imageUrls = imageService.uploadTempImages(files);
-
-        Document response = new SuccessResponse();
-        response.append("imageUrls", imageUrls);
-        return response;
+        return new SuccessResponse();
     }
 
     @PostMapping("/delete-temp")

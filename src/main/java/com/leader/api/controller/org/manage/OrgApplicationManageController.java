@@ -78,9 +78,9 @@ public class OrgApplicationManageController {
 
     @PostMapping("/send-notification")
     public Document sendApplicationNotification(@RequestBody QueryObject queryObject) {
-        imageService.assertUploadedTempImages(queryObject.notification.imageUrls);
-
         authorizationService.assertCurrentMemberHasAuthority(RECRUIT);
+
+        queryObject.notification.imageUrls = imageService.getUploadedTempImages();
 
         ObjectId memberId = memberIdService.getCurrentMemberId();
         applicationManageService.sendNotification(memberId, queryObject.applicationId, queryObject.notification);

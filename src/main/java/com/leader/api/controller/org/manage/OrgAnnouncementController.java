@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.leader.api.data.org.announcement.OrgAnnouncementConfirmation.NOT_CONFIRMED;
@@ -96,11 +97,12 @@ public class OrgAnnouncementController {
 
     @PostMapping("/send")
     public Document sendAnnouncement(@RequestBody QueryObject queryObject) {
-        imageService.assertUploadedTempImage(queryObject.announceInfo.coverUrl);
-        imageService.assertUploadedTempImages(queryObject.announceInfo.imageUrls);
-
         authorizationService.assertCurrentMemberHasAuthority(ANNOUNCEMENT_MANAGEMENT);
         authorizationService.assertCurrentMemberCanManageAllMembers(queryObject.toMemberIds);
+
+        ArrayList<String> uploadedImageUrls = imageService.getUploadedTempImages();
+        queryObject.announceInfo.coverUrl = uploadedImageUrls.get(0);
+        queryObject.announceInfo.imageUrls = new ArrayList<>(uploadedImageUrls.subList(1, uploadedImageUrls.size()));
 
         ObjectId memberId = memberIdService.getCurrentMemberId();
         announcementService.sendAnnouncement(memberId, queryObject.toMemberIds, queryObject.announceInfo);

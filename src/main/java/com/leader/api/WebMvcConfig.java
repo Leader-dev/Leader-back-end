@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -60,7 +61,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // add base authentication checker for all routes other than /user/**
         registry
                 .addInterceptor(new HandlerInterceptor() {
-                    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+                    public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) {
                         // check if userId exists
                         if (!userIdService.currentUserExists()) {
                             throw new UserAuthException();
@@ -69,11 +70,12 @@ public class WebMvcConfig implements WebMvcConfigurer {
                     }
                 })
                 .addPathPatterns("/**")
-                .excludePathPatterns("/user/**", "/api/info");
+                .excludePathPatterns("/user/**", "/api/info")
+                .addPathPatterns("/user/info/**");
         // add base orgId parameter handler for all routes in /org/manage/**
         registry
                 .addInterceptor(new HandlerInterceptor() {
-                    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+                    public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) {
                         String orgIdString = request.getParameter(ORG_ID_PARAMETER_NAME);
                         if (orgIdString == null) {
                             throw new InternalErrorException("Missing required parameter " + ORG_ID_PARAMETER_NAME + ".");
@@ -89,7 +91,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Document> handle(Exception ex, HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<Document> handle(Exception ex) {
         // Special handling for user auth failed, return auth error (403)
         if (ex instanceof UserAuthException) {
             return new ResponseEntity<>(new AuthErrorResponse(), HttpStatus.OK);

@@ -97,7 +97,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
             return new ResponseEntity<>(new AuthErrorResponse(), HttpStatus.OK);
         }
         // if an exception other than defined types occur, print trace in console for debug
-        if (!(ex instanceof InternalErrorException)) {
+        if (!(ex instanceof InternalErrorException) || ex.getCause() != null) {
             ex.printStackTrace();
         }
         // whenever an exception occur, return internal error (500) along with the original message of the exception

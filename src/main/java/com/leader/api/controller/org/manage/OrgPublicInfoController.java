@@ -8,6 +8,7 @@ import com.leader.api.service.service.ImageService;
 import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,6 +25,7 @@ public class OrgPublicInfoController {
     private final OrgMemberIdService orgMemberIdService;
     private final ImageService imageService;
 
+    @Autowired
     public OrgPublicInfoController(OrganizationService organizationService,
                                    OrgAuthorizationService authorizationService,
                                    OrgMemberIdService orgMemberIdService,
@@ -36,6 +38,7 @@ public class OrgPublicInfoController {
 
     public static class QueryObject {
         public OrgPublicInfo publicInfo;
+        public String posterUrl;
     }
 
     @PostMapping("/get")
@@ -61,16 +64,16 @@ public class OrgPublicInfoController {
     }
 
     @PostMapping("/set-poster")
-    public Document setPoster() {
+    public Document setPoster(@RequestBody QueryObject queryObject) {
         authorizationService.assertCurrentMemberHasAuthority(PUBLIC_INFO_MANAGEMENT);
 
-        String posterUrl = imageService.getUploadedTempImage();
+        imageService.assertUploadedTempImage(queryObject.posterUrl);
 
         ObjectId orgId = orgMemberIdService.getCurrentOrgId();
         String prevPosterUrl = organizationService.getPublicInfo(orgId).posterUrl;
-        organizationService.updateOrganizationPoster(orgId, posterUrl);
+        organizationService.updateOrganizationPoster(orgId, queryObject.posterUrl);
 
-        imageService.confirmUploadImage(posterUrl);
+        imageService.confirmUploadImage(queryObject.posterUrl);
         imageService.deleteImage(prevPosterUrl);
 
         return new SuccessResponse();

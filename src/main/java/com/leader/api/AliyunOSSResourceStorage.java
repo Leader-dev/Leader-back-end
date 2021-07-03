@@ -1,12 +1,16 @@
 package com.leader.api;
 
+import com.aliyun.oss.HttpMethod;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
+import com.aliyun.oss.model.GeneratePresignedUrlRequest;
 import com.leader.api.resource.storage.StaticResourceStorage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
+import java.net.URL;
+import java.util.Date;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -47,6 +51,12 @@ public class AliyunOSSResourceStorage implements StaticResourceStorage {
 
     public void storeFile(String url, InputStream inputStream) {
         operateOSSClient(oss -> oss.putObject(bucketName, url, inputStream));
+    }
+
+    public URL generatePresignedUploadUrl(String url, Date expiration) {
+        GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucketName, url, HttpMethod.PUT);
+        request.setExpiration(expiration);
+        return operateOSSClientWithReturn(oss -> oss.generatePresignedUrl(request));
     }
 
     public boolean fileExists(String url) {

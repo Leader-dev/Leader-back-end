@@ -12,12 +12,12 @@ import com.leader.api.service.service.ImageService;
 import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.leader.api.data.org.announcement.OrgAnnouncementConfirmation.NOT_CONFIRMED;
@@ -33,6 +33,7 @@ public class OrgAnnouncementController {
     private final OrgAuthorizationService authorizationService;
     private final ImageService imageService;
 
+    @Autowired
     public OrgAnnouncementController(OrgAnnouncementService announcementService,
                                      OrgMemberIdService memberIdService,
                                      OrgAuthorizationService authorizationService,
@@ -100,9 +101,8 @@ public class OrgAnnouncementController {
         authorizationService.assertCurrentMemberHasAuthority(ANNOUNCEMENT_MANAGEMENT);
         authorizationService.assertCurrentMemberCanManageAllMembers(queryObject.toMemberIds);
 
-        ArrayList<String> uploadedImageUrls = imageService.getUploadedTempImages();
-        queryObject.announceInfo.coverUrl = uploadedImageUrls.get(0);
-        queryObject.announceInfo.imageUrls = new ArrayList<>(uploadedImageUrls.subList(1, uploadedImageUrls.size()));
+        imageService.assertUploadedTempImage(queryObject.announceInfo.coverUrl);
+        imageService.assertUploadedTempImages(queryObject.announceInfo.imageUrls);
 
         ObjectId memberId = memberIdService.getCurrentMemberId();
         announcementService.sendAnnouncement(memberId, queryObject.toMemberIds, queryObject.announceInfo);

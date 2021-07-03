@@ -5,14 +5,11 @@ import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.List;
 
 @RestController
 @RequestMapping("/service/image")
@@ -25,6 +22,10 @@ public class ImageUploadController {
         this.imageService = imageService;
     }
 
+    public static class QueryObject {
+        public Integer urlCount;
+    }
+
     @PostMapping("/access-start-url")
     public Document getAccessStartUrl() {
         String startUrl = imageService.getAccessStartUrl();
@@ -34,34 +35,31 @@ public class ImageUploadController {
         return response;
     }
 
-    @PostMapping("/upload-single")
-    public Document uploadSingle(MultipartHttpServletRequest request) throws IOException {
-        imageService.deleteTemp();
+    @PostMapping("/get-upload-url")
+    public Document getUploadUrl() {
+        imageService.cleanUp();
 
-        String originalFilename = request.getFileNames().next();
-        MultipartFile file = request.getFile(originalFilename);
-        imageService.uploadTempImage(file);
+        String uploadUrl = imageService.generateNewUploadUrl();
 
-        return new SuccessResponse();
+        Document response = new SuccessResponse();
+        response.append("url", uploadUrl);
+        return response;
     }
 
-    @PostMapping("/upload-multiple")
-    public Document uploadMultiple(MultipartHttpServletRequest request) throws IOException {
-        imageService.deleteTemp();
+    @PostMapping("/get-upload-url-multiple")
+    public Document getUploadUrlMultiple(@RequestBody QueryObject queryObject) {
+        imageService.cleanUp();
 
-        ArrayList<MultipartFile> files = new ArrayList<>();
-        for (Iterator<String> it = request.getFileNames(); it.hasNext();) {
-            String filename = it.next();
-            files.addAll(request.getFiles(filename));
-        }
-        imageService.uploadTempImages(files);
+        List<String> uploadUrls = imageService.generateNewUploadUrls(queryObject.urlCount);
 
-        return new SuccessResponse();
+        Document response = new SuccessResponse();
+        response.append("urls", uploadUrls);
+        return response;
     }
 
     @PostMapping("/delete-temp")
     public Document deleteTempFiles() {
-        imageService.deleteTemp();
+        imageService.cleanUp();
 
         return new SuccessResponse();
     }

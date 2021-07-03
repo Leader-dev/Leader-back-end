@@ -80,7 +80,7 @@ public class OrgApplicationManageController {
     public Document sendApplicationNotification(@RequestBody QueryObject queryObject) {
         authorizationService.assertCurrentMemberHasAuthority(RECRUIT);
 
-        queryObject.notification.imageUrls = imageService.getUploadedTempImages();
+        imageService.assertUploadedTempImages(queryObject.notification.imageUrls);
 
         ObjectId memberId = memberIdService.getCurrentMemberId();
         applicationManageService.sendNotification(memberId, queryObject.applicationId, queryObject.notification);

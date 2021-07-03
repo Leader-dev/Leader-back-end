@@ -7,6 +7,7 @@ import com.leader.api.service.org.timeline.OrgTimelineService;
 import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,6 +27,7 @@ public class OrgTimelineController {
     private final OrgTimelineService timelineService;
     private final OrgMemberIdService memberIdService;
 
+    @Autowired
     public OrgTimelineController(OrgAuthorizationService authorizationService,
                                  OrgTimelineService timelineService,
                                  OrgMemberIdService memberIdService) {

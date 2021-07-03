@@ -15,6 +15,7 @@ import com.leader.api.service.util.UserIdService;
 import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,6 +35,7 @@ public class OrgUserController {
     private final OrgStructureService structureService;
     private final ImageService imageService;
 
+    @Autowired
     public OrgUserController(UserIdService userIdService, UserInfoService userInfoService, OrganizationService organizationService,
                              OrgMemberService membershipService, OrgReportService reportService,
                              OrgStructureService structureService, ImageService imageService) {
@@ -53,7 +55,7 @@ public class OrgUserController {
 
     @PostMapping("/create")
     public Document createOrganization(@RequestBody QueryObject queryObject) {
-        queryObject.publicInfo.posterUrl = imageService.getUploadedTempImage();
+         imageService.assertUploadedTempImage(queryObject.publicInfo.posterUrl);
 
         ObjectId userid = userIdService.getCurrentUserId();
         String nickname = userInfoService.getUserNickname(userid);
@@ -82,7 +84,7 @@ public class OrgUserController {
 
     @PostMapping("/report")
     public Document reportOrganization(@RequestBody QueryObject queryObject) {
-        queryObject.reportInfo.imageUrls = imageService.getUploadedTempImages();
+        imageService.assertUploadedTempImages(queryObject.reportInfo.imageUrls);
 
         queryObject.reportInfo.senderUserId = userIdService.getCurrentUserId();
         reportService.sendReport(queryObject.reportInfo);

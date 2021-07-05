@@ -8,6 +8,10 @@ import java.util.List;
 
 public interface ImageRecordRepository extends MongoRepository<ImageRecord, ObjectId> {
 
+    ImageRecord findByImageUrl(String imageUrl);
+
+    List<ImageRecord> findByImageUrlIn(List<String> imageUrls);
+
     List<ImageRecord> findByUploadUserIdAndStatus(ObjectId uploadUserId, String status);
 
     List<ImageRecord> findByUploadUserIdAndStatusAndUploadUrlExpireBefore(ObjectId uploadUserId, String status, Date date);

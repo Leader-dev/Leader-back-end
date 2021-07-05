@@ -6,16 +6,13 @@ import com.leader.api.resource.storage.StaticResourceStorage;
 import com.leader.api.service.util.SecureService;
 import com.leader.api.service.util.UserIdService;
 import com.leader.api.util.InternalErrorException;
+import com.leader.api.util.MultitaskUtil;
 import com.leader.api.util.component.DateUtil;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.leader.api.data.service.ImageRecord.*;
@@ -48,31 +45,55 @@ public class ImageService {
         return new Date(dateUtil.getCurrentTime() + UPLOAD_LINK_EXPIRE_MILLISECONDS);
     }
 
-    private ImageRecord newRecord(ObjectId userId, String imageUrl, Date expiration) {
-        ImageRecord record = new ImageRecord();
-        record.uploadUserId = userId;
-        record.imageUrl = imageUrl;
-        record.status = PENDING;
-        record.uploadUrlExpire = expiration;
-        return record;
-    }
-
-    private void deleteFileAndEraseRecord(String imageUrl) {
-        resourceStorage.deleteFile(imageUrl);
-        imageRecordRepository.deleteByImageUrl(imageUrl);
-    }
-
-    public String generateNewUploadUrl() {
-        ObjectId userId = userIdService.getCurrentUserId();
-
-        // generate new url
+    // synchronized so that only one thread can be using this method at a time
+    private synchronized String allocateNewImageUrl(ObjectId userId, Date expiration) {
+        // generate a new imageUrl
         String imageUrl;
         do {
             imageUrl = FILE_PREFIX + secureService.generateRandomSalt(RANDOM_SALT_LENGTH);
         } while (imageRecordRepository.existsByImageUrl(imageUrl));
 
+        // insert the new record
+        ImageRecord record = new ImageRecord();
+        record.uploadUserId = userId;
+        record.imageUrl = imageUrl;
+        record.status = PENDING;
+        record.uploadUrlExpire = expiration;
+        imageRecordRepository.insert(record);
+
+        return imageUrl;
+    }
+
+    private void setRecordToInvalid(ImageRecord record) {
+        record.status = INVALID;
+        imageRecordRepository.save(record);
+    }
+
+    private void setRecordsToInvalid(List<ImageRecord> records) {
+        records.forEach(record -> record.status = INVALID);
+        imageRecordRepository.saveAll(records);
+    }
+
+    private void cleanUpInvalidImages() {  // only way to completely remove images
+        ObjectId userId = userIdService.getCurrentUserId();
+
+        // find invalid and expired records, extracting url part
+        List<ImageRecord> invalidAndExpiredRecords = imageRecordRepository
+                .findByUploadUserIdAndStatusAndUploadUrlExpireBefore(userId, INVALID, dateUtil.getCurrentDate());
+        List<String> imageUrls = invalidAndExpiredRecords.stream()
+                .map(record -> record.imageUrl).collect(Collectors.toList());
+
+        // delete all images according to urls
+        MultitaskUtil.forEach(imageUrls, imageUrl -> {
+            resourceStorage.deleteFile(imageUrl);
+            imageRecordRepository.deleteByImageUrl(imageUrl);
+        });
+    }
+
+    public String generateNewUploadUrl() {
+        ObjectId userId = userIdService.getCurrentUserId();
         Date expiration = getExpirationSinceNow();
-        imageRecordRepository.insert(newRecord(userId, imageUrl, expiration));
+        String imageUrl = allocateNewImageUrl(userId, expiration);
         return resourceStorage.generatePresignedUploadUrl(imageUrl, expiration).toString();
     }
 
@@ -88,33 +109,14 @@ public class ImageService {
         }
 
         ObjectId userId = userIdService.getCurrentUserId();
-
         Date expiration = getExpirationSinceNow();
-        ArrayList<String> uploadUrls = new ArrayList<>(count);
-        CountDownLatch latch = new CountDownLatch(count);
-        for (int i = 0; i < count; i++) {
-            String imageUrl;
-            do {
-                imageUrl = FILE_PREFIX + secureService.generateRandomSalt(RANDOM_SALT_LENGTH);
-            } while (imageRecordRepository.existsByImageUrl(imageUrl));
-            imageRecordRepository.insert(newRecord(userId, imageUrl, expiration));
-
-            // copy variables for thread to catch
-            final String finalImageUrl = imageUrl;
-            final int finalI = i;
-            new Thread(() -> {
-                String uploadUrl = resourceStorage.generatePresignedUploadUrl(finalImageUrl, expiration).toString();
-                uploadUrls.set(finalI, uploadUrl);
-                latch.countDown();
-            }).start();
-        }
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            throw new InternalErrorException("Interrupted exception occur.", e);
-        }
-        return uploadUrls;
+        String[] uploadUrls = new String[count];
+        MultitaskUtil.forI(count, targetIndex -> {
+            String imageUrl = allocateNewImageUrl(userId, expiration);
+            String uploadUrl = resourceStorage.generatePresignedUploadUrl(imageUrl, expiration).toString();
+            uploadUrls[targetIndex] = uploadUrl;
+        });
+        return Arrays.asList(uploadUrls);
     }
 
     public void assertUploadedTempImage(String imageUrl) {  // asserts at least one image uploaded
@@ -185,41 +187,27 @@ public class ImageService {
             return;
         }
 
-        deleteFileAndEraseRecord(imageUrl);
+        setRecordToInvalid(imageRecordRepository.findByImageUrl(imageUrl));
+        cleanUpInvalidImages();
     }
 
     public void deleteImages(List<String> imageUrls) {
         if (imageUrls == null || imageUrls.size() == 0) {
             return;
         }
+        if (imageUrls.size() == 1) {
+            deleteImage(imageUrls.get(0));
+            return;
+        }
 
-        CountDownLatch latch = new CountDownLatch(imageUrls.size());
-        for (String imageUrl: imageUrls) {
-            new Thread(() -> {
-                deleteFileAndEraseRecord(imageUrl);
-                latch.countDown();
-            }).start();
-        }
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            throw new InternalErrorException("InterruptedException occur.", e);
-        }
+        setRecordsToInvalid(imageRecordRepository.findByImageUrlIn(imageUrls));
+        cleanUpInvalidImages();
     }
 
     public void cleanUp() {
         ObjectId userId = userIdService.getCurrentUserId();
-
-        // set all pending record to invalid
-        List<ImageRecord> pendingRecords = imageRecordRepository.findByUploadUserIdAndStatus(userId, PENDING);
-        pendingRecords.forEach(imageRecord -> imageRecord.status = INVALID);
-        imageRecordRepository.saveAll(pendingRecords);
-
-        // remove all invalid and expired record
-        List<ImageRecord> invalidAndExpiredRecords = imageRecordRepository
-                .findByUploadUserIdAndStatusAndUploadUrlExpireBefore(userId, INVALID, dateUtil.getCurrentDate());
-        deleteImages(invalidAndExpiredRecords.stream().map(record -> record.imageUrl).collect(Collectors.toList()));
+        setRecordsToInvalid(imageRecordRepository.findByUploadUserIdAndStatus(userId, PENDING));
+        cleanUpInvalidImages();
     }
 
     public String getAccessStartUrl() {

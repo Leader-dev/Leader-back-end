@@ -17,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -61,7 +60,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // add base authentication checker for all routes other than /user/**
         registry
                 .addInterceptor(new HandlerInterceptor() {
-                    public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) {
+                    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
                         // check if userId exists
                         if (!userIdService.currentUserExists()) {
                             throw new UserAuthException();
@@ -75,7 +74,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // add base orgId parameter handler for all routes in /org/manage/**
         registry
                 .addInterceptor(new HandlerInterceptor() {
-                    public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) {
+                    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
                         String orgIdString = request.getParameter(ORG_ID_PARAMETER_NAME);
                         if (orgIdString == null) {
                             throw new InternalErrorException("Missing required parameter " + ORG_ID_PARAMETER_NAME + ".");

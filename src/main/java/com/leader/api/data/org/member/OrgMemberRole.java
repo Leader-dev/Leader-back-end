@@ -12,16 +12,22 @@ public class OrgMemberRole {
     public static final String RECRUIT_MANAGER = "recruit-manager";
     public static final String MEMBER = "member";
 
+    private static final OrgMemberRole PRESIDENT_INSTANCE = new OrgMemberRole(PRESIDENT);
+    private static final OrgMemberRole GENERAL_MANAGER_INSTANCE = new OrgMemberRole(GENERAL_MANAGER);
+    private static final OrgMemberRole DEPARTMENT_MANAGER_INSTANCE = new OrgMemberRole(DEPARTMENT_MANAGER);
+    private static final OrgMemberRole RECRUIT_MANAGER_INSTANCE = new OrgMemberRole(RECRUIT_MANAGER);
+    private static final OrgMemberRole MEMBER_INSTANCE = new OrgMemberRole(MEMBER);
+
     public static OrgMemberRole president() {
-        return new OrgMemberRole(PRESIDENT);
+        return PRESIDENT_INSTANCE;
     }
 
     public static OrgMemberRole generalManager() {
-        return new OrgMemberRole(GENERAL_MANAGER);
+        return GENERAL_MANAGER_INSTANCE;
     }
 
     public static OrgMemberRole departmentManager() {
-        return new OrgMemberRole(DEPARTMENT_MANAGER);
+        return DEPARTMENT_MANAGER_INSTANCE;
     }
 
     public static OrgMemberRole departmentManager(ObjectId departmentId) {
@@ -29,7 +35,7 @@ public class OrgMemberRole {
     }
 
     public static OrgMemberRole recruitManager() {
-        return new OrgMemberRole(RECRUIT_MANAGER);
+        return RECRUIT_MANAGER_INSTANCE;
     }
 
     public static OrgMemberRole recruitManager(ObjectId departmentId) {
@@ -37,7 +43,7 @@ public class OrgMemberRole {
     }
 
     public static OrgMemberRole member() {
-        return new OrgMemberRole(MEMBER);
+        return MEMBER_INSTANCE;
     }
 
     public static OrgMemberRole member(ObjectId departmentId) {

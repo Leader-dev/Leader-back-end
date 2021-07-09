@@ -19,10 +19,11 @@ public class OrgQueryService {
         this.organizationRepository = organizationRepository;
     }
 
-    public <T> List<T> findOrganizationsByNumber(int count) {
+    public <T> List<T> findOrganizationsByNumber(int count, Class<T> type) {
         Page<T> list = organizationRepository.findByQuery(
                 new Document(),
-                PageRequest.of(0, count)
+                PageRequest.of(0, count),
+                type
         );
         return list.getContent();
     }
@@ -52,7 +53,8 @@ public class OrgQueryService {
         }
         return organizationRepository.findByQuery(
                 query,
-                PageRequest.of(queryObject.pageNumber, queryObject.pageSize)
+                PageRequest.of(queryObject.pageNumber, queryObject.pageSize),
+                OrgLobbyOverview.class
         );
     }
 }

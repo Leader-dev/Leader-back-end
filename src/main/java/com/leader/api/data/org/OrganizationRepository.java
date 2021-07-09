@@ -20,6 +20,7 @@ public interface OrganizationRepository extends MongoRepository<Organization, Ob
     @Query("?0")
     <T> Page<T> findByQuery(
             Document query,
-            Pageable pageable
+            Pageable pageable,
+            Class<T> type
     );
 }

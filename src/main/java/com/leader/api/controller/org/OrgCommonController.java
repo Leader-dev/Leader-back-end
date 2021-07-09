@@ -54,12 +54,14 @@ public class OrgCommonController {
     @PostMapping("/index")
     public Document getOrganizationIndex() {
         // TODO Use more intelligent way to decide content
-        List<OrgPosterOverview> pic = queryService.findOrganizationsByNumber(5);
-        List<OrgLobbyOverview> list = queryService.findOrganizationsByNumber(9);
+        List<OrgPosterOverview> pic = queryService.findOrganizationsByNumber(5, OrgPosterOverview.class);
+        List<OrgLobbyOverview> list = queryService.findOrganizationsByNumber(9, OrgLobbyOverview.class);
 
         Document response = new SuccessResponse();
-        response.append("pic", pic);
-        response.append("list", list);
+        Document index = new Document();
+        index.append("pic", pic);
+        index.append("list", list);
+        response.append("index", index);
         return response;
     }
 
@@ -69,9 +71,11 @@ public class OrgCommonController {
         Page<OrgLobbyOverview> list = queryService.findRunningOrganizationsByQueryObject(queryObject);
 
         Document response = new SuccessResponse();
-        response.append("list", list.getContent());
-        response.append("totalPages", list.getTotalPages());
-        response.append("totalNumber", list.getTotalElements());
+        Document result = new Document();
+        result.append("list", list.getContent());
+        result.append("totalPages", list.getTotalPages());
+        result.append("totalNumber", list.getTotalElements());
+        response.append("result", result);
         return response;
     }
 

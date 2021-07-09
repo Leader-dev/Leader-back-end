@@ -79,8 +79,10 @@ public class OrgApplicationSettingController {
         List<OrgDepartmentRecruitInfo> departmentsInfo = settingService.getDepartmentsRecruitManagerInfo(departments);
 
         Document response = new SuccessResponse();
-        response.append("memberId", memberId);
-        response.append("departments", departmentsInfo);
+        Document info = new Document();
+        info.append("memberId", memberId);
+        info.append("departments", departmentsInfo);
+        response.append("info", info);
         return response;
     }
 

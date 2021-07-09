@@ -3,6 +3,7 @@ package com.leader.api.service.org.timeline;
 import com.leader.api.data.org.timeline.OrgTimelineItem;
 import com.leader.api.data.org.timeline.OrgTimelineItemRepository;
 import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -13,23 +14,24 @@ public class OrgTimelineService {
 
     private final OrgTimelineItemRepository timelineItemRepository;
 
+    @Autowired
     public OrgTimelineService(OrgTimelineItemRepository timelineItemRepository) {
         this.timelineItemRepository = timelineItemRepository;
     }
 
-    public List<OrgTimelineItem> getTimelineOf(ObjectId organizationId) {
-        return timelineItemRepository.findByOrganizationIdOrderByTimestampAsc(organizationId);
+    public List<OrgTimelineItem> getTimelineOf(ObjectId orgId) {
+        return timelineItemRepository.findByOrgIdOrderByTimestampAsc(orgId);
     }
 
-    public void insertItem(ObjectId organizationId, Date timestamp, String description) {
+    public void insertItem(ObjectId orgId, Date timestamp, String description) {
         OrgTimelineItem item = new OrgTimelineItem();
-        item.organizationId = organizationId;
+        item.orgId = orgId;
         item.timestamp = timestamp;
         item.description = description;
         timelineItemRepository.insert(item);
     }
 
-    public void deleteItemWithId(ObjectId organizationId, ObjectId timelineItemId) {
-        timelineItemRepository.deleteByOrganizationIdAndId(organizationId, timelineItemId);
+    public void deleteItemWithId(ObjectId orgId, ObjectId timelineItemId) {
+        timelineItemRepository.deleteByOrgIdAndId(orgId, timelineItemId);
     }
 }

@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface OrgTimelineItemRepository extends MongoRepository<OrgTimelineItem, ObjectId> {
 
-    List<OrgTimelineItem> findByOrganizationIdOrderByTimestampAsc(ObjectId organizationId);
+    List<OrgTimelineItem> findByOrgIdOrderByTimestampAsc(ObjectId orgId);
 
-    void deleteByOrganizationIdAndId(ObjectId organizationId, ObjectId id);
+    void deleteByOrgIdAndId(ObjectId orgId, ObjectId id);
 }

@@ -45,22 +45,22 @@ public class ImageService {
         return new Date(dateUtil.getCurrentTime() + UPLOAD_LINK_EXPIRE_MILLISECONDS);
     }
 
-    // synchronized so that only one thread can be using this method at a time
-    private synchronized String allocateNewImageUrl(ObjectId userId, Date expiration) {
-        // generate a new imageUrl
-        String imageUrl;
-        do {
-            imageUrl = FILE_PREFIX + secureService.generateRandomSalt(RANDOM_SALT_LENGTH);
-        } while (imageRecordRepository.existsByImageUrl(imageUrl));
-
+    private String allocateNewImageUrl(ObjectId userId, Date expiration) {
         // insert the new record
         ImageRecord record = new ImageRecord();
         record.uploadUserId = userId;
-        record.imageUrl = imageUrl;
         record.status = PENDING;
         record.uploadUrlExpire = expiration;
-        imageRecordRepository.insert(record);
 
+        String imageUrl;
+        synchronized (imageRecordRepository) {
+            // generate a new imageUrl
+            do {
+                imageUrl = FILE_PREFIX + secureService.generateRandomSalt(RANDOM_SALT_LENGTH);
+            } while (imageRecordRepository.existsByImageUrl(imageUrl));
+            record.imageUrl = imageUrl;
+            imageRecordRepository.insert(record);
+        }
         return imageUrl;
     }
 

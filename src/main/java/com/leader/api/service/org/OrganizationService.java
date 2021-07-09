@@ -9,6 +9,8 @@ import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import static com.leader.api.data.org.Organization.PENDING;
+
 @Service
 public class OrganizationService {
 
@@ -54,14 +56,16 @@ public class OrganizationService {
         newOrganization.posterUrl = orgInfo.posterUrl;
 
         // set items
-        newOrganization.numberId = secureService.generateRandomNumberId(
-                ORG_NUMBER_ID_LENGTH,
-                organizationRepository::existsByNumberId
-        );
-        newOrganization.status = "pending";  // must be pending state
+        newOrganization.status = PENDING;  // must be pending state
         newOrganization.memberCount = 0L;  // no member is initially in the organization
 
-        return organizationRepository.insert(newOrganization);
+        synchronized (organizationRepository) {
+            newOrganization.numberId = secureService.generateRandomNumberId(
+                    ORG_NUMBER_ID_LENGTH,
+                    organizationRepository::existsByNumberId
+            );
+            return organizationRepository.insert(newOrganization);
+        }
     }
 
     public void updateOrganizationPublicInfo(ObjectId orgId, OrgPublicInfo publicInfo) {

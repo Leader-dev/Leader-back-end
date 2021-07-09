@@ -39,6 +39,7 @@ public class OrgApplicationController {
 
     private static class QueryObject {
         public ObjectId orgId;
+        public String name;
         public ObjectId departmentId;
         public OrgApplicationForm applicationForm;
         public ObjectId applicationId;
@@ -50,10 +51,11 @@ public class OrgApplicationController {
     public Document requestApplyForm(@RequestBody QueryObject queryObject) {
         ObjectId userid = userIdService.getCurrentUserId();
         applicationService.sendApplication(
+                userid,
                 queryObject.orgId,
+                queryObject.name,
                 queryObject.departmentId,
-                queryObject.applicationForm,
-                userid
+                queryObject.applicationForm
         );
 
         return new SuccessResponse();

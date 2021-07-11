@@ -2,16 +2,10 @@ package com.leader.api.data.org;
 
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.ArrayList;
 
-@Document(collection = "org_list")
-public class Organization {
-
-    // states
-    public static final String PENDING = "pending";
-    public static final String RUNNING = "running";
+public class OrgDetail {
 
     @Id
     public ObjectId id;
@@ -34,5 +28,4 @@ public class Organization {
 
     // application
     public OrgApplicationScheme applicationScheme;
-    public int receivedApplicationCount;
 }

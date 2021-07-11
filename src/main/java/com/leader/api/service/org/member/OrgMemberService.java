@@ -40,18 +40,19 @@ public class OrgMemberService {
         if (isMember(orgId, userid)) {
             throw new InternalErrorException("Already in organization");
         }
-        OrgMember orgMembership = new OrgMember();
-        orgMembership.orgId = orgId;
-        orgMembership.userId = userid;
-        orgMembership.name = name;
-        orgMembership.roles = new ArrayList<>();
-        orgMembership.roles.add(OrgMemberRole.member());
+        OrgMember newMember = new OrgMember();
+        newMember.orgId = orgId;
+        newMember.userId = userid;
+        newMember.name = name;
+        newMember.roles = new ArrayList<>();
+        newMember.roles.add(OrgMemberRole.member());
+        newMember.resigned = false;
         synchronized (membershipRepository) {
-            orgMembership.numberId = secureService.generateRandomNumberId(
+            newMember.numberId = secureService.generateRandomNumberId(
                     MEMBER_NUMBER_ID_LENGTH,
                     membershipRepository::existsByNumberId
             );
-            return membershipRepository.insert(orgMembership);
+            return membershipRepository.insert(newMember);
         }
     }
 

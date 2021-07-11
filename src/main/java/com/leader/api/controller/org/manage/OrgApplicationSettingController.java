@@ -40,6 +40,7 @@ public class OrgApplicationSettingController {
 
     public static class QueryObject {
         public OrgApplicationScheme scheme;
+        public Boolean resetReceivedApplicationCount;
         public ObjectId departmentId;
         public ObjectId memberId;
     }
@@ -50,9 +51,13 @@ public class OrgApplicationSettingController {
 
         ObjectId orgId = memberIdService.getCurrentOrgId();
         OrgApplicationScheme scheme = settingService.getApplicationScheme(orgId);
+        int receivedApplicationCount = settingService.getReceivedApplicationCount(orgId);
 
         Document response = new SuccessResponse();
-        response.append("scheme", scheme);
+        Document data = new Document();
+        data.append("scheme", scheme);
+        data.append("receivedApplicationCount", receivedApplicationCount);
+        response.append("data", data);
         return response;
     }
 
@@ -61,7 +66,10 @@ public class OrgApplicationSettingController {
         authorizationService.assertCurrentMemberHasAuthority(RECRUIT_SETTING);
 
         ObjectId orgId = memberIdService.getCurrentOrgId();
-        settingService.updateApplicationScheme(orgId, queryObject.scheme);
+        settingService.setApplicationScheme(orgId, queryObject.scheme);
+        if (queryObject.resetReceivedApplicationCount != null && queryObject.resetReceivedApplicationCount) {
+            settingService.resetReceivedApplicationCount(orgId);
+        }
 
         return new SuccessResponse();
     }
@@ -82,7 +90,7 @@ public class OrgApplicationSettingController {
         Document info = new Document();
         info.append("memberId", memberId);
         info.append("departments", departmentsInfo);
-        response.append("info", info);
+        response.append("data", info);
         return response;
     }
 

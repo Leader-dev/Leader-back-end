@@ -1,8 +1,6 @@
 package com.leader.api.service.org;
 
-import com.leader.api.data.org.OrgPublicInfo;
-import com.leader.api.data.org.Organization;
-import com.leader.api.data.org.OrganizationRepository;
+import com.leader.api.data.org.*;
 import com.leader.api.service.util.SecureService;
 import com.leader.api.util.InternalErrorException;
 import org.bson.types.ObjectId;
@@ -58,6 +56,8 @@ public class OrganizationService {
         // set items
         newOrganization.status = PENDING;  // must be pending state
         newOrganization.memberCount = 0L;  // no member is initially in the organization
+        newOrganization.applicationScheme = new OrgApplicationScheme();  // new application scheme object
+        newOrganization.receivedApplicationCount = 0;  // no application is initially sent to organization
 
         synchronized (organizationRepository) {
             newOrganization.numberId = secureService.generateRandomNumberId(
@@ -82,8 +82,8 @@ public class OrganizationService {
         });
     }
 
-    public Organization getOrganization(ObjectId orgId) {
-        return organizationRepository.findFirstById(orgId, Organization.class);
+    public OrgDetail getOrganizationDetail(ObjectId orgId) {
+        return organizationRepository.findFirstById(orgId, OrgDetail.class);
     }
 
     public OrgPublicInfo getPublicInfo(ObjectId orgId) {

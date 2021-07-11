@@ -51,8 +51,8 @@ public class OrgApplicationController {
     public Document requestApplyForm(@RequestBody QueryObject queryObject) {
         ObjectId userid = userIdService.getCurrentUserId();
         applicationService.sendApplication(
-                userid,
                 queryObject.orgId,
+                userid,
                 queryObject.name,
                 queryObject.departmentId,
                 queryObject.applicationForm

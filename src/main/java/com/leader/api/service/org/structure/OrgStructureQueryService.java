@@ -145,6 +145,6 @@ public class OrgStructureQueryService {
     }
 
     public List<OrgMemberOverview> searchMembers(ObjectId orgId, String searchText) {
-        return memberRepository.findByOrgIdAndNameContaining(orgId, searchText, OrgMemberOverview.class);
+        return memberRepository.findByOrgIdAndNameContainingAndResignedFalse(orgId, searchText, OrgMemberOverview.class);
     }
 }

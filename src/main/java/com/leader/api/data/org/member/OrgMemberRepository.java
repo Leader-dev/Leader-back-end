@@ -34,7 +34,7 @@ public interface OrgMemberRepository extends MongoRepository<OrgMember, ObjectId
 
     boolean existsByOrgIdAndId(ObjectId orgId, ObjectId memberId);
 
-    <T> List<T> findByOrgIdAndNameContaining(ObjectId orgId, String searchText, Class<T> type);
+    <T> List<T> findByOrgIdAndNameContainingAndResignedFalse(ObjectId orgId, String searchText, Class<T> type);
 
     @Aggregation(pipeline = {
             "{" +

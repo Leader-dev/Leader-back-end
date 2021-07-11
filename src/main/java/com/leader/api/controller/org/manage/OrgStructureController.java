@@ -159,4 +159,13 @@ public class OrgStructureController {
 
         return new SuccessResponse();
     }
+
+    @PostMapping("/dismiss")
+    public Document removeMember(@RequestBody QueryObject queryObject) {
+        authorizationService.assertCurrentMemberHasAuthority(STRUCTURE_MANAGEMENT);
+
+        structureService.dismissMember(queryObject.memberId);
+
+        return new SuccessResponse();
+    }
 }

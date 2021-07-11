@@ -10,6 +10,7 @@ import com.leader.api.service.org.authorization.OrgRoleService;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.leader.api.data.org.member.OrgMemberRole.*;
@@ -82,5 +83,17 @@ public class OrgStructureService extends OrgStructureQueryService {
     public void setMemberToMember(ObjectId memberId, ObjectId departmentId) {
         roleService.removeRolesIn(memberId, GENERAL_MANAGER, DEPARTMENT_MANAGER);
         roleService.updateRoleDepartmentIdIn(memberId, member(departmentId));
+    }
+
+    public void dismissMember(ObjectId memberId) {
+        memberRepository.findById(memberId).ifPresent(member -> {
+            member.userId = null;
+            member.roles = new ArrayList<>();
+            member.title = null;
+            member.phone = null;
+            member.email = null;
+            member.resigned = true;
+            memberRepository.save(member);
+        });
     }
 }

@@ -7,6 +7,7 @@ import com.leader.api.data.org.member.OrgMember;
 import com.leader.api.data.org.member.OrgMemberRepository;
 import com.leader.api.data.org.member.OrgMemberRole;
 import com.leader.api.service.org.authorization.OrgRoleService;
+import com.leader.api.service.org.member.OrgMemberService;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
@@ -19,13 +20,15 @@ import static com.leader.api.data.org.member.OrgMemberRole.*;
 public class OrgStructureService extends OrgStructureQueryService {
 
     private final OrganizationRepository organizationRepository;
+    private final OrgMemberService memberService;
 
     public OrgStructureService(OrgDepartmentRepository departmentRepository,
                                OrgMemberRepository memberRepository,
                                OrganizationRepository organizationRepository,
-                               OrgRoleService roleService) {
+                               OrgRoleService roleService, OrgMemberService memberService) {
         super(memberRepository, departmentRepository, roleService);
         this.organizationRepository = organizationRepository;
+        this.memberService = memberService;
     }
 
     public void setOrgPresidentInfo(ObjectId memberId) {
@@ -94,6 +97,8 @@ public class OrgStructureService extends OrgStructureQueryService {
             member.email = null;
             member.resigned = true;
             memberRepository.save(member);
+
+            memberService.updateOrganizationMemberCount(member.orgId);
         });
     }
 }

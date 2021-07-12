@@ -13,7 +13,7 @@ public interface OrgMemberRepository extends MongoRepository<OrgMember, ObjectId
 
     List<OrgMember> findAllByOrgId(ObjectId orgId);
 
-    long countByOrgId(ObjectId orgId);
+    long countByOrgIdAndResignedFalse(ObjectId orgId);
 
     List<OrgMember> findByOrgIdAndRolesContaining(ObjectId orgId, OrgMemberRole role);
 
@@ -24,8 +24,6 @@ public interface OrgMemberRepository extends MongoRepository<OrgMember, ObjectId
     OrgMember findByOrgIdAndUserId(ObjectId orgId, ObjectId userId);
 
     boolean existsByOrgIdAndUserId(ObjectId orgId, ObjectId userId);
-
-    void deleteByOrgIdAndUserId(ObjectId orgId, ObjectId userId);
 
     boolean existsByOrgIdAndId(ObjectId orgId, ObjectId memberId);
 

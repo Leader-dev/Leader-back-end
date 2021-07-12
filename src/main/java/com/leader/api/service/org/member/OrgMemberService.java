@@ -47,6 +47,7 @@ public class OrgMemberService {
         newMember.roles = new ArrayList<>();
         newMember.roles.add(OrgMemberRole.member());
         newMember.resigned = false;
+        newMember.displayTitle = true;
         synchronized (memberRepository) {
             newMember.numberId = secureService.generateRandomNumberId(
                     MEMBER_NUMBER_ID_LENGTH,
@@ -56,13 +57,9 @@ public class OrgMemberService {
         }
     }
 
-    private void deleteMembership(ObjectId orgId, ObjectId userId) {
-        memberRepository.deleteByOrgIdAndUserId(orgId, userId);
-    }
-
-    private void updateOrganizationMemberCount(ObjectId orgId) {
+    public void updateOrganizationMemberCount(ObjectId orgId) {
         organizationRepository.findById(orgId).ifPresent(organization -> {
-            organization.memberCount = memberRepository.countByOrgId(orgId);
+            organization.memberCount = memberRepository.countByOrgIdAndResignedFalse(orgId);
             organizationRepository.save(organization);
         });
     }
@@ -81,19 +78,6 @@ public class OrgMemberService {
         OrgMember member = insertNewMembership(orgId, userId, name);
         updateOrganizationMemberCount(orgId);
         return member;
-    }
-
-    public void leaveOrganization(ObjectId orgId, ObjectId userId) {
-        deleteMembership(orgId, userId);
-        updateOrganizationMemberCount(orgId);
-    }
-
-    public OrgMember getMember(ObjectId memberId) {
-        return memberRepository.findById(memberId).orElse(null);
-    }
-
-    public ObjectId getOrgId(ObjectId memberId) {
-        return getMember(memberId).orgId;
     }
 
     public List<OrgJoinedOverview> findJoinedOrganizations(ObjectId userid) {

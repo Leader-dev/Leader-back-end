@@ -1,6 +1,6 @@
 package com.leader.api.data.trend.item;
 
-import com.leader.api.data.user.UserInfo;
+import com.leader.api.data.trend.puppet.PuppetTrendOverview;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 
@@ -11,8 +11,8 @@ public class TrendItemDetail {
 
     @Id
     public ObjectId id;
-    public ObjectId userId;
-    public UserInfo userInfo;
+    public ObjectId puppetId;
+    public PuppetTrendOverview puppetInfo;
     public String orgName;
     public String orgTitle;
     public boolean anonymous;

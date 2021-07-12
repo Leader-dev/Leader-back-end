@@ -14,6 +14,8 @@ public interface StaticResourceStorage {
 
     void storeFile(String url, InputStream inputStream);
 
+    void copyFile(String sourceUrl, String targetUrl);
+
     boolean fileExists(String url);
 
     void deleteFile(String url);

@@ -12,7 +12,7 @@ public class TrendItem {
 
     @Id
     public ObjectId id;
-    public ObjectId userId;
+    public ObjectId puppetId;
     public String orgName;
     public String orgTitle;
     public boolean anonymous;

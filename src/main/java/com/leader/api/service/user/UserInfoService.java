@@ -7,7 +7,6 @@ import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.function.Consumer;
 
 @Service
@@ -48,18 +47,6 @@ public class UserInfoService {
     public void updateAvatar(ObjectId id, String avatarUrl) {
         operateAndSaveUser(id, user -> {
             user.avatarUrl = avatarUrl;
-        });
-    }
-
-    public void updateIntroduction(ObjectId id, String introduction) {
-        operateAndSaveUser(id, user -> {
-            user.introduction = introduction;
-        });
-    }
-
-    public void updateContacts(ObjectId id, ArrayList<String> contacts) {
-        operateAndSaveUser(id, user -> {
-            user.contacts = contacts;
         });
     }
 }

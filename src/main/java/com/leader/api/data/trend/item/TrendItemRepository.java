@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public interface TrendItemRepository extends MongoRepository<TrendItem, ObjectId> {
 
-    Optional<TrendItem> findByUserIdAndId(ObjectId userId, ObjectId id);
+    Optional<TrendItem> findByPuppetIdAndId(ObjectId puppetId, ObjectId id);
 
     @Aggregation(pipeline = {
             "{" +
@@ -19,32 +19,32 @@ public interface TrendItemRepository extends MongoRepository<TrendItem, ObjectId
             "}",
             "{" +
             "   $set: {" +
-            "       userId: { $cond: ['$anonymous', null, '$userId'] }" +
+            "       puppetId: { $cond: ['$anonymous', null, '$puppetId'] }" +
             "       orgName: { $cond: ['$anonymous', null, '$orgName'] }" +
             "       orgTitle: { $cond: ['$anonymous', null, '$orgTitle'] }" +
             "   }" +
             "}",
             "{" +
             "   $lookup: {" +
-            "       from: 'user_list'," +
-            "       localField: 'userId'," +
+            "       from: 'puppet_list'," +
+            "       localField: 'puppetId'," +
             "       foreignField: '_id'" +
-            "       as: 'userInfo'" +
+            "       as: 'puppetInfo'" +
             "   }" +
             "}",
             "{" +
             "   $unwind: {" +
-            "       path: '$userInfo'," +
+            "       path: '$puppetInfo'," +
             "       preserveNullAndEmptyArrays: true" +
             "   }" +
             "}",
             "{" +
             "   $lookup: {" +
             "       from: 'trend_like'," +
-            "       let: { trendItemId: '$_id', userId: ?1 }," +
+            "       let: { trendItemId: '$_id', puppetId: ?1 }," +
             "       pipeline: [{ $match: { $expr: { $and: [" +
             "           { $eq: ['$trendItemId', '$$trendItemId'] }" +
-            "           { $eq: ['$userId', '$$userId'] }" +
+            "           { $eq: ['$puppetId', '$$puppetId'] }" +
                     "]}}}]," +
             "       as: 'likeInfo'" +
             "   }" +
@@ -56,13 +56,13 @@ public interface TrendItemRepository extends MongoRepository<TrendItem, ObjectId
             "}",
             "{ $sort: { sendDate : -1 } }"
     })
-    List<TrendItemDetail> lookupByQueryOrderBySendDateDesc(Document query, ObjectId userId, Pageable pageable);
+    List<TrendItemDetail> lookupByQueryOrderBySendDateDesc(Document query, ObjectId puppetId, Pageable pageable);
 
-    default List<TrendItemDetail> lookupByOrderBySendDateDesc(ObjectId userId, Pageable pageable) {
-        return lookupByQueryOrderBySendDateDesc(new Document(), userId, pageable);
+    default List<TrendItemDetail> lookupByOrderBySendDateDesc(ObjectId puppetId, Pageable pageable) {
+        return lookupByQueryOrderBySendDateDesc(new Document(), puppetId, pageable);
     }
 
-    default List<TrendItemDetail> lookupByUserIdOrderBySendDateDesc(ObjectId userId, Pageable pageable) {
-        return lookupByQueryOrderBySendDateDesc(new Document("userId", userId), userId, pageable);
+    default List<TrendItemDetail> lookupByPuppetIdOrderBySendDateDesc(ObjectId puppetId, Pageable pageable) {
+        return lookupByQueryOrderBySendDateDesc(new Document("puppetId", puppetId), puppetId, pageable);
     }
 }

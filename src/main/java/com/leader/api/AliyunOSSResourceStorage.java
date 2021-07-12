@@ -53,6 +53,10 @@ public class AliyunOSSResourceStorage implements StaticResourceStorage {
         operateOSSClient(oss -> oss.putObject(bucketName, url, inputStream));
     }
 
+    public void copyFile(String sourceUrl, String targetUrl) {
+        operateOSSClient(oss -> oss.copyObject(bucketName, sourceUrl, bucketName, targetUrl));
+    }
+
     public URL generatePresignedUploadUrl(String url, Date expiration) {
         GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucketName, url, HttpMethod.PUT);
         request.setExpiration(expiration);

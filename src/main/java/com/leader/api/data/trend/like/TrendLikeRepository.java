@@ -7,9 +7,9 @@ public interface TrendLikeRepository extends MongoRepository<TrendLike, ObjectId
 
     long countByTrendItemId(ObjectId trendItemId);
 
-    boolean existsByTrendItemIdAndUserId(ObjectId trendItemId, ObjectId userId);
+    boolean existsByTrendItemIdAndPuppetId(ObjectId trendItemId, ObjectId puppetId);
 
-    void deleteByTrendItemIdAndUserId(ObjectId trendItemId, ObjectId userId);
+    void deleteByTrendItemIdAndPuppetId(ObjectId trendItemId, ObjectId puppetId);
 
     void deleteByTrendItemId(ObjectId trendItemId);
 }

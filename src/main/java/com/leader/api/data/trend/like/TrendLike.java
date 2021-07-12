@@ -10,5 +10,5 @@ public class TrendLike {
     @Id
     public ObjectId id;
     public ObjectId trendItemId;
-    public ObjectId userId;
+    public ObjectId puppetId;
 }

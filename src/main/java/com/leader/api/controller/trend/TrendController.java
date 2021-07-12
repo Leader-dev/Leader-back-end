@@ -1,14 +1,10 @@
 package com.leader.api.controller.trend;
 
-import com.leader.api.data.org.member.OrgMemberTitleInfo;
 import com.leader.api.data.trend.item.TrendItem;
 import com.leader.api.data.trend.item.TrendItemDetail;
-import com.leader.api.data.user.UserInfo;
-import com.leader.api.service.org.member.OrgMemberTitleService;
 import com.leader.api.service.service.ImageService;
+import com.leader.api.service.trend.PuppetIdService;
 import com.leader.api.service.trend.TrendService;
-import com.leader.api.service.user.UserInfoService;
-import com.leader.api.service.util.UserIdService;
 import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -27,26 +23,20 @@ import java.util.List;
 public class TrendController {
 
     private final TrendService trendService;
-    private final UserIdService userIdService;
+    private final PuppetIdService puppetIdService;
     private final ImageService imageService;
-    private final UserInfoService userInfoService;
-    private final OrgMemberTitleService titleService;
 
     @Autowired
-    public TrendController(TrendService trendService, UserIdService userIdService, ImageService imageService,
-                           UserInfoService userInfoService, OrgMemberTitleService titleService) {
+    public TrendController(TrendService trendService, PuppetIdService puppetIdService, ImageService imageService) {
         this.trendService = trendService;
-        this.userIdService = userIdService;
+        this.puppetIdService = puppetIdService;
         this.imageService = imageService;
-        this.userInfoService = userInfoService;
-        this.titleService = titleService;
     }
 
     public static class QueryObject {
         public int pageNumber;
         public int pageSize;
         public ObjectId trendItemId;
-        public ObjectId userId;
         public boolean anonymous;
         public ObjectId orgId;
         public String content;
@@ -56,8 +46,8 @@ public class TrendController {
 
     @PostMapping("/list")
     public Document listTrends(@RequestBody QueryObject queryObject) {
-        ObjectId userId = userIdService.getCurrentUserId();
-        List<TrendItemDetail> trends = trendService.getTrends(userId, PageRequest.of(queryObject.pageNumber, queryObject.pageSize));
+        ObjectId puppetId = puppetIdService.getCurrentPuppetId();
+        List<TrendItemDetail> trends = trendService.getTrends(puppetId, PageRequest.of(queryObject.pageNumber, queryObject.pageSize));
 
         Document response = new SuccessResponse();
         response.append("trends", trends);
@@ -66,8 +56,8 @@ public class TrendController {
 
     @PostMapping("/list-sent")
     public Document listSentTrends(@RequestBody QueryObject queryObject) {
-        ObjectId userId = userIdService.getCurrentUserId();
-        List<TrendItemDetail> trends = trendService.getSentTrends(userId, PageRequest.of(queryObject.pageNumber, queryObject.pageSize));
+        ObjectId puppetId = puppetIdService.getCurrentPuppetId();
+        List<TrendItemDetail> trends = trendService.getSentTrends(puppetId, PageRequest.of(queryObject.pageNumber, queryObject.pageSize));
 
         Document response = new SuccessResponse();
         response.append("trends", trends);
@@ -78,8 +68,10 @@ public class TrendController {
     public Document sendTrend(@RequestBody QueryObject queryObject) {
         imageService.assertUploadedTempImages(queryObject.imageUrls);
 
-        ObjectId userId = userIdService.getCurrentUserId();
+        ObjectId puppetId = puppetIdService.getCurrentPuppetId();
+        ObjectId userId = puppetIdService.getCurrentUserId();
         trendService.sendTrend(
+                puppetId,
                 userId,
                 queryObject.anonymous,
                 queryObject.orgId,
@@ -94,25 +86,25 @@ public class TrendController {
 
     @PostMapping("/like")
     public Document likeTrend(@RequestBody QueryObject queryObject) {
-        ObjectId userId = userIdService.getCurrentUserId();
-        trendService.likeTrend(userId, queryObject.trendItemId);
+        ObjectId puppetId = puppetIdService.getCurrentPuppetId();
+        trendService.likeTrend(puppetId, queryObject.trendItemId);
 
         return new SuccessResponse();
     }
 
     @PostMapping("/unlike")
     public Document unlikeTrend(@RequestBody QueryObject queryObject) {
-        ObjectId userId = userIdService.getCurrentUserId();
-        trendService.unlikeTrend(userId, queryObject.trendItemId);
+        ObjectId puppetId = puppetIdService.getCurrentPuppetId();
+        trendService.unlikeTrend(puppetId, queryObject.trendItemId);
 
         return new SuccessResponse();
     }
 
     @PostMapping("/delete")
     public Document deleteTrend(@RequestBody QueryObject queryObject) {
-        ObjectId userId = userIdService.getCurrentUserId();
+        ObjectId puppetId = puppetIdService.getCurrentPuppetId();
         TrendItem item = trendService.getTrendItem(queryObject.trendItemId);
-        trendService.deleteTrend(userId, queryObject.trendItemId);
+        trendService.deleteTrend(puppetId, queryObject.trendItemId);
 
         imageService.deleteImages(item.imageUrls);
 
@@ -121,22 +113,9 @@ public class TrendController {
 
     @PostMapping("/report")
     public Document reportTrend(@RequestBody QueryObject queryObject) {
-        ObjectId userId = userIdService.getCurrentUserId();
+        ObjectId userId = puppetIdService.getCurrentUserId();
         trendService.reportTrend(userId, queryObject.trendItemId, queryObject.description, queryObject.imageUrls);
 
         return new SuccessResponse();
-    }
-
-    @PostMapping("/get-user-info")
-    public Document getUserInfo(@RequestBody QueryObject queryObject) {
-        UserInfo userInfo = userInfoService.getUserInfo(queryObject.userId);
-        List<OrgMemberTitleInfo> titles = titleService.findDisplayedTitles(queryObject.userId);
-
-        Document response = new SuccessResponse();
-        Document data = new Document();
-        data.append("userInfo", userInfo);
-        data.append("titles", titles);
-        response.append("data", data);
-        return response;
     }
 }

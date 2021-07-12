@@ -41,24 +41,29 @@ public class TrendService {
         this.dateUtil = dateUtil;
     }
 
-    public List<TrendItemDetail> getTrends(ObjectId userId, Pageable pageable) {
-        return itemRepository.lookupByOrderBySendDateDesc(userId, pageable);
+    public List<TrendItemDetail> getTrends(ObjectId puppetId, Pageable pageable) {
+        return itemRepository.lookupByOrderBySendDateDesc(puppetId, pageable);
     }
 
-    public List<TrendItemDetail> getSentTrends(ObjectId userId, Pageable pageable) {
-        return itemRepository.lookupByUserIdOrderBySendDateDesc(userId, pageable);
+    public List<TrendItemDetail> getSentTrends(ObjectId puppetId, Pageable pageable) {
+        return itemRepository.lookupByPuppetIdOrderBySendDateDesc(puppetId, pageable);
     }
 
     public TrendItem getTrendItem(ObjectId trendItemId) {
         return itemRepository.findById(trendItemId).orElse(null);
     }
 
-    public void sendTrend(ObjectId userId, boolean anonymous, ObjectId orgId, String content, ArrayList<String> imageUrls) {
+    public void sendTrend(ObjectId puppetId,
+                          ObjectId userId,
+                          boolean anonymous,
+                          ObjectId orgId,
+                          String content,
+                          ArrayList<String> imageUrls) {
         Organization organization = organizationRepository.findById(orgId, Organization.class);
         OrgMember member = memberRepository.findByOrgIdAndUserId(orgId, userId);
 
         TrendItem item = new TrendItem();
-        item.userId = userId;
+        item.puppetId = puppetId;
         item.orgName = organization.name;
         item.orgTitle = member.title;
         item.anonymous = anonymous;
@@ -69,12 +74,12 @@ public class TrendService {
         itemRepository.insert(item);
     }
 
-    public void likeTrend(ObjectId userId, ObjectId trendItemId) {
-        if (!likeRepository.existsByTrendItemIdAndUserId(trendItemId, userId)) {
+    public void likeTrend(ObjectId puppetId, ObjectId trendItemId) {
+        if (!likeRepository.existsByTrendItemIdAndPuppetId(trendItemId, puppetId)) {
             itemRepository.findById(trendItemId).ifPresent(item -> {
                 TrendLike like = new TrendLike();
                 like.trendItemId = trendItemId;
-                like.userId = userId;
+                like.puppetId = puppetId;
                 likeRepository.insert(like);
 
                 item.likeCount = likeRepository.countByTrendItemId(trendItemId);
@@ -83,17 +88,17 @@ public class TrendService {
         }
     }
 
-    public void unlikeTrend(ObjectId userId, ObjectId trendItemId) {
+    public void unlikeTrend(ObjectId puppetId, ObjectId trendItemId) {
         itemRepository.findById(trendItemId).ifPresent(item -> {
-            likeRepository.deleteByTrendItemIdAndUserId(trendItemId, userId);
+            likeRepository.deleteByTrendItemIdAndPuppetId(trendItemId, puppetId);
 
             item.likeCount = likeRepository.countByTrendItemId(trendItemId);
             itemRepository.save(item);
         });
     }
 
-    public void deleteTrend(ObjectId userId, ObjectId trendItemId) {
-        itemRepository.findByUserIdAndId(userId, trendItemId).ifPresent(item -> {
+    public void deleteTrend(ObjectId puppetId, ObjectId trendItemId) {
+        itemRepository.findByPuppetIdAndId(puppetId, trendItemId).ifPresent(item -> {
             likeRepository.deleteByTrendItemId(trendItemId);
             itemRepository.delete(item);
         });

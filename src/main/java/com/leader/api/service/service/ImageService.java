@@ -119,6 +119,18 @@ public class ImageService {
         return Arrays.asList(uploadUrls);
     }
 
+    public String duplicateImage(String imageUrl) {
+        if (imageUrl == null) {
+            return null;
+        }
+
+        ObjectId userId = userIdService.getCurrentUserId();
+        String newUrl = allocateNewImageUrl(userId, dateUtil.getCurrentDate());
+        resourceStorage.copyFile(imageUrl, newUrl);
+        confirmUploadImage(newUrl);
+        return newUrl;
+    }
+
     public void assertUploadedTempImage(String imageUrl) {  // asserts at least one image uploaded
         if (imageUrl == null) {
             return;

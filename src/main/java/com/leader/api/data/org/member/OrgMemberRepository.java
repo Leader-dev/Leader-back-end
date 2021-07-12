@@ -1,5 +1,6 @@
 package com.leader.api.data.org.member;
 
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -10,27 +11,21 @@ public interface OrgMemberRepository extends MongoRepository<OrgMember, ObjectId
 
     boolean existsByNumberId(String numberId);
 
-    List<OrgMember> findAllByOrgId(ObjectId organizationId);
+    List<OrgMember> findAllByOrgId(ObjectId orgId);
 
-    long countByOrgId(ObjectId organizationId);
+    long countByOrgId(ObjectId orgId);
 
-    List<OrgMember> findAllByUserId(ObjectId userId);
-
-    List<OrgMember> findByOrgIdAndRolesContaining(ObjectId organizationId, OrgMemberRole role);
+    List<OrgMember> findByOrgIdAndRolesContaining(ObjectId orgId, OrgMemberRole role);
 
     List<OrgMember> findByRolesContaining(OrgMemberRole role);
 
-    boolean existsByOrgIdAndRolesContainingAndId(ObjectId organizationId, OrgMemberRole role, ObjectId memberId);
-
     boolean existsByRolesContainingAndId(OrgMemberRole role, ObjectId memberId);
 
-    long countByUserId(ObjectId userId);
+    OrgMember findByOrgIdAndUserId(ObjectId orgId, ObjectId userId);
 
-    OrgMember findByOrgIdAndUserId(ObjectId organizationId, ObjectId userId);
+    boolean existsByOrgIdAndUserId(ObjectId orgId, ObjectId userId);
 
-    boolean existsByOrgIdAndUserId(ObjectId organizationId, ObjectId userId);
-
-    void deleteByOrgIdAndUserId(ObjectId organizationId, ObjectId userId);
+    void deleteByOrgIdAndUserId(ObjectId orgId, ObjectId userId);
 
     boolean existsByOrgIdAndId(ObjectId orgId, ObjectId memberId);
 
@@ -59,16 +54,26 @@ public interface OrgMemberRepository extends MongoRepository<OrgMember, ObjectId
 
     @Aggregation(pipeline = {
             "{" +
-            "   $match: { orgId: ?0, userId: ?1 }" +
+            "   $match: ?0" +
             "}",
             "{" +
-            "   $unwind: '$roles'" +
+            "   $lookup: {" +
+            "       from: 'org_list'," +
+            "       localField: 'orgId'," +
+            "       foreignField: '_id'" +
+            "       as: 'orgInfo'" +
+            "   }" +
             "}",
             "{" +
-            "   $replaceRoot: { newRoot: '$roles' }" +
+            "   $unwind: '$orgInfo'" +
+            "}",
+            "{" +
+            "   $set: {" +
+            "       orgName: '$orgInfo.name'" +
+            "   }" +
             "}"
     })
-    List<OrgMemberRole> lookupRolesByOrgIdAndUserId(ObjectId organizationId, ObjectId userId);
+    List<OrgMemberTitleInfo> lookupJoinedOrganizationTitlesByQuery(Document query);
 
     @Aggregation(pipeline = {
             "{" +
@@ -82,4 +87,16 @@ public interface OrgMemberRepository extends MongoRepository<OrgMember, ObjectId
             "}"
     })
     List<OrgMemberRole> lookupRolesByMemberId(ObjectId memberId);
+
+    default List<OrgMemberTitleInfo> lookupJoinedOrganizationTitlesByUserId(ObjectId userId) {
+        Document query = new Document("userId", userId);
+        return lookupJoinedOrganizationTitlesByQuery(query);
+    }
+
+    default List<OrgMemberTitleInfo> lookupJoinedOrganizationTitlesByUserIdAndDisplayTitle(ObjectId userId, boolean displayTitle) {
+        Document query = new Document();
+        query.append("userId", userId);
+        query.append("displayTitle", displayTitle);
+        return lookupJoinedOrganizationTitlesByQuery(query);
+    }
 }

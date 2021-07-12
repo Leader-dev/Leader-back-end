@@ -55,7 +55,7 @@ public class OrgUserController {
 
     @PostMapping("/create")
     public Document createOrganization(@RequestBody QueryObject queryObject) {
-         imageService.assertUploadedTempImage(queryObject.publicInfo.posterUrl);
+        imageService.assertUploadedTempImage(queryObject.publicInfo.posterUrl);
 
         ObjectId userid = userIdService.getCurrentUserId();
         String nickname = userInfoService.getUserNickname(userid);

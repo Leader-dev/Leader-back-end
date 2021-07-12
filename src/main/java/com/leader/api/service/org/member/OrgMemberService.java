@@ -20,20 +20,20 @@ public class OrgMemberService {
     public static final int MEMBER_NUMBER_ID_LENGTH = 5;
 
     private final OrganizationRepository organizationRepository;
-    private final OrgMemberRepository membershipRepository;
+    private final OrgMemberRepository memberRepository;
     private final SecureService secureService;
 
     @Autowired
     public OrgMemberService(OrganizationRepository organizationRepository,
-                            OrgMemberRepository membershipRepository,
+                            OrgMemberRepository memberRepository,
                             SecureService secureService) {
         this.organizationRepository = organizationRepository;
-        this.membershipRepository = membershipRepository;
+        this.memberRepository = memberRepository;
         this.secureService = secureService;
     }
 
     private boolean membershipExists(ObjectId orgId, ObjectId userId) {
-        return membershipRepository.existsByOrgIdAndUserId(orgId, userId);
+        return memberRepository.existsByOrgIdAndUserId(orgId, userId);
     }
 
     private OrgMember insertNewMembership(ObjectId orgId, ObjectId userid, String name) {
@@ -47,22 +47,22 @@ public class OrgMemberService {
         newMember.roles = new ArrayList<>();
         newMember.roles.add(OrgMemberRole.member());
         newMember.resigned = false;
-        synchronized (membershipRepository) {
+        synchronized (memberRepository) {
             newMember.numberId = secureService.generateRandomNumberId(
                     MEMBER_NUMBER_ID_LENGTH,
-                    membershipRepository::existsByNumberId
+                    memberRepository::existsByNumberId
             );
-            return membershipRepository.insert(newMember);
+            return memberRepository.insert(newMember);
         }
     }
 
     private void deleteMembership(ObjectId orgId, ObjectId userId) {
-        membershipRepository.deleteByOrgIdAndUserId(orgId, userId);
+        memberRepository.deleteByOrgIdAndUserId(orgId, userId);
     }
 
     private void updateOrganizationMemberCount(ObjectId orgId) {
         organizationRepository.findById(orgId).ifPresent(organization -> {
-            organization.memberCount = membershipRepository.countByOrgId(orgId);
+            organization.memberCount = memberRepository.countByOrgId(orgId);
             organizationRepository.save(organization);
         });
     }
@@ -89,7 +89,7 @@ public class OrgMemberService {
     }
 
     public OrgMember getMember(ObjectId memberId) {
-        return membershipRepository.findById(memberId).orElse(null);
+        return memberRepository.findById(memberId).orElse(null);
     }
 
     public ObjectId getOrgId(ObjectId memberId) {
@@ -97,6 +97,6 @@ public class OrgMemberService {
     }
 
     public List<OrgJoinedOverview> findJoinedOrganizations(ObjectId userid) {
-        return membershipRepository.lookupJoinedOrganizationsByUserId(userid);
+        return memberRepository.lookupJoinedOrganizationsByUserId(userid);
     }
 }

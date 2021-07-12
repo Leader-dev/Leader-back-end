@@ -83,10 +83,10 @@ public class OrganizationService {
     }
 
     public OrgDetail getOrganizationDetail(ObjectId orgId) {
-        return organizationRepository.findFirstById(orgId, OrgDetail.class);
+        return organizationRepository.findById(orgId, OrgDetail.class);
     }
 
     public OrgPublicInfo getPublicInfo(ObjectId orgId) {
-        return organizationRepository.findFirstById(orgId, OrgPublicInfo.class);
+        return organizationRepository.findById(orgId, OrgPublicInfo.class);
     }
 }

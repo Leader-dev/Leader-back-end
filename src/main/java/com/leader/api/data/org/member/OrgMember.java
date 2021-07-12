@@ -24,5 +24,7 @@ public class OrgMember {
     public ArrayList<String> phone;
     public ArrayList<String> email;
 
+    public boolean displayTitle;
+
     public boolean resigned;
 }

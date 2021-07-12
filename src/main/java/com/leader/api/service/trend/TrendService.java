@@ -1,0 +1,110 @@
+package com.leader.api.service.trend;
+
+import com.leader.api.data.org.Organization;
+import com.leader.api.data.org.OrganizationRepository;
+import com.leader.api.data.org.member.OrgMember;
+import com.leader.api.data.org.member.OrgMemberRepository;
+import com.leader.api.data.trend.item.TrendItem;
+import com.leader.api.data.trend.item.TrendItemDetail;
+import com.leader.api.data.trend.item.TrendItemRepository;
+import com.leader.api.data.trend.like.TrendLike;
+import com.leader.api.data.trend.like.TrendLikeRepository;
+import com.leader.api.data.trend.report.TrendReport;
+import com.leader.api.data.trend.report.TrendReportRepository;
+import com.leader.api.util.component.DateUtil;
+import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Service
+public class TrendService {
+
+    private final TrendItemRepository itemRepository;
+    private final TrendLikeRepository likeRepository;
+    private final TrendReportRepository reportRepository;
+    private final OrganizationRepository organizationRepository;
+    private final OrgMemberRepository memberRepository;
+    private final DateUtil dateUtil;
+
+    @Autowired
+    public TrendService(TrendItemRepository itemRepository, TrendLikeRepository likeRepository, TrendReportRepository reportRepository,
+                        OrganizationRepository organizationRepository, OrgMemberRepository memberRepository, DateUtil dateUtil) {
+        this.itemRepository = itemRepository;
+        this.likeRepository = likeRepository;
+        this.reportRepository = reportRepository;
+        this.organizationRepository = organizationRepository;
+        this.memberRepository = memberRepository;
+        this.dateUtil = dateUtil;
+    }
+
+    public List<TrendItemDetail> getTrends(ObjectId userId, Pageable pageable) {
+        return itemRepository.lookupByOrderBySendDateDesc(userId, pageable);
+    }
+
+    public List<TrendItemDetail> getSentTrends(ObjectId userId, Pageable pageable) {
+        return itemRepository.lookupByUserIdOrderBySendDateDesc(userId, pageable);
+    }
+
+    public TrendItem getTrendItem(ObjectId trendItemId) {
+        return itemRepository.findById(trendItemId).orElse(null);
+    }
+
+    public void sendTrend(ObjectId userId, boolean anonymous, ObjectId orgId, String content, ArrayList<String> imageUrls) {
+        Organization organization = organizationRepository.findById(orgId, Organization.class);
+        OrgMember member = memberRepository.findByOrgIdAndUserId(orgId, userId);
+
+        TrendItem item = new TrendItem();
+        item.userId = userId;
+        item.orgName = organization.name;
+        item.orgTitle = member.title;
+        item.anonymous = anonymous;
+        item.sendDate = dateUtil.getCurrentDate();
+        item.content = content;
+        item.imageUrls = imageUrls;
+        item.likeCount = 0L;
+        itemRepository.insert(item);
+    }
+
+    public void likeTrend(ObjectId userId, ObjectId trendItemId) {
+        if (!likeRepository.existsByTrendItemIdAndUserId(trendItemId, userId)) {
+            itemRepository.findById(trendItemId).ifPresent(item -> {
+                TrendLike like = new TrendLike();
+                like.trendItemId = trendItemId;
+                like.userId = userId;
+                likeRepository.insert(like);
+
+                item.likeCount = likeRepository.countByTrendItemId(trendItemId);
+                itemRepository.save(item);
+            });
+        }
+    }
+
+    public void unlikeTrend(ObjectId userId, ObjectId trendItemId) {
+        itemRepository.findById(trendItemId).ifPresent(item -> {
+            likeRepository.deleteByTrendItemIdAndUserId(trendItemId, userId);
+
+            item.likeCount = likeRepository.countByTrendItemId(trendItemId);
+            itemRepository.save(item);
+        });
+    }
+
+    public void deleteTrend(ObjectId userId, ObjectId trendItemId) {
+        itemRepository.findByUserIdAndId(userId, trendItemId).ifPresent(item -> {
+            likeRepository.deleteByTrendItemId(trendItemId);
+            itemRepository.delete(item);
+        });
+    }
+
+    public void reportTrend(ObjectId userId, ObjectId trendItemId, String description, ArrayList<String> imageUrls) {
+        TrendReport report = new TrendReport();
+        report.senderUserId = userId;
+        report.trendItemId = trendItemId;
+        report.description = description;
+        report.imageUrls = imageUrls;
+        reportRepository.insert(report);
+    }
+}

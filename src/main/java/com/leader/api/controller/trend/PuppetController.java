@@ -70,6 +70,16 @@ public class PuppetController {
         return response;
     }
 
+    @PostMapping("/get-titles")
+    public Document getPuppetTitles() {
+        ObjectId userId = puppetIdService.getCurrentUserId();
+        List<OrgMemberTitleInfo> titles = titleService.findTitles(userId);
+
+        Document response = new SuccessResponse();
+        response.append("titles", titles);
+        return response;
+    }
+
     @PostMapping("/update-info")
     public Document updatePuppetInfo(@RequestBody QueryObject queryObject) {
         ObjectId puppetId = puppetIdService.getCurrentPuppetId();

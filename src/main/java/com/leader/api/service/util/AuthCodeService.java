@@ -2,6 +2,7 @@ package com.leader.api.service.util;
 
 import com.leader.api.data.util.AuthCodeRecord;
 import com.leader.api.data.util.AuthCodeRecordRepository;
+import com.leader.api.resource.sms.SMSService;
 import com.leader.api.util.component.DateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,13 +17,15 @@ public class AuthCodeService {
     private final AuthCodeRecordRepository authCodeRecordRepository;
     private final SecureService secureService;
     private final DateUtil dateUtil;
+    private final SMSService smsService;
 
     @Autowired
     public AuthCodeService(AuthCodeRecordRepository authCodeRecordRepository, SecureService secureService,
-                           DateUtil dateUtil) {
+                           DateUtil dateUtil, SMSService smsService) {
         this.authCodeRecordRepository = authCodeRecordRepository;
         this.secureService = secureService;
         this.dateUtil = dateUtil;
+        this.smsService = smsService;
     }
 
     private long timePassedSinceLastAuthCode(String phone) {
@@ -51,10 +54,10 @@ public class AuthCodeService {
         // randomly generate authcode
         String authcode = secureService.generateRandomAuthCode(AUTHCODE_LENGTH);
 
+        smsService.sendAuthCode(phone, authcode);
+
         // insert record to database
         insertAuthCodeRecord(phone, authcode);
-
-        // TODO Actually send the authcode to phone
 
         return true;
     }

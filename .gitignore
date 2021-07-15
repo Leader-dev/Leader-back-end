@@ -34,4 +34,4 @@ build/
 .vscode/
 
 ### Custom ###
-/application.properties
+/application.yml

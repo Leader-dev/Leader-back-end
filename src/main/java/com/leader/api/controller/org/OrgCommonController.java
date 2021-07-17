@@ -45,7 +45,7 @@ public class OrgCommonController {
         return response;
     }
 
-    @PostMapping("/index")
+    @PostMapping("/home")
     public Document getOrganizationIndex() {
         // TODO Use more intelligent way to decide content
         List<OrgPosterOverview> pic = queryService.findOrganizationsByNumber(5, OrgPosterOverview.class);

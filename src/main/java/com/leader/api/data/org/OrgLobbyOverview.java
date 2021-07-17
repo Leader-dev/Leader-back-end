@@ -10,10 +10,10 @@ public class OrgLobbyOverview {
     @Id
     public ObjectId id;
     public String numberId;
-    public String addressAuth;
+    public String instituteAuth;
 
     public String name;
-    public String address;
+    public String instituteName;
     public List<String> typeAliases;
     public String posterUrl;
     public Long memberCount;

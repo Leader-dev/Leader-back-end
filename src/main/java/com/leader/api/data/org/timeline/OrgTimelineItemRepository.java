@@ -9,5 +9,5 @@ public interface OrgTimelineItemRepository extends MongoRepository<OrgTimelineIt
 
     List<OrgTimelineItem> findByOrgIdOrderByTimestampAsc(ObjectId orgId);
 
-    void deleteByOrgIdAndId(ObjectId orgId, ObjectId id);
+    void deleteByOrgIdAndId(ObjectId organizationId, ObjectId id);
 }

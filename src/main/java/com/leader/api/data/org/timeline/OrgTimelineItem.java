@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
 
-@Document("org_timeline_item")
+@Document(collation = "org_timeline_item")
 public class OrgTimelineItem {
 
     @Id
@@ -14,4 +14,5 @@ public class OrgTimelineItem {
     public ObjectId orgId;
     public Date timestamp;
     public String description;
+
 }

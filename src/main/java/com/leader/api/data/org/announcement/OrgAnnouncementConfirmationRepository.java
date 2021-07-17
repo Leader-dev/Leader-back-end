@@ -25,7 +25,7 @@ public interface OrgAnnouncementConfirmationRepository extends MongoRepository<O
             "   $lookup: {" +
             "       from: 'org_member'," +
             "       localField: 'memberId'," +
-            "       foreignField: '_id'" +
+            "       foreignField: '_id'," +
             "       as: 'memberInfo'" +
             "   }" +
             "}",
@@ -46,7 +46,7 @@ public interface OrgAnnouncementConfirmationRepository extends MongoRepository<O
             "   $lookup: {" +
             "       from: 'org_announce'," +
             "       localField: 'announceId'," +
-            "       foreignField: '_id'" +
+            "       foreignField: '_id'," +
             "       as: 'announceInfo'" +
             "   }" +
             "}",
@@ -60,7 +60,7 @@ public interface OrgAnnouncementConfirmationRepository extends MongoRepository<O
             "   $lookup: {" +
             "       from: 'org_member'," +
             "       localField: 'senderMemberId'," +
-            "       foreignField: '_id'" +
+            "       foreignField: '_id'," +
             "       as: 'senderMemberInfo'" +
             "   }" +
             "}",
@@ -78,7 +78,7 @@ public interface OrgAnnouncementConfirmationRepository extends MongoRepository<O
             "   $lookup: {" +
             "       from: 'org_announce'," +
             "       localField: 'announceId'," +
-            "       foreignField: '_id'" +
+            "       foreignField: '_id'," +
             "       as: 'announceInfo'" +
             "   }" +
             "}",
@@ -92,7 +92,7 @@ public interface OrgAnnouncementConfirmationRepository extends MongoRepository<O
             "   $lookup: {" +
             "       from: 'org_member'," +
             "       localField: 'senderMemberId'," +
-            "       foreignField: '_id'" +
+            "       foreignField: '_id'," +
             "       as: 'senderMemberInfo'" +
             "   }" +
             "}",

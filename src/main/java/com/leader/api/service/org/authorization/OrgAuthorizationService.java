@@ -64,9 +64,11 @@ public class OrgAuthorizationService {
 
     public boolean currentMemberCanManageAll(List<ObjectId> memberIds) {
         ObjectId currentOrgId = memberIdService.getCurrentOrgId();
+
         if (!structureQueryService.isAllMemberOfOrganization(currentOrgId, memberIds)) {
             return false;
         }
+
         ObjectId currentMemberId = memberIdService.getCurrentMemberId();
         List<OrgMemberRole> roles = findRolesIn(currentMemberId);
         return roleAuthorityService.canManageMembers(memberIds, roles);

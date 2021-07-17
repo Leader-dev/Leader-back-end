@@ -4,6 +4,7 @@ import com.leader.api.data.org.member.OrgMemberInfo;
 import com.leader.api.service.org.authorization.OrgAuthorizationService;
 import com.leader.api.service.org.member.OrgMemberIdService;
 import com.leader.api.service.org.member.OrgMemberInfoService;
+import com.leader.api.service.org.structure.OrgStructureService;
 import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -22,13 +23,15 @@ public class OrgMemberInfoController {
     private final OrgAuthorizationService authorizationService;
     private final OrgMemberIdService memberIdService;
     private final OrgMemberInfoService memberInfoService;
+    private final OrgStructureService structureService;
 
     @Autowired
     public OrgMemberInfoController(OrgAuthorizationService authorizationService, OrgMemberIdService memberIdService,
-                                   OrgMemberInfoService memberInfoService) {
+                                   OrgMemberInfoService memberInfoService, OrgStructureService structureService) {
         this.authorizationService = authorizationService;
         this.memberIdService = memberIdService;
         this.memberInfoService = memberInfoService;
+        this.structureService = structureService;
     }
 
     public static class QueryObject {
@@ -53,6 +56,16 @@ public class OrgMemberInfoController {
 
         ObjectId memberId = memberIdService.getCurrentMemberId();
         memberInfoService.updateMemberInfo(memberId, queryObject.memberInfo);
+
+        return new SuccessResponse();
+    }
+
+    @PostMapping("/resign")
+    public Document resignFromOrganization() {
+        authorizationService.assertCurrentMemberHasAuthority(BASIC);
+
+        ObjectId memberId = memberIdService.getCurrentMemberId();
+        structureService.dismissMember(memberId);
 
         return new SuccessResponse();
     }

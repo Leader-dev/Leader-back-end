@@ -88,7 +88,7 @@ public class OrgAnnouncementService {
     }
 
     public List<OrgAnnouncementOverview> listSentAnnouncements(List<ObjectId> senderMemberIds) {
-        return announcementRepository.findBySenderMemberIdIsIn(senderMemberIds, OrgAnnouncementOverview.class);
+        return announcementRepository.findBySenderMemberIdIn(senderMemberIds, OrgAnnouncementOverview.class);
     }
 
     public void sendAnnouncement(ObjectId senderMemberId, List<ObjectId> toMemberIds, OrgAnnouncementBasicInfo basicInfo) {

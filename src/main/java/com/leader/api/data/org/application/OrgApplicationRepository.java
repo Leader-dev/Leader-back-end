@@ -141,13 +141,15 @@ public interface OrgApplicationRepository extends MongoRepository<OrgApplication
     })
     List<OrgApplicationReceivedOverview> lookupByQuery(Document query);
 
-    boolean existsByApplicantUserIdAndId(ObjectId applicationUserId, ObjectId id);
+    boolean existsByApplicantUserIdAndId(ObjectId applicantUserId, ObjectId id);
 
-    OrgApplication findByApplicantUserIdAndId(ObjectId applicationUserId, ObjectId id);
+    OrgApplication findByApplicantUserIdAndId(ObjectId applicantUserId, ObjectId id);
 
     List<OrgApplication> findByOrgId(ObjectId orgId);
 
     long countByOrgIdAndStatus(ObjectId orgId, String status);
+
+    boolean existsByOrgIdAndApplicantUserIdAndStatusIn(ObjectId orgId, ObjectId applicantUserId, List<String> statuses);
 
     default List<OrgApplicationReceivedOverview> lookupByOrgIdAndStatus(ObjectId orgId, String... status) {
         Document query = new Document();

@@ -56,13 +56,15 @@ public class UserAuthService {
 
     public User createUser(String phone, String password, String nickname) {
         User user = new User();
-        user.uid = generateNewUid();
         user.phone = phone;
         String salt = secureService.generateRandomSalt(SALT_LENGTH);
         user.password = secureService.SHA1(password + salt);
         user.salt = salt;
         user.nickname = nickname;
-        return userRepository.insert(user);
+        synchronized (userRepository) {
+            user.uid = generateNewUid();
+            return userRepository.insert(user);
+        }
     }
 
     public boolean validateUser(String phone, String password) {

@@ -1,10 +1,13 @@
 package com.leader.api.service.user;
 
+import com.leader.api.data.user.User;
 import com.leader.api.data.user.UserInfo;
 import com.leader.api.data.user.UserRepository;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.function.Consumer;
 
 @Service
 public class UserInfoService {
@@ -16,29 +19,34 @@ public class UserInfoService {
         this.userRepository = userRepository;
     }
 
+    private void operateAndSaveUser(ObjectId id, Consumer<User> consumer) {
+        userRepository.findById(id).ifPresent(user -> {
+            consumer.accept(user);
+            userRepository.save(user);
+        });
+    }
+
     public UserInfo getUserInfo(ObjectId id) {
-        return userRepository.findUserById(id, UserInfo.class);
+        return userRepository.findById(id, UserInfo.class);
     }
 
     public String getUserNickname(ObjectId id) {
         return getUserInfo(id).nickname;
     }
 
-    public String getPortrait(ObjectId id) {
-        return getUserInfo(id).portraitUrl;
+    public String getAvatar(ObjectId id) {
+        return getUserInfo(id).avatarUrl;
     }
 
     public void updateNickname(ObjectId id, String nickname) {
-        userRepository.findById(id).ifPresent(user -> {
+        operateAndSaveUser(id, user -> {
             user.nickname = nickname;
-            userRepository.save(user);
         });
     }
 
-    public void updatePortrait(ObjectId id, String portraitUrl) {
-        userRepository.findById(id).ifPresent(user -> {
-            user.portraitUrl = portraitUrl;
-            userRepository.save(user);
+    public void updateAvatar(ObjectId id, String avatarUrl) {
+        operateAndSaveUser(id, user -> {
+            user.avatarUrl = avatarUrl;
         });
     }
 }

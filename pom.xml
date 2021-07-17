@@ -29,6 +29,7 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
+
 		<!-- begin aliyun oss -->
 		<dependency>
 			<groupId>com.aliyun.oss</groupId>
@@ -52,6 +53,14 @@
 			<version>2.3.3</version>
 		</dependency>
 		<!-- end aliyun oss -->
+
+		<!-- begin aliyun sms -->
+		<dependency>
+			<groupId>com.aliyun</groupId>
+			<artifactId>dysmsapi20170525</artifactId>
+			<version>2.0.4</version>
+		</dependency>
+		<!-- end aliyun sms -->
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

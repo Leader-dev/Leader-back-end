@@ -11,7 +11,7 @@ public class OrgTimelineItem {
 
     @Id
     public ObjectId id;
-    public ObjectId organizationId;
+    public ObjectId orgId;
     public Date timestamp;
     public String description;
 }

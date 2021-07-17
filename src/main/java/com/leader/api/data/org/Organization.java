@@ -34,4 +34,5 @@ public class Organization {
 
     // application
     public OrgApplicationScheme applicationScheme;
+    public int receivedApplicationCount;
 }

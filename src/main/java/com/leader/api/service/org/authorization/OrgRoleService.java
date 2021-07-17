@@ -35,7 +35,7 @@ public class OrgRoleService {
         memberRepository.findById(memberId).ifPresent(member -> operateAndSaveMembership(member, callable));
     }
 
-    public OrgMemberRole findRole(ObjectId memberId, String name) {
+    public OrgMemberRole findRoleByName(ObjectId memberId, String name) {
         return OrgRoleUtil.findRoleIn(findRoles(memberId), name);
     }
 
@@ -44,7 +44,7 @@ public class OrgRoleService {
     }
 
     public boolean hasRole(ObjectId memberId, String... names) {
-        return OrgRoleUtil.anyRoleExistIn(findRoles(memberId), names);
+        return OrgRoleUtil.anyRoleNameExistIn(findRoles(memberId), names);
     }
 
     public boolean hasRole(ObjectId memberId, OrgMemberRole... roles) {

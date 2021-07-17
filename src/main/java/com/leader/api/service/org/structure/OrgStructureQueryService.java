@@ -7,6 +7,7 @@ import com.leader.api.data.org.member.OrgMemberOverview;
 import com.leader.api.data.org.member.OrgMemberRepository;
 import com.leader.api.data.org.member.OrgMemberRole;
 import com.leader.api.service.org.authorization.OrgRoleService;
+import com.leader.api.service.org.authorization.OrgRoleUtil;
 import com.leader.api.util.InternalErrorException;
 import org.bson.types.ObjectId;
 import org.springframework.context.annotation.Primary;
@@ -15,11 +16,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.leader.api.data.org.member.OrgMemberRole.*;
 import static com.leader.api.service.org.authorization.OrgRoleUtil.anyRoleExistIn;
-import static com.leader.api.service.org.authorization.OrgRoleUtil.roleExistsIn;
 
 @Service
 @Primary  // set to primary to distinguish with OrgStructureService when resolving dependency
@@ -29,29 +28,31 @@ public class OrgStructureQueryService {
     protected final OrgDepartmentRepository departmentRepository;
     protected final OrgRoleService roleService;
 
-    private final Function<OrgMember, OrgMemberOverview> mapper;
-
     public OrgStructureQueryService(OrgMemberRepository memberRepository,
                                     OrgDepartmentRepository departmentRepository,
                                     OrgRoleService roleService) {
         this.memberRepository = memberRepository;
         this.departmentRepository = departmentRepository;
         this.roleService = roleService;
+    }
 
-        this.mapper = membership -> {
-            OrgMemberOverview overview = new OrgMemberOverview();
-            overview.id = membership.id;
-            overview.name = membership.name;
-            overview.title = membership.title;
-            if (roleExistsIn(membership.roles, DEPARTMENT_MANAGER)) {
-                overview.roleName = DEPARTMENT_MANAGER;
-            } else if (anyRoleExistIn(membership.roles, GENERAL_MANAGER, PRESIDENT)) {
-                overview.roleName = GENERAL_MANAGER;
-            } else {
-                overview.roleName = MEMBER;
-            }
-            return overview;
-        };
+    private static final Function<OrgMember, OrgMemberOverview> TO_MEMBER_OVERVIEW_MAPPER = membership -> {
+        OrgMemberOverview overview = new OrgMemberOverview();
+        overview.id = membership.id;
+        overview.name = membership.name;
+        overview.title = membership.title;
+        if (OrgRoleUtil.roleNameExistsIn(membership.roles, DEPARTMENT_MANAGER)) {
+            overview.roleName = DEPARTMENT_MANAGER;
+        } else if (OrgRoleUtil.anyRoleNameExistIn(membership.roles, GENERAL_MANAGER, PRESIDENT)) {
+            overview.roleName = GENERAL_MANAGER;
+        } else {
+            overview.roleName = MEMBER;
+        }
+        return overview;
+    };
+
+    private static List<OrgMemberOverview> mapToMemberOverviewList(List<OrgMember> members) {
+        return members.stream().map(TO_MEMBER_OVERVIEW_MAPPER).collect(Collectors.toList());
     }
 
     private List<OrgMember> findMembersOfOrganization(ObjectId orgId) {
@@ -120,7 +121,7 @@ public class OrgStructureQueryService {
     }
 
     public OrgDepartment getMemberDepartment(ObjectId memberId) {
-        OrgMemberRole role = roleService.findRole(memberId, MEMBER);
+        OrgMemberRole role = roleService.findRoleByName(memberId, MEMBER);
         if (role == null || role.departmentId == null) {
             return null;
         }
@@ -132,21 +133,18 @@ public class OrgStructureQueryService {
     }
 
     public List<OrgMemberOverview> listMembers(ObjectId orgId, ObjectId departmentId) {
-        Stream<OrgMember> membershipStream = findMembers(orgId, departmentId).stream();
-        return membershipStream.map(mapper).collect(Collectors.toList());
+        return mapToMemberOverviewList(findMembers(orgId, departmentId));
     }
 
     public List<OrgMemberOverview> listMembersOfOrganization(ObjectId orgId) {
-        Stream<OrgMember> membershipStream = findMembersOfOrganization(orgId).stream();
-        return membershipStream.map(mapper).collect(Collectors.toList());
+        return mapToMemberOverviewList(findMembersOfOrganization(orgId));
     }
 
     public List<OrgMemberOverview> listMembersOfOrganizationWithRoles(ObjectId orgId, OrgMemberRole... roles) {
-        Stream<OrgMember> membershipStream = findMembersOfOrganizationWithRoles(orgId, roles).stream();
-        return membershipStream.map(mapper).collect(Collectors.toList());
+        return mapToMemberOverviewList(findMembersOfOrganizationWithRoles(orgId, roles));
     }
 
     public List<OrgMemberOverview> searchMembers(ObjectId orgId, String searchText) {
-        return memberRepository.findByOrgIdAndNameContaining(orgId, searchText, OrgMemberOverview.class);
+        return memberRepository.findByOrgIdAndNameContainingAndResignedFalse(orgId, searchText, OrgMemberOverview.class);
     }
 }

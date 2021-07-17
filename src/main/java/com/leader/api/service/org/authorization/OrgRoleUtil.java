@@ -39,7 +39,7 @@ public class OrgRoleUtil {
         return list;
     }
 
-    public static boolean roleExistsIn(List<OrgMemberRole> roles, String name) {
+    public static boolean roleNameExistsIn(List<OrgMemberRole> roles, String name) {
         for (OrgMemberRole role : roles) {
             if (name.equals(role.name)) {
                 return true;
@@ -48,9 +48,9 @@ public class OrgRoleUtil {
         return false;
     }
 
-    public static boolean anyRoleExistIn(List<OrgMemberRole> roles, String... names) {
+    public static boolean anyRoleNameExistIn(List<OrgMemberRole> roles, String... names) {
         for (String name : names) {
-            if (roleExistsIn(roles, name)) {
+            if (roleNameExistsIn(roles, name)) {
                 return true;
             }
         }

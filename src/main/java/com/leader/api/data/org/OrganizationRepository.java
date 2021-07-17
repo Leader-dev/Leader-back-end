@@ -15,11 +15,12 @@ public interface OrganizationRepository extends MongoRepository<Organization, Ob
 
     Organization findByIdAndStatus(ObjectId id, String status);
 
-    <T> T findFirstById(ObjectId id, Class<T> type);
+    <T> T findById(ObjectId id, Class<T> type);
 
     @Query("?0")
     <T> Page<T> findByQuery(
             Document query,
-            Pageable pageable
+            Pageable pageable,
+            Class<T> type
     );
 }

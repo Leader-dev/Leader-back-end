@@ -31,18 +31,29 @@ public class OrgApplicationSettingService {
         this.roleService = roleService;
     }
 
-    private Organization findOrganization(ObjectId orgId) {
+    private Organization getOrganization(ObjectId orgId) {
         return organizationRepository.findById(orgId).orElse(null);
     }
 
     public OrgApplicationScheme getApplicationScheme(ObjectId orgId) {
-        Organization organization = findOrganization(orgId);
+        Organization organization = getOrganization(orgId);
         return organization.applicationScheme;
     }
 
-    public void updateApplicationScheme(ObjectId orgId, OrgApplicationScheme scheme) {
-        Organization organization = findOrganization(orgId);
+    public void setApplicationScheme(ObjectId orgId, OrgApplicationScheme scheme) {
+        Organization organization = getOrganization(orgId);
         organization.applicationScheme = scheme;
+        organizationRepository.save(organization);
+    }
+
+    public int getReceivedApplicationCount(ObjectId orgId) {
+        Organization organization = getOrganization(orgId);
+        return organization.receivedApplicationCount;
+    }
+
+    public void resetReceivedApplicationCount(ObjectId orgId) {
+        Organization organization = getOrganization(orgId);
+        organization.receivedApplicationCount = 0;
         organizationRepository.save(organization);
     }
 

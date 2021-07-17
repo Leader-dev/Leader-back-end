@@ -9,5 +9,5 @@ public class UserInfo {
     public ObjectId id;
     public String uid;
     public String nickname;
-    public String portraitUrl;
+    public String avatarUrl;
 }

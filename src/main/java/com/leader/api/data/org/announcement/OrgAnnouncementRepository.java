@@ -10,7 +10,7 @@ public interface OrgAnnouncementRepository extends MongoRepository<OrgAnnounceme
 
     <T> List<T> findBySenderMemberId(ObjectId senderUserId, Class<T> type);
 
-    <T> List<T> findBySenderMemberIdIsIn(List<ObjectId> senderUserIds, Class<T> type);
+    <T> List<T> findBySenderMemberIdIn(List<ObjectId> senderUserIds, Class<T> type);
 
     boolean existsBySenderMemberIdAndId(ObjectId senderUserId, ObjectId announceId);
 

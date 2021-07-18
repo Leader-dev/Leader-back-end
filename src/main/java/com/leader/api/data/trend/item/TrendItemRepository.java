@@ -65,4 +65,8 @@ public interface TrendItemRepository extends MongoRepository<TrendItem, ObjectId
     default List<TrendItemDetail> lookupByPuppetIdOrderBySendDateDesc(ObjectId puppetId, Pageable pageable) {
         return lookupByQueryOrderBySendDateDesc(new Document("puppetId", puppetId), puppetId, pageable);
     }
+
+    default TrendItemDetail lookupByIdOrderBySendDateDesc(ObjectId puppetId, ObjectId id) {
+        return lookupByQueryOrderBySendDateDesc(new Document("id", id), puppetId, Pageable.unpaged()).get(0);
+    }
 }

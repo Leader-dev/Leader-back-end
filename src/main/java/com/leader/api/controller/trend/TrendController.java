@@ -64,6 +64,16 @@ public class TrendController {
         return response;
     }
 
+    @PostMapping("/detail")
+    public Document getTrendDetail(@RequestBody QueryObject queryObject) {
+        ObjectId puppetId = puppetIdService.getCurrentPuppetId();
+        TrendItemDetail detail = trendService.getDetail(puppetId, queryObject.trendItemId);
+
+        Document response = new SuccessResponse();
+        response.append("detail", detail);
+        return response;
+    }
+
     @PostMapping("/send")
     public Document sendTrend(@RequestBody QueryObject queryObject) {
         imageService.assertUploadedTempImages(queryObject.imageUrls);

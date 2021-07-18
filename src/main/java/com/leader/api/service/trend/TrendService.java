@@ -28,16 +28,18 @@ public class TrendService {
     private final TrendReportRepository reportRepository;
     private final OrganizationRepository organizationRepository;
     private final OrgMemberRepository memberRepository;
+    private final TrendNotificationService notificationService;
     private final DateUtil dateUtil;
 
     @Autowired
     public TrendService(TrendItemRepository itemRepository, TrendLikeRepository likeRepository, TrendReportRepository reportRepository,
-                        OrganizationRepository organizationRepository, OrgMemberRepository memberRepository, DateUtil dateUtil) {
+                        OrganizationRepository organizationRepository, OrgMemberRepository memberRepository, TrendNotificationService notificationService, DateUtil dateUtil) {
         this.itemRepository = itemRepository;
         this.likeRepository = likeRepository;
         this.reportRepository = reportRepository;
         this.organizationRepository = organizationRepository;
         this.memberRepository = memberRepository;
+        this.notificationService = notificationService;
         this.dateUtil = dateUtil;
     }
 
@@ -47,6 +49,10 @@ public class TrendService {
 
     public List<TrendItemDetail> getSentTrends(ObjectId puppetId, Pageable pageable) {
         return itemRepository.lookupByPuppetIdOrderBySendDateDesc(puppetId, pageable);
+    }
+
+    public TrendItemDetail getDetail(ObjectId puppetId, ObjectId trendItemId) {
+        return itemRepository.lookupByIdOrderBySendDateDesc(puppetId, trendItemId);
     }
 
     public TrendItem getTrendItem(ObjectId trendItemId) {
@@ -84,6 +90,8 @@ public class TrendService {
 
                 item.likeCount = likeRepository.countByTrendItemId(trendItemId);
                 itemRepository.save(item);
+
+                notificationService.sendLikeNotification(item.puppetId, puppetId, trendItemId);
             });
         }
     }

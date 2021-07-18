@@ -7,7 +7,6 @@ import com.leader.api.service.org.query.OrgQueryObject;
 import com.leader.api.service.org.query.OrgQueryService;
 import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
-import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,10 +28,6 @@ public class OrgCommonController {
                                OrgQueryService queryService) {
         this.typeService = typeService;
         this.queryService = queryService;
-    }
-
-    public static class QueryObject {
-        public ObjectId orgId;
     }
 
     @PostMapping("/types")

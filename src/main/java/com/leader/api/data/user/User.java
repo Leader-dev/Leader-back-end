@@ -14,7 +14,6 @@ public class User {
     // auth
     public String password;
     public String phone;
-    public String salt;
 
     // info
     public String nickname;

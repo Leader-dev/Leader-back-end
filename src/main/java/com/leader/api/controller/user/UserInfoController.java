@@ -2,6 +2,8 @@ package com.leader.api.controller.user;
 
 import com.leader.api.data.user.UserInfo;
 import com.leader.api.service.service.ImageService;
+import com.leader.api.service.trend.PuppetIdService;
+import com.leader.api.service.trend.TrendService;
 import com.leader.api.service.user.UserInfoService;
 import com.leader.api.service.util.UserIdService;
 import com.leader.api.util.response.SuccessResponse;
@@ -19,12 +21,17 @@ public class UserInfoController {
 
     private final UserInfoService userInfoService;
     private final UserIdService userIdService;
+    private final PuppetIdService puppetIdService;
+    private final TrendService trendService;
     private final ImageService imageService;
 
     @Autowired
-    public UserInfoController(UserInfoService userInfoService, UserIdService userIdService, ImageService imageService) {
+    public UserInfoController(UserInfoService userInfoService, UserIdService userIdService,
+                              PuppetIdService puppetIdService, TrendService trendService, ImageService imageService) {
         this.userInfoService = userInfoService;
         this.userIdService = userIdService;
+        this.puppetIdService = puppetIdService;
+        this.trendService = trendService;
         this.imageService = imageService;
     }
 
@@ -38,9 +45,14 @@ public class UserInfoController {
     public Document getUserInfo() {
         ObjectId userId = userIdService.getCurrentUserId();
         UserInfo info = userInfoService.getUserInfo(userId);
+        ObjectId puppetId = puppetIdService.getCurrentPuppetId();
+        long likes = trendService.countLikes(puppetId);
 
         Document response = new SuccessResponse();
-        response.append("info", info);
+        Document data = new Document();
+        data.append("info", info);
+        data.append("likes", likes);
+        response.append("data", data);
         return response;
     }
 

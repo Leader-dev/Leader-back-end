@@ -7,5 +7,5 @@ public class OrgApplicationScheme {
     public boolean open;
     public int maximumApplication;  // -1 means no limit
     public boolean appointDepartment;
-    public ArrayList<String> questions;
+    public ArrayList<OrgApplicationQuestion> questions;
 }

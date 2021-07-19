@@ -58,15 +58,6 @@ public class SecureServiceTests {
     }
 
     @Test
-    public void SHA1Test() {
-        // no pre-actions
-
-        String result = secureService.SHA1(TEST_PLAIN_TEXT);
-
-        assertEquals(TEST_SHA1, result);
-    }
-
-    @Test
     public void encryptDecryptTest() {
         KeyPair keyPair = secureService.generateRSAKeyPair(1024);
         String cipherText = secureService.encryptRSA(TEST_PLAIN_TEXT, keyPair.getPublic());

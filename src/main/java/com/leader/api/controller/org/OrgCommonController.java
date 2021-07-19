@@ -7,7 +7,6 @@ import com.leader.api.service.org.query.OrgQueryObject;
 import com.leader.api.service.org.query.OrgQueryService;
 import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
-import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,10 +30,6 @@ public class OrgCommonController {
         this.queryService = queryService;
     }
 
-    public static class QueryObject {
-        public ObjectId orgId;
-    }
-
     @PostMapping("/types")
     public Document getOrganizationTypes() {
         // convert types from object list to key-value-pair object, with alias being the key
@@ -45,7 +40,7 @@ public class OrgCommonController {
         return response;
     }
 
-    @PostMapping("/index")
+    @PostMapping("/home")
     public Document getOrganizationIndex() {
         // TODO Use more intelligent way to decide content
         List<OrgPosterOverview> pic = queryService.findOrganizationsByNumber(5, OrgPosterOverview.class);

@@ -58,12 +58,13 @@ public class OrgUserController {
     }
 
     public static class QueryObject {
+        public ObjectId orgId;
         public OrgPublicInfo publicInfo;
         public OrgReport reportInfo;
     }
 
     @PostMapping("/detail")
-    public Document organizationDetail(@RequestBody OrgCommonController.QueryObject queryObject) {
+    public Document organizationDetail(@RequestBody QueryObject queryObject) {
         // find organization
         OrgDetail detail = organizationService.getOrganizationDetail(queryObject.orgId);
         if (detail == null) {
@@ -84,7 +85,7 @@ public class OrgUserController {
     }
 
     @PostMapping("/add-to-favorite")
-    public Document favorOrganization(@RequestBody OrgCommonController.QueryObject queryObject) {
+    public Document favorOrganization(@RequestBody QueryObject queryObject) {
         ObjectId userId = userIdService.getCurrentUserId();
         favoriteService.addOrganizationToFavorite(queryObject.orgId, userId);
 
@@ -92,7 +93,7 @@ public class OrgUserController {
     }
 
     @PostMapping("/remove-from-favorite")
-    public Document notFavorOrganization(@RequestBody OrgCommonController.QueryObject queryObject) {
+    public Document notFavorOrganization(@RequestBody QueryObject queryObject) {
         ObjectId userId = userIdService.getCurrentUserId();
         favoriteService.removeOrganizationFromFavorite(queryObject.orgId, userId);
 

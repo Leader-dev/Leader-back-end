@@ -13,7 +13,6 @@ public class UserAuthService {
 
     private static final int UID_LENGTH = 8;
     private static final long UID_LENGTH_CAPACITY = 50000000;
-    private static final int SALT_LENGTH = 16;
 
     private final UserRepository userRepository;
     private final SecureService secureService;
@@ -57,9 +56,7 @@ public class UserAuthService {
     public User createUser(String phone, String password, String nickname) {
         User user = new User();
         user.phone = phone;
-        String salt = secureService.generateRandomSalt(SALT_LENGTH);
-        user.password = secureService.SHA1(password + salt);
-        user.salt = salt;
+        user.password = secureService.encodePassword(password);
         user.nickname = nickname;
         synchronized (userRepository) {
             user.uid = generateNewUid();
@@ -70,17 +67,13 @@ public class UserAuthService {
     public boolean validateUser(String phone, String password) {
         assertPhoneExists(phone);
         User user = userRepository.findByPhone(phone);
-        String salt = user.salt;
-        String processedPassword = secureService.SHA1(password + salt);
-        return user.password.equals(processedPassword);
+        return secureService.matchesPassword(password, user.password);
     }
 
     public void updateUserPasswordByPhone(String phone, String newPassword) {
         assertPhoneExists(phone);
         User user = userRepository.findByPhone(phone);
-        String salt = secureService.generateRandomSalt(SALT_LENGTH);
-        user.password = secureService.SHA1(newPassword + salt);
-        user.salt = salt;
+        user.password = secureService.encodePassword(newPassword);
         userRepository.save(user);
     }
 

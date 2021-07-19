@@ -18,14 +18,15 @@ public class Organization {
 
     // auto controlled
     public String numberId;
-    public Long memberCount;
+    public long memberCount;
     public String status;
-    public String addressAuth;
+    public String instituteAuth;
     public String presidentName;
 
     // info
     public String name;
     public String address;
+    public String instituteName;
     public String introduction;
     public ArrayList<String> phone;
     public ArrayList<String> email;

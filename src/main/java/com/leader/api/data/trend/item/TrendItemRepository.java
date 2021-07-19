@@ -15,10 +15,27 @@ public interface TrendItemRepository extends MongoRepository<TrendItem, ObjectId
 
     @Aggregation(pipeline = {
             "{" +
+            "   $match: { puppetId: ?0 }" +
+            "}",
+            "{" +
+            "   $lookup: {" +
+            "       from: 'trend_like'," +
+            "       localField: '_id'," +
+            "       foreignField: 'trendItemId'" +
+            "       as: 'likes'" +
+            "   }" +
+            "}",
+            "{ $unwind: '$likes' }",
+            "{ $count: 'likes' }"
+    })
+    Optional<Long> countLikesByPuppetId(ObjectId puppet);
+
+    @Aggregation(pipeline = {
+            "{" +
             "   $match: ?0" +
             "}",
             "{" +
-            "   $set: {" +
+            "   $addFields: {" +
             "       puppetId: { $cond: ['$anonymous', null, '$puppetId'] }" +
             "       orgName: { $cond: ['$anonymous', null, '$orgName'] }" +
             "       orgTitle: { $cond: ['$anonymous', null, '$orgTitle'] }" +
@@ -50,7 +67,7 @@ public interface TrendItemRepository extends MongoRepository<TrendItem, ObjectId
             "   }" +
             "}",
             "{" +
-            "   $set: {" +
+            "   $addFields: {" +
             "       liked: { $ne: [0, { $size: '$likeInfo' }] }" +
             "   }" +
             "}",
@@ -64,5 +81,9 @@ public interface TrendItemRepository extends MongoRepository<TrendItem, ObjectId
 
     default List<TrendItemDetail> lookupByPuppetIdOrderBySendDateDesc(ObjectId puppetId, Pageable pageable) {
         return lookupByQueryOrderBySendDateDesc(new Document("puppetId", puppetId), puppetId, pageable);
+    }
+
+    default TrendItemDetail lookupByIdOrderBySendDateDesc(ObjectId puppetId, ObjectId id) {
+        return lookupByQueryOrderBySendDateDesc(new Document("id", id), puppetId, Pageable.unpaged()).get(0);
     }
 }

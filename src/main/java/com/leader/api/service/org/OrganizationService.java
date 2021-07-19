@@ -27,6 +27,7 @@ public class OrganizationService {
         // copy items, only these can be set by the user
         target.name = source.name;
         target.address = source.address;
+        target.instituteName = source.instituteName;
         target.introduction = source.introduction;
         target.phone = source.phone;
         target.email = source.email;

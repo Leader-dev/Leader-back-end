@@ -66,7 +66,7 @@ public interface OrgMemberRepository extends MongoRepository<OrgMember, ObjectId
             "   $unwind: '$orgInfo'" +
             "}",
             "{" +
-            "   $set: {" +
+            "   $addFields: {" +
             "       orgName: '$orgInfo.name'" +
             "   }" +
             "}"

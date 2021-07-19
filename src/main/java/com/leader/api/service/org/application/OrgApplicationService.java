@@ -1,5 +1,6 @@
 package com.leader.api.service.org.application;
 
+import com.leader.api.data.org.OrgApplicationQuestion;
 import com.leader.api.data.org.Organization;
 import com.leader.api.data.org.OrganizationRepository;
 import com.leader.api.data.org.application.*;
@@ -60,12 +61,15 @@ public class OrgApplicationService {
         this.dateUtil = dateUtil;
     }
 
-    private static boolean compareQuestions(OrgApplicationForm applicationForm, List<String> questions) {
+    private static boolean checkQuestions(OrgApplicationForm applicationForm, List<OrgApplicationQuestion> questions) {
         if (applicationForm.size() != questions.size()) {
             return false;
         }
         for (int i = 0; i < questions.size(); i++) {
-            if (!applicationForm.get(i).question.equals(questions.get(i))) {
+            if (!applicationForm.get(i).question.equals(questions.get(i).question)) {
+                return false;
+            }
+            if (questions.get(i).required && applicationForm.get(i).answer.length() == 0) {
                 return false;
             }
         }
@@ -105,7 +109,7 @@ public class OrgApplicationService {
         }
 
         Organization organization = getOrganization(orgId);
-        if (name == null || !compareQuestions(applicationForm, organization.applicationScheme.questions)) {
+        if (name == null || !checkQuestions(applicationForm, organization.applicationScheme.questions)) {
             throw new InternalErrorException("Invalid application questions.");
         }
 

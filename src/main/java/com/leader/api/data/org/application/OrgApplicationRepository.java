@@ -22,7 +22,10 @@ public interface OrgApplicationRepository extends MongoRepository<OrgApplication
             "   }" +
             "}",
             "{" +
-            "   $unwind: '$orgInfo'" +
+            "   $unwind: {" +
+            "       path: '$orgInfo'," +
+            "       preserveNullAndEmptyArrays: true" +
+            "   }" +
             "}"
     })
     <T> List<T> lookupByApplicantUserIdIncludeOrgInfo(ObjectId applicationUserId, Class<T> type);
@@ -40,7 +43,10 @@ public interface OrgApplicationRepository extends MongoRepository<OrgApplication
             "   }" +
             "}",
             "{" +
-            "   $unwind: '$orgInfo'" +
+            "   $unwind: {" +
+            "       path: '$orgInfo'," +
+            "       preserveNullAndEmptyArrays: true" +
+            "   }" +
             "}",
             "{" +
             "   $lookup: {" +
@@ -51,7 +57,10 @@ public interface OrgApplicationRepository extends MongoRepository<OrgApplication
             "   }" +
             "}",
             "{" +
-            "   $set: { departmentInfo: { $first: '$departmentInfo' } }" +
+            "   $unwind: {" +
+            "       path: '$departmentInfo'," +
+            "       preserveNullAndEmptyArrays: true" +
+            "   }" +
             "}",
             "{" +
             "   $lookup: {" +
@@ -77,7 +86,10 @@ public interface OrgApplicationRepository extends MongoRepository<OrgApplication
             "   }" +
             "}",
             "{" +
-            "   $unwind: '$applicantUserInfo'" +
+            "   $unwind: {" +
+            "       path: '$applicantUserInfo'," +
+            "       preserveNullAndEmptyArrays: true" +
+            "   }" +
             "}",
             "{" +
             "   $lookup: {" +
@@ -88,7 +100,10 @@ public interface OrgApplicationRepository extends MongoRepository<OrgApplication
             "   }" +
             "}",
             "{" +
-            "   $set: { departmentInfo: { $first: '$departmentInfo' } }" +
+            "   $unwind: {" +
+            "       path: '$departmentInfo'," +
+            "       preserveNullAndEmptyArrays: true" +
+            "   }" +
             "}",
             "{" +
             "   $lookup: {" +
@@ -99,7 +114,10 @@ public interface OrgApplicationRepository extends MongoRepository<OrgApplication
             "   }" +
             "}",
             "{" +
-            "   $set: { operateMemberInfo: { $first: '$operateMemberInfo' } }" +
+            "   $unwind: {" +
+            "       path: '$operateMemberInfo'," +
+            "       preserveNullAndEmptyArrays: true" +
+            "   }" +
             "}",
             "{" +
             "   $lookup: {" +
@@ -125,7 +143,10 @@ public interface OrgApplicationRepository extends MongoRepository<OrgApplication
             "   }" +
             "}",
             "{" +
-            "   $unwind: '$applicantUserInfo'" +
+            "   $unwind: {" +
+            "       path: '$applicantUserInfo'," +
+            "       preserveNullAndEmptyArrays: true" +
+            "   }" +
             "}",
             "{" +
             "   $lookup: {" +
@@ -136,7 +157,10 @@ public interface OrgApplicationRepository extends MongoRepository<OrgApplication
             "   }" +
             "}",
             "{" +
-            "   $set: { operateMemberInfo: { $first: '$operateMemberInfo' } }" +
+            "   $unwind: {" +
+            "       path: '$operateMemberInfo'," +
+            "       preserveNullAndEmptyArrays: true" +
+            "   }" +
             "}"
     })
     List<OrgApplicationReceivedOverview> lookupByQuery(Document query);
@@ -144,10 +168,6 @@ public interface OrgApplicationRepository extends MongoRepository<OrgApplication
     boolean existsByApplicantUserIdAndId(ObjectId applicantUserId, ObjectId id);
 
     OrgApplication findByApplicantUserIdAndId(ObjectId applicantUserId, ObjectId id);
-
-    List<OrgApplication> findByOrgId(ObjectId orgId);
-
-    long countByOrgIdAndStatus(ObjectId orgId, String status);
 
     boolean existsByOrgIdAndApplicantUserIdAndStatusIn(ObjectId orgId, ObjectId applicantUserId, List<String> statuses);
 

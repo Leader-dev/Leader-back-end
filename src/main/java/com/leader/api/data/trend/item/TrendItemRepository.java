@@ -18,7 +18,7 @@ public interface TrendItemRepository extends MongoRepository<TrendItem, ObjectId
             "   $match: ?0" +
             "}",
             "{" +
-            "   $set: {" +
+            "   $addFields: {" +
             "       puppetId: { $cond: ['$anonymous', null, '$puppetId'] }" +
             "       orgName: { $cond: ['$anonymous', null, '$orgName'] }" +
             "       orgTitle: { $cond: ['$anonymous', null, '$orgTitle'] }" +
@@ -50,7 +50,7 @@ public interface TrendItemRepository extends MongoRepository<TrendItem, ObjectId
             "   }" +
             "}",
             "{" +
-            "   $set: {" +
+            "   $addFields: {" +
             "       liked: { $ne: [0, { $size: '$likeInfo' }] }" +
             "   }" +
             "}",

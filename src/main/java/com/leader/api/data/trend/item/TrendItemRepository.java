@@ -15,6 +15,24 @@ public interface TrendItemRepository extends MongoRepository<TrendItem, ObjectId
 
     @Aggregation(pipeline = {
             "{" +
+            "   $match: { puppetId: ?0 }" +
+            "}",
+            "{" +
+            "   $lookup: {" +
+            "       from: 'trend_like'," +
+            "       localField: '_id'," +
+            "       foreignField: 'trendItemId'" +
+            "       as: 'likes'" +
+            "   }" +
+            "}",
+            "{ $unwind: '$likes' }",
+            "{ $count: 'likes' }"
+
+    })
+    long countLikesByPuppetId(ObjectId puppet);
+
+    @Aggregation(pipeline = {
+            "{" +
             "   $match: ?0" +
             "}",
             "{" +

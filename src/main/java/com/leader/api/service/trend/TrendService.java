@@ -105,6 +105,10 @@ public class TrendService {
         });
     }
 
+    public long countLikes(ObjectId puppetId) {
+        return itemRepository.countLikesByPuppetId(puppetId);
+    }
+
     public void deleteTrend(ObjectId puppetId, ObjectId trendItemId) {
         itemRepository.findByPuppetIdAndId(puppetId, trendItemId).ifPresent(item -> {
             likeRepository.deleteByTrendItemId(trendItemId);

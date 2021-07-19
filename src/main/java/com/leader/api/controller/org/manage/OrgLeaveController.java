@@ -119,7 +119,7 @@ public class OrgLeaveController {
     public Document listProcessed () {
         authorizationService.assertCurrentMemberHasAuthority(OrgAuthority.ATTENDANCE);
         String[] processesStatuses = {OrgLeave.APPROVED, OrgLeave.REJECTED};
-        List<ObjectId> manageableMembers = authorizationService.listManageableManagerIdsOfCurrentMember();
+        List<ObjectId> manageableMembers = authorizationService.listSupervisableManagerIdsOfCurrentMember();
         List<OrgLeaveUserOverview> overviews = orgLeaveService.listByStatuses(manageableMembers, processesStatuses);
 
         Document response = new SuccessResponse();

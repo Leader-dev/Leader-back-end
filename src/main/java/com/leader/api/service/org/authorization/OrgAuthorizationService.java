@@ -100,14 +100,14 @@ public class OrgAuthorizationService {
         return listManageableMembersOfCurrentMember().stream().map(member -> member.id).collect(Collectors.toList());
     }
 
-    public List<OrgMemberOverview> listManageableManagersOfCurrentMember() {
+    public List<OrgMemberOverview> listSupervisableManagersOfCurrentMember() {
         ObjectId currentOrgId = memberIdService.getCurrentOrgId();
         ObjectId currentMemberId = memberIdService.getCurrentMemberId();
         List<OrgMemberRole> roles = findRolesIn(currentMemberId);
         return roleAuthorityService.listManageableManagers(currentOrgId, roles);
     }
 
-    public List<ObjectId> listManageableManagerIdsOfCurrentMember() {
-        return listManageableManagersOfCurrentMember().stream().map(member -> member.id).collect(Collectors.toList());
+    public List<ObjectId> listSupervisableManagerIdsOfCurrentMember() {
+        return listSupervisableManagersOfCurrentMember().stream().map(member -> member.id).collect(Collectors.toList());
     }
 }

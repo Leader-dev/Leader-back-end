@@ -1,6 +1,5 @@
 package com.leader.api.controller.org.manage;
 
-import com.leader.api.data.org.member.OrgMemberInfoOverview;
 import com.leader.api.data.org.task.*;
 import com.leader.api.service.org.authorization.OrgAuthority;
 import com.leader.api.service.org.authorization.OrgAuthorizationService;
@@ -131,7 +130,7 @@ public class OrgTasksController {
     @PostMapping("/list-published")
     public Document listPublishedTasks() {
         authorizationService.assertCurrentMemberHasAuthority(OrgAuthority.TASK);
-        List<ObjectId> manageableMembers = authorizationService.listManageableManagerIdsOfCurrentMember();
+        List<ObjectId> manageableMembers = authorizationService.listSupervisableManagerIdsOfCurrentMember();
         List<OrgTaskOverview> tasks = orgTaskService.listSentTasks(manageableMembers); // Allows higher hierarchy to access
 
         Document response = new SuccessResponse();

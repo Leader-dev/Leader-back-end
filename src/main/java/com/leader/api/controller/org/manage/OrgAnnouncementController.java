@@ -88,7 +88,7 @@ public class OrgAnnouncementController {
     public Document listSentAnnouncements() {
         authorizationService.assertCurrentMemberHasAuthority(ANNOUNCEMENT_MANAGEMENT);
 
-        List<ObjectId> managerIds = authorizationService.listManageableManagerIdsOfCurrentMember();
+        List<ObjectId> managerIds = authorizationService.listSupervisableManagerIdsOfCurrentMember();
         List<OrgAnnouncementOverview> announcements = announcementService.listSentAnnouncements(managerIds);
 
         Document response = new SuccessResponse();

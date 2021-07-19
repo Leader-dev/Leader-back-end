@@ -94,8 +94,8 @@ public class OrgTaskService {
         //return taskRepository.findByPublishUserIdIsIn(managableIds, OrgTaskOverview.class);
         ArrayList<OrgTaskOverview> allOverviews = new ArrayList<>();
 
-        for (ObjectId managableId : managableIds) {
-            allOverviews.addAll(taskRepository.lookupByPublishUserId(managableId));
+        for (ObjectId manageableId : managableIds) {
+            allOverviews.addAll(taskRepository.lookupByPublishUserId(manageableId));
         }
 
         return allOverviews;

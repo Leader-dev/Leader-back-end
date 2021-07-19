@@ -27,9 +27,8 @@ public interface TrendItemRepository extends MongoRepository<TrendItem, ObjectId
             "}",
             "{ $unwind: '$likes' }",
             "{ $count: 'likes' }"
-
     })
-    long countLikesByPuppetId(ObjectId puppet);
+    Optional<Long> countLikesByPuppetId(ObjectId puppet);
 
     @Aggregation(pipeline = {
             "{" +

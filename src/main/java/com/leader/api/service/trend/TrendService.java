@@ -106,7 +106,7 @@ public class TrendService {
     }
 
     public long countLikes(ObjectId puppetId) {
-        return itemRepository.countLikesByPuppetId(puppetId);
+        return itemRepository.countLikesByPuppetId(puppetId).orElse(0L);
     }
 
     public void deleteTrend(ObjectId puppetId, ObjectId trendItemId) {

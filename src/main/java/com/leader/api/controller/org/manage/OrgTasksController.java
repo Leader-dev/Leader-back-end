@@ -130,7 +130,7 @@ public class OrgTasksController {
     @PostMapping("/list-published")
     public Document listPublishedTasks() {
         authorizationService.assertCurrentMemberHasAuthority(OrgAuthority.TASK);
-        List<ObjectId> manageableMembers = authorizationService.listSupervisableManagerIdsOfCurrentMember();
+        List<ObjectId> manageableMembers = authorizationService.listManageableMemberIdsOfCurrentMember();
         List<OrgTaskOverview> tasks = orgTaskService.listSentTasks(manageableMembers); // Allows higher hierarchy to access
 
         Document response = new SuccessResponse();

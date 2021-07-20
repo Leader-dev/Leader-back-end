@@ -9,8 +9,9 @@ public class OrgJoinedOverview {
     public ObjectId id;
     public String numberId;
     public String name;
+    public String institute;
     public String address;
-    public String addressAuth;
+    public String instituteAuth;
     public String typeAlias;
     public String posterUrl;
     public String status;

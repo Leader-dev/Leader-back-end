@@ -1,6 +1,7 @@
 package com.leader.api;
 
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.leader.api.service.admin.AdminIdService;
 import com.leader.api.service.org.member.OrgMemberIdService;
 import com.leader.api.service.org.member.OrgMemberService;
 import com.leader.api.service.util.UserIdService;
@@ -39,12 +40,19 @@ public class WebMvcConfig implements WebMvcConfigurer {
     private final UserIdService userIdService;
     private final OrgMemberIdService memberIdService;
     private final OrgMemberService memberService;
+    private final AdminIdService adminIdService;
 
     @Autowired
-    public WebMvcConfig(UserIdService userIdService, OrgMemberIdService memberIdService, OrgMemberService memberService) {
+    public WebMvcConfig(UserIdService userIdService, OrgMemberIdService memberIdService,
+                        OrgMemberService memberService, AdminIdService adminIdService) {
         this.userIdService = userIdService;
         this.memberIdService = memberIdService;
         this.memberService = memberService;
+        this.adminIdService = adminIdService;
+    }
+
+    private static boolean isPostRequest(HttpServletRequest request) {
+        return "POST".equals(request.getMethod());
     }
 
     @Override
@@ -57,36 +65,51 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        // add base authentication checker for all routes other than /user/**
+        // add base authentication checker for all routes other than /user/** and /admin/**
         registry
                 .addInterceptor(new HandlerInterceptor() {
                     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
                         // check if userId exists
-                        if (!userIdService.currentUserExists()) {
+                        if (isPostRequest(request) && !userIdService.currentUserExists()) {
                             throw new UserAuthException();
                         }
                         return true;
                     }
                 })
                 .addPathPatterns("/**")
-                .excludePathPatterns("/user/**", "/api/info")
+                .excludePathPatterns("/user/**", "/admin/**", "/api/info")
                 .addPathPatterns("/user/info/**");
         // add base orgId parameter handler for all routes in /org/manage/**
         registry
                 .addInterceptor(new HandlerInterceptor() {
                     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-                        String orgIdString = request.getParameter(ORG_ID_PARAMETER_NAME);
-                        if (orgIdString == null) {
-                            throw new InternalErrorException("Missing required parameter " + ORG_ID_PARAMETER_NAME + ".");
+                        if (isPostRequest(request)) {
+                            String orgIdString = request.getParameter(ORG_ID_PARAMETER_NAME);
+                            if (orgIdString == null) {
+                                throw new InternalErrorException("Missing required parameter " + ORG_ID_PARAMETER_NAME + ".");
+                            }
+                            ObjectId orgId = new ObjectId(orgIdString);
+                            ObjectId userId = userIdService.getCurrentUserId();
+                            memberService.assertIsMember(orgId, userId);
+                            memberIdService.setOrgId(orgId);
                         }
-                        ObjectId orgId = new ObjectId(orgIdString);
-                        ObjectId userId = userIdService.getCurrentUserId();
-                        memberService.assertIsMember(orgId, userId);
-                        memberIdService.setOrgId(orgId);
                         return true;
                     }
                 })
                 .addPathPatterns("/org/manage/**");
+        // add base admin authentication checker
+        registry
+                .addInterceptor(new HandlerInterceptor() {
+                    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+                        // check if userId exists
+                        if (isPostRequest(request) && !adminIdService.currentAdminExists()) {
+                            throw new UserAuthException();
+                        }
+                        return true;
+                    }
+                })
+                .addPathPatterns("/admin/**")
+                .excludePathPatterns("/admin/key", "/admin/login");
     }
 
     @ExceptionHandler(Exception.class)

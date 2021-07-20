@@ -53,8 +53,8 @@ public class SecureService {
         return saltBuilder.toString();
     }
 
-    public String encodePassword(String message) {
-        return PASSWORD_ENCODER.encode(message);
+    public String encodePassword(String rawPassword) {
+        return PASSWORD_ENCODER.encode(rawPassword);
     }
 
     public boolean matchesPassword(String rawPassword, String password) {

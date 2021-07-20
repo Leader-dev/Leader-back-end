@@ -78,6 +78,7 @@ public class OrgLeaveService {
         ArrayList<OrgLeaveUserOverview> allOverviews = new ArrayList<>();
         for (String status : statuses) {
             allOverviews.addAll(listByStatus(manageableUserIds, status));
+
         }
         return allOverviews;
     }

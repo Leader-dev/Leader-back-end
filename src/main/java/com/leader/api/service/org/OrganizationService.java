@@ -7,6 +7,7 @@ import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import static com.leader.api.data.org.Organization.NONE;
 import static com.leader.api.data.org.Organization.PENDING;
 
 @Service
@@ -55,6 +56,7 @@ public class OrganizationService {
         newOrganization.posterUrl = orgInfo.posterUrl;
 
         // set items
+        newOrganization.instituteAuth = NONE;  // organizations born with no auth
         newOrganization.status = PENDING;  // must be pending state
         newOrganization.memberCount = 0L;  // no member is initially in the organization
         newOrganization.applicationScheme = new OrgApplicationScheme();  // new application scheme object

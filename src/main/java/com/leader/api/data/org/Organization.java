@@ -13,6 +13,11 @@ public class Organization {
     public static final String PENDING = "pending";
     public static final String RUNNING = "running";
 
+    // instituteAuth
+    public static final String NONE = "none";
+    public static final String SELF = "self";
+    public static final String OFFICIAL = "official";
+
     @Id
     public ObjectId id;
 

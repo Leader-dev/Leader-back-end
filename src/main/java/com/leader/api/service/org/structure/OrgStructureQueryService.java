@@ -128,6 +128,12 @@ public class OrgStructureQueryService {
         return departmentRepository.findById(role.departmentId).orElse(null);
     }
 
+    public void assertMemberIsInDepartment(ObjectId departmentId, ObjectId memberId) {
+        if (!isMemberOfDepartment(departmentId, memberId)){
+            throw new InternalErrorException("Member not in department!");
+        }
+    }
+
     public <T> List<T> listDepartments(ObjectId orgId, ObjectId parentId, Class<T> type) {
         return departmentRepository.findByOrgIdAndParentId(orgId, parentId, type);
     }

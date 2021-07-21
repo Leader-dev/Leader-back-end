@@ -1,9 +1,9 @@
-package com.leader.api.service.org.attendance;
+package com.leader.api.service.org.leave;
 
-import com.leader.api.data.org.attendance.OrgLeave;
-import com.leader.api.data.org.attendance.OrgLeaveDetail;
-import com.leader.api.data.org.attendance.OrgLeaveRepository;
-import com.leader.api.data.org.attendance.OrgLeaveUserOverview;
+import com.leader.api.data.org.leave.OrgLeave;
+import com.leader.api.data.org.leave.OrgLeaveDetail;
+import com.leader.api.data.org.leave.OrgLeaveRepository;
+import com.leader.api.data.org.leave.OrgLeaveUserOverview;
 import com.leader.api.util.InternalErrorException;
 import com.leader.api.util.component.DateUtil;
 import org.bson.types.ObjectId;
@@ -104,6 +104,25 @@ public class OrgLeaveService {
         thisLeave.reviewNote = reviewNote;
 
         leaveRepository.save(thisLeave);
+    }
+
+    public boolean memberHasValidLeave(ObjectId applicationMemberId, Date attendanceDate) {
+        return leaveRepository.existsByApplicationMemberIdAndStatusAndLeaveStartDateBeforeAndLeaveEndDateAfter(
+                applicationMemberId, OrgLeave.APPROVED, attendanceDate, attendanceDate
+        );
+
+    }
+
+
+    public ArrayList<ObjectId> leaveList(List<ObjectId> manageableMemberIds, Date attendanceDate) {
+        ArrayList<ObjectId> approvedList = new ArrayList<>();
+        for (ObjectId memberId : manageableMemberIds) {
+            if (memberHasValidLeave(memberId, attendanceDate)) {
+                approvedList.add(memberId);
+            }
+        }
+        return approvedList;
+
     }
 
 }

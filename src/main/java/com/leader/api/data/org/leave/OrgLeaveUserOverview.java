@@ -1,10 +1,8 @@
-package com.leader.api.data.org.attendance;
+package com.leader.api.data.org.leave;
 
 import com.leader.api.data.org.member.OrgMemberInfoOverview;
 import org.bson.types.ObjectId;
-import org.springframework.data.annotation.Id;
 
-import java.util.ArrayList;
 import java.util.Date;
 
 public class OrgLeaveUserOverview {

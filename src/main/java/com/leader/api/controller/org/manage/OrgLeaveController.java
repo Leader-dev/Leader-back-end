@@ -1,10 +1,10 @@
 package com.leader.api.controller.org.manage;
 
 
-import com.leader.api.data.org.attendance.OrgLeave;
-import com.leader.api.data.org.attendance.OrgLeaveDetail;
-import com.leader.api.data.org.attendance.OrgLeaveUserOverview;
-import com.leader.api.service.org.attendance.OrgLeaveService;
+import com.leader.api.data.org.leave.OrgLeave;
+import com.leader.api.data.org.leave.OrgLeaveDetail;
+import com.leader.api.data.org.leave.OrgLeaveUserOverview;
+import com.leader.api.service.org.leave.OrgLeaveService;
 import com.leader.api.service.org.authorization.OrgAuthority;
 import com.leader.api.service.org.authorization.OrgAuthorizationService;
 import com.leader.api.service.org.member.OrgMemberIdService;

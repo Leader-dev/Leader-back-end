@@ -1,16 +1,17 @@
-package com.leader.api.data.org.attendance;
+package com.leader.api.data.org.leave;
 
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public interface OrgLeaveRepository extends MongoRepository<OrgLeave, ObjectId> {
     OrgLeave findByIdAndApplicationMemberId (ObjectId id, ObjectId applicationMemberId);
 
-
+    boolean existsByApplicationMemberIdAndStatusAndLeaveStartDateBeforeAndLeaveEndDateAfter (
+            ObjectId applicationMemberId, String Status, Date leaveStartDate, Date leaveEndDate);
 
     @Aggregation(pipeline = {
             "{ $match : {applicationMemberId : ?0, status : ?1} }",

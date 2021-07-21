@@ -63,4 +63,18 @@ public class AdminOrgController {
 
         return new SuccessResponse();
     }
+
+    @PostMapping("/type/move-up")
+    public Document moveUpType(@RequestBody QueryObject queryObject) {
+        orgService.moveUpOrgType(queryObject.typeId);
+
+        return new SuccessResponse();
+    }
+
+    @PostMapping("/type/move-down")
+    public Document moveDownType(@RequestBody QueryObject queryObject) {
+        orgService.moveDownOrgType(queryObject.typeId);
+
+        return new SuccessResponse();
+    }
 }

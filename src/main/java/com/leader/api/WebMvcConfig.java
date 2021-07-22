@@ -77,7 +77,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                     }
                 })
                 .addPathPatterns("/**")
-                .excludePathPatterns("/user/**", "/admin/**", "/api/info")
+                .excludePathPatterns("/user/**", "/admin/**", "/api/info", "/service/image/access-start-url")
                 .addPathPatterns("/user/info/**");
         // add base orgId parameter handler for all routes in /org/manage/**
         registry

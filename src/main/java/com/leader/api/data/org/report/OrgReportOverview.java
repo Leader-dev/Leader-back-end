@@ -1,20 +1,19 @@
 package com.leader.api.data.org.report;
 
+import com.leader.api.data.org.OrgLobbyOverview;
+import com.leader.api.data.user.UserInfo;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.ArrayList;
 import java.util.Date;
 
-@Document(collection = "org_report")
-public class OrgReport {
+public class OrgReportOverview {
 
     @Id
     public ObjectId id;
     public ObjectId orgId;
+    public OrgLobbyOverview orgInfo;
     public ObjectId senderUserId;
+    public UserInfo senderUserInfo;
     public Date sendDate;
-    public String description;
-    public ArrayList<String> imageUrls;
 }

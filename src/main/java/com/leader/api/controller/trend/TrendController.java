@@ -10,6 +10,7 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,7 +48,18 @@ public class TrendController {
     @PostMapping("/list")
     public Document listTrends(@RequestBody QueryObject queryObject) {
         ObjectId puppetId = puppetIdService.getCurrentPuppetId();
-        List<TrendItemDetail> trends = trendService.getTrends(puppetId, PageRequest.of(queryObject.pageNumber, queryObject.pageSize));
+        List<TrendItemDetail> trends = trendService.getTrends(
+                puppetId, PageRequest.of(queryObject.pageNumber, queryObject.pageSize, Sort.by("sendDate").descending()));
+
+        Document response = new SuccessResponse();
+        response.append("trends", trends);
+        return response;
+    }
+
+    @PostMapping("/list-hot")
+    public Document listHotTrends() {
+        ObjectId puppetId = puppetIdService.getCurrentPuppetId();
+        List<TrendItemDetail> trends = trendService.getHotTrends(puppetId);
 
         Document response = new SuccessResponse();
         response.append("trends", trends);
@@ -57,7 +69,8 @@ public class TrendController {
     @PostMapping("/list-sent")
     public Document listSentTrends(@RequestBody QueryObject queryObject) {
         ObjectId puppetId = puppetIdService.getCurrentPuppetId();
-        List<TrendItemDetail> trends = trendService.getSentTrends(puppetId, PageRequest.of(queryObject.pageNumber, queryObject.pageSize));
+        List<TrendItemDetail> trends = trendService.getSentTrends(
+                puppetId, PageRequest.of(queryObject.pageNumber, queryObject.pageSize, Sort.by("sendDate").descending()));
 
         Document response = new SuccessResponse();
         response.append("trends", trends);

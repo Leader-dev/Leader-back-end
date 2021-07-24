@@ -14,14 +14,20 @@ import com.leader.api.data.trend.report.TrendReportRepository;
 import com.leader.api.util.component.DateUtil;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Service
 public class TrendService {
+
+    public static final long HOT_PERIOD = 7 * 24 * 3600 * 1000;
+    public static final int HOT_COUNT = 3;
 
     private final TrendItemRepository itemRepository;
     private final TrendLikeRepository likeRepository;
@@ -44,15 +50,23 @@ public class TrendService {
     }
 
     public List<TrendItemDetail> getTrends(ObjectId puppetId, Pageable pageable) {
-        return itemRepository.lookupByOrderBySendDateDesc(puppetId, pageable);
+        return itemRepository.lookupBy(puppetId, pageable);
+    }
+
+    public List<TrendItemDetail> getHotTrends(ObjectId puppetId) {
+        return itemRepository.lookupBySendDateAfter(
+                puppetId,
+                new Date(dateUtil.getCurrentTime() - HOT_PERIOD),
+                PageRequest.of(0, HOT_COUNT, Sort.by("likeCount").descending())
+        );
     }
 
     public List<TrendItemDetail> getSentTrends(ObjectId puppetId, Pageable pageable) {
-        return itemRepository.lookupByPuppetIdOrderBySendDateDesc(puppetId, pageable);
+        return itemRepository.lookupByPuppetId(puppetId, pageable);
     }
 
     public TrendItemDetail getDetail(ObjectId puppetId, ObjectId trendItemId) {
-        return itemRepository.lookupByIdOrderBySendDateDesc(puppetId, trendItemId);
+        return itemRepository.lookupById(puppetId, trendItemId);
     }
 
     public TrendItem getTrendItem(ObjectId trendItemId) {

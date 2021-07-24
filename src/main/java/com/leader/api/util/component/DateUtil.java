@@ -22,6 +22,4 @@ public class DateUtil {
             throw new InternalErrorException("Invalid date! Must be after current date.");
         }
     }
-
-
 }

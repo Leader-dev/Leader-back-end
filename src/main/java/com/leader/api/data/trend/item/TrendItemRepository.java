@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -70,20 +71,23 @@ public interface TrendItemRepository extends MongoRepository<TrendItem, ObjectId
             "   $addFields: {" +
             "       liked: { $ne: [0, { $size: '$likeInfo' }] }" +
             "   }" +
-            "}",
-            "{ $sort: { sendDate : -1 } }"
+            "}"
     })
-    List<TrendItemDetail> lookupByQueryOrderBySendDateDesc(Document query, ObjectId puppetId, Pageable pageable);
+    List<TrendItemDetail> lookupByQuery(Document query, ObjectId puppetId, Pageable pageable);
 
-    default List<TrendItemDetail> lookupByOrderBySendDateDesc(ObjectId puppetId, Pageable pageable) {
-        return lookupByQueryOrderBySendDateDesc(new Document(), puppetId, pageable);
+    default List<TrendItemDetail> lookupBy(ObjectId puppetId, Pageable pageable) {
+        return lookupByQuery(new Document(), puppetId, pageable);
     }
 
-    default List<TrendItemDetail> lookupByPuppetIdOrderBySendDateDesc(ObjectId puppetId, Pageable pageable) {
-        return lookupByQueryOrderBySendDateDesc(new Document("puppetId", puppetId), puppetId, pageable);
+    default List<TrendItemDetail> lookupByPuppetId(ObjectId puppetId, Pageable pageable) {
+        return lookupByQuery(new Document("puppetId", puppetId), puppetId, pageable);
     }
 
-    default TrendItemDetail lookupByIdOrderBySendDateDesc(ObjectId puppetId, ObjectId id) {
-        return lookupByQueryOrderBySendDateDesc(new Document("id", id), puppetId, Pageable.unpaged()).get(0);
+    default List<TrendItemDetail> lookupBySendDateAfter(ObjectId puppetId, Date date, Pageable pageable) {
+        return lookupByQuery(new Document("sendDate", new Document("$gt", date)), puppetId, pageable);
+    }
+
+    default TrendItemDetail lookupById(ObjectId puppetId, ObjectId id) {
+        return lookupByQuery(new Document("_id", id), puppetId, Pageable.unpaged()).get(0);
     }
 }

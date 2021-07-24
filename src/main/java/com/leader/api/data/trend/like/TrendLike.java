@@ -4,6 +4,8 @@ import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.Date;
+
 @Document(collection = "trend_like")
 public class TrendLike {
 
@@ -11,4 +13,5 @@ public class TrendLike {
     public ObjectId id;
     public ObjectId trendItemId;
     public ObjectId puppetId;
+    public Date timestamp;
 }

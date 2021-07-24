@@ -53,10 +53,16 @@ public class UserAuthService {
         }
     }
 
+    public User createUser(String phone) {
+        return createUser(phone, null, null);
+    }
+
     public User createUser(String phone, String password, String nickname) {
         User user = new User();
         user.phone = phone;
-        user.password = secureService.encodePassword(password);
+        if (password != null) {
+            user.password = secureService.encodePassword(password);
+        }
         user.nickname = nickname;
         synchronized (userRepository) {
             user.uid = generateNewUid();
@@ -64,16 +70,28 @@ public class UserAuthService {
         }
     }
 
-    public boolean validateUser(String phone, String password) {
-        assertPhoneExists(phone);
+    public boolean hasPassword(String phone) {
         User user = userRepository.findByPhone(phone);
+        return user.password != null;
+    }
+
+    public boolean validateUser(String phone, String password) {
+        User user = userRepository.findByPhone(phone);
+        if (user.password == null) {
+            return false;
+        }
         return secureService.matchesPassword(password, user.password);
     }
 
     public void updateUserPasswordByPhone(String phone, String newPassword) {
-        assertPhoneExists(phone);
         User user = userRepository.findByPhone(phone);
         user.password = secureService.encodePassword(newPassword);
+        userRepository.save(user);
+    }
+
+    public void updateUserNicknameByPhone(String phone, String nickname) {
+        User user = userRepository.findByPhone(phone);
+        user.nickname = nickname;
         userRepository.save(user);
     }
 

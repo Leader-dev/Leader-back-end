@@ -1,6 +1,5 @@
 package com.leader.api.controller.user;
 
-import com.leader.api.data.user.User;
 import com.leader.api.service.user.UserAuthService;
 import com.leader.api.service.util.AuthCodeService;
 import com.leader.api.service.util.PasswordService;
@@ -94,13 +93,29 @@ public class UserAuthController {
         return new SuccessResponse();
     }
 
-    @PostMapping("/register")
-    public Document registerUser(@RequestBody UserQueryObject queryObject) {
-        // check phone
-        if (userAuthService.phoneExists(queryObject.phone)) {
-            return new ErrorResponse("phone_exist");
+    @PostMapping("/quick-login")
+    public Document quickLogin(@RequestBody UserQueryObject queryObject) {
+        // check authcode
+        if (!authCodeService.validateAuthCode(queryObject.phone, queryObject.authcode)) {
+            return new ErrorResponse("authcode_incorrect");
         }
 
+        ObjectId userid;
+        if (userAuthService.phoneExists(queryObject.phone)) {
+            userid = userAuthService.getUserIdByPhone(queryObject.phone);
+        } else {
+            userid = userAuthService.createUser(queryObject.phone).id;
+        }
+        userIdService.setCurrentUserId(userid);
+
+        // invalidate current authcode
+        authCodeService.removeAuthCodeRecord(queryObject.phone);
+
+        return new SuccessResponse();
+    }
+
+    @PostMapping("/register")
+    public Document registerUser(@RequestBody UserQueryObject queryObject) {
         // check authcode
         if (!authCodeService.validateAuthCode(queryObject.phone, queryObject.authcode)) {
             return new ErrorResponse("authcode_incorrect");
@@ -109,14 +124,21 @@ public class UserAuthController {
         // decrypt password
         String password = passwordService.decrypt(queryObject.password);
 
-        // actually create user
-        User registeredUser = userAuthService.createUser(queryObject.phone, password, queryObject.nickname);
+        ObjectId userId;
+        if (userAuthService.phoneExists(queryObject.phone)) {
+            if (userAuthService.hasPassword(queryObject.phone)) {
+                return new ErrorResponse("user_exist");
+            }
+            userAuthService.updateUserPasswordByPhone(queryObject.phone, password);
+            userAuthService.updateUserNicknameByPhone(queryObject.phone, queryObject.nickname);
+            userId = userAuthService.getUserIdByPhone(queryObject.phone);
+        } else {
+            userId = userAuthService.createUser(queryObject.phone, password, queryObject.nickname).id;
+        }
+        userIdService.setCurrentUserId(userId);
 
-        // delete authcode record
+        // invalidate current authcode
         authCodeService.removeAuthCodeRecord(queryObject.phone);
-
-        // save user id
-        userIdService.setCurrentUserId(registeredUser.id);
 
         return new SuccessResponse();
     }
@@ -140,6 +162,10 @@ public class UserAuthController {
             // check authcode
             if (!authCodeService.validateAuthCode(queryObject.phone, queryObject.authcode)) {
                 return new ErrorResponse("authcode_incorrect");
+            }
+
+            if (!userAuthService.hasPassword(queryObject.phone)) {
+                return new ErrorResponse("need_info");
             }
 
             // invalidate current authcode

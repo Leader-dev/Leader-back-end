@@ -11,6 +11,7 @@ public class OrgLobbyOverview {
     public ObjectId id;
     public String numberId;
     public String instituteAuth;
+    public String presidentName;
 
     public String name;
     public String instituteName;

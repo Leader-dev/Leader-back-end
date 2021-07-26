@@ -5,6 +5,7 @@ import com.leader.api.service.util.SecureService;
 import com.leader.api.util.InternalErrorException;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import static com.leader.api.data.org.Organization.NONE;
@@ -13,7 +14,8 @@ import static com.leader.api.data.org.Organization.PENDING;
 @Service
 public class OrganizationService {
 
-    public static final int ORG_NUMBER_ID_LENGTH = 6;
+    @Value("${leader.org-number-id-length}")
+    public int ORG_NUMBER_ID_LENGTH;
 
     private final OrganizationRepository organizationRepository;
     private final SecureService secureService;

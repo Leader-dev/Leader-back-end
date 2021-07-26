@@ -6,13 +6,17 @@ import com.leader.api.service.util.SecureService;
 import com.leader.api.util.InternalErrorException;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserAuthService {
 
-    private static final int UID_LENGTH = 8;
-    private static final long UID_LENGTH_CAPACITY = 50000000;
+    @Value("${leader.uid-length}")
+    private int UID_LENGTH;
+
+    @Value("${leader.uid-length-capacity}")
+    private long UID_LENGTH_CAPACITY;
 
     private final UserRepository userRepository;
     private final SecureService secureService;

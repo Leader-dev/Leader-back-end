@@ -28,7 +28,7 @@ public class OrgFavoriteService {
     }
 
     public void addOrganizationToFavorite(ObjectId orgId, ObjectId userId) {
-        if (organizationRepository.existsById(orgId)) {
+        if (organizationRepository.existsById(orgId) && !favoriteRecordRepository.existsByOrgIdAndUserId(orgId, userId)) {
             OrgFavoriteRecord record = new OrgFavoriteRecord();
             record.orgId = orgId;
             record.userId = userId;

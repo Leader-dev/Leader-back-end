@@ -1,6 +1,6 @@
 package com.leader.api.controller.user;
 
-import com.leader.api.data.user.OfficialNotification;
+import com.leader.api.data.user.OfficialNotificationReceivedOverview;
 import com.leader.api.service.user.OfficialNotificationService;
 import com.leader.api.service.util.UserIdService;
 import com.leader.api.util.response.SuccessResponse;
@@ -34,7 +34,7 @@ public class OfficialNotificationController {
     @PostMapping("/list-received")
     public Document listReceivedNotifications() {
         ObjectId userId = userIdService.getCurrentUserId();
-        List<OfficialNotification> notifications = notificationService.getReceivedNotifications(userId);
+        List<OfficialNotificationReceivedOverview> notifications = notificationService.getReceivedNotifications(userId);
 
         Document response = new SuccessResponse();
         response.append("notifications", notifications);

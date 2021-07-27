@@ -60,6 +60,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // allow CORS for all paths
         registry
                 .addMapping("/**")
+                .allowedMethods("GET", "POST", "OPTIONS")
                 .exposedHeaders(APITokenFilter.SET_TOKEN_HEADER_KEY);
     }
 

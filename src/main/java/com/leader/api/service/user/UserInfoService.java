@@ -30,6 +30,10 @@ public class UserInfoService {
         return userRepository.findById(id, UserInfo.class);
     }
 
+    public UserInfo getUserInfo(String uid) {
+        return userRepository.findByUid(uid, UserInfo.class);
+    }
+
     public String getUserNickname(ObjectId id) {
         return getUserInfo(id).nickname;
     }

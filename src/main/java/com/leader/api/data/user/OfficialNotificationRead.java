@@ -4,17 +4,11 @@ import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.Date;
-
-@Document(collection = "official_notification")
-public class OfficialNotification {
+@Document(collection = "official_notification_read")
+public class OfficialNotificationRead {
 
     @Id
     public ObjectId id;
-    public boolean toAll;
+    public ObjectId notificationId;
     public ObjectId userId;
-    public Date sendDate;
-    public String title;
-    public String content;
-    public String coverUrl;
 }

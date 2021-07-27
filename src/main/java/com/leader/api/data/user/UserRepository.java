@@ -11,7 +11,7 @@ public interface UserRepository extends MongoRepository<User, ObjectId> {
 
     <T> Page<T> findAllBy(Pageable pageable, Class<T> type);
 
-    User findByUid(String uid);
+    <T> T findByUid(String uid, Class<T> type);
 
     User findByPhone(String phone);
 

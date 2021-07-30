@@ -3,6 +3,7 @@ package com.leader.api.service.service;
 import com.leader.api.data.service.ImageRecord;
 import com.leader.api.data.service.ImageRecordRepository;
 import com.leader.api.resource.storage.StaticResourceStorage;
+import com.leader.api.service.admin.AdminIdService;
 import com.leader.api.service.util.SecureService;
 import com.leader.api.service.util.UserIdService;
 import com.leader.api.util.InternalErrorException;
@@ -28,17 +29,27 @@ public class ImageService {
     private final StaticResourceStorage resourceStorage;
     private final ImageRecordRepository imageRecordRepository;
     private final UserIdService userIdService;
+    private final AdminIdService adminIdService;
     private final SecureService secureService;
     private final DateUtil dateUtil;
 
     @Autowired
     public ImageService(StaticResourceStorage resourceStorage, ImageRecordRepository imageRecordRepository,
-                        UserIdService userIdService, SecureService secureService, DateUtil dateUtil) {
+                        UserIdService userIdService, AdminIdService adminIdService, SecureService secureService, DateUtil dateUtil) {
         this.resourceStorage = resourceStorage;
         this.imageRecordRepository = imageRecordRepository;
         this.userIdService = userIdService;
+        this.adminIdService = adminIdService;
         this.secureService = secureService;
         this.dateUtil = dateUtil;
+    }
+
+    private ObjectId getCurrentUserIdOrAdminId() {
+        ObjectId userId = userIdService.getCurrentUserId();
+        if (userId != null) {
+            return userId;
+        }
+        return adminIdService.getCurrentAdminId();
     }
 
     private Date getExpirationSinceNow() {
@@ -75,7 +86,7 @@ public class ImageService {
     }
 
     private void cleanUpInvalidImages() {  // only way to completely remove images
-        ObjectId userId = userIdService.getCurrentUserId();
+        ObjectId userId = getCurrentUserIdOrAdminId();
 
         // find invalid and expired records, extracting url part
         List<ImageRecord> invalidAndExpiredRecords = imageRecordRepository
@@ -91,7 +102,7 @@ public class ImageService {
     }
 
     public String generateNewUploadUrl() {
-        ObjectId userId = userIdService.getCurrentUserId();
+        ObjectId userId = getCurrentUserIdOrAdminId();
         Date expiration = getExpirationSinceNow();
         String imageUrl = allocateNewImageUrl(userId, expiration);
         return resourceStorage.generatePresignedUploadUrl(imageUrl, expiration).toString();
@@ -108,7 +119,7 @@ public class ImageService {
             throw new InternalErrorException("Count too large.");
         }
 
-        ObjectId userId = userIdService.getCurrentUserId();
+        ObjectId userId = getCurrentUserIdOrAdminId();
         Date expiration = getExpirationSinceNow();
         String[] uploadUrls = new String[count];
         MultitaskUtil.forI(count, targetIndex -> {
@@ -124,7 +135,7 @@ public class ImageService {
             return null;
         }
 
-        ObjectId userId = userIdService.getCurrentUserId();
+        ObjectId userId = getCurrentUserIdOrAdminId();
         String newUrl = allocateNewImageUrl(userId, dateUtil.getCurrentDate());
         resourceStorage.copyFile(imageUrl, newUrl);
         confirmUploadImage(newUrl);
@@ -136,7 +147,7 @@ public class ImageService {
             return;
         }
 
-        ObjectId userId = userIdService.getCurrentUserId();
+        ObjectId userId = getCurrentUserIdOrAdminId();
         boolean recordExists = imageRecordRepository.existsByUploadUserIdAndImageUrlAndStatus(userId, imageUrl, PENDING);
         if (!recordExists || !resourceStorage.fileExists(imageUrl)) {
             throw new InternalErrorException("Image not uploaded.");
@@ -148,7 +159,7 @@ public class ImageService {
             return;
         }
 
-        ObjectId userId = userIdService.getCurrentUserId();
+        ObjectId userId = getCurrentUserIdOrAdminId();
         for (String imageUrl: imageUrls) {
             if (!imageRecordRepository.existsByUploadUserIdAndImageUrlAndStatus(userId, imageUrl, PENDING)) {
                 throw new InternalErrorException("Images not uploaded.");
@@ -164,7 +175,7 @@ public class ImageService {
             return;
         }
 
-        ObjectId userId = userIdService.getCurrentUserId();
+        ObjectId userId = getCurrentUserIdOrAdminId();
         ImageRecord record = imageRecordRepository.findByUploadUserIdAndImageUrlAndStatus(userId, imageUrl, PENDING);
         if (record == null || !resourceStorage.fileExists(imageUrl)) {
             throw new InternalErrorException("Image not uploaded.");
@@ -178,7 +189,7 @@ public class ImageService {
             return;
         }
 
-        ObjectId userId = userIdService.getCurrentUserId();
+        ObjectId userId = getCurrentUserIdOrAdminId();
         ArrayList<ImageRecord> records = new ArrayList<>();
         for (String imageUrl: imageUrls) {
             ImageRecord record = imageRecordRepository.findByUploadUserIdAndImageUrlAndStatus(userId, imageUrl, PENDING);
@@ -217,7 +228,7 @@ public class ImageService {
     }
 
     public void cleanUp() {
-        ObjectId userId = userIdService.getCurrentUserId();
+        ObjectId userId = getCurrentUserIdOrAdminId();
         setRecordsToInvalid(imageRecordRepository.findByUploadUserIdAndStatus(userId, PENDING));
         cleanUpInvalidImages();
     }

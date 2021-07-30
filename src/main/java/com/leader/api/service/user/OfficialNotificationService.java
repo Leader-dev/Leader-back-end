@@ -61,10 +61,16 @@ public class OfficialNotificationService {
         notificationRepository.insert(notification);
     }
 
-    public void updateNotification(ObjectId notificationId, String title, String content, String coverUrl) {
+    public void updateNotification(ObjectId notificationId, String title, String content) {
         notificationRepository.findById(notificationId).ifPresent(notification -> {
             notification.title = title;
             notification.content = content;
+            notificationRepository.save(notification);
+        });
+    }
+
+    public void updateNotificationCover(ObjectId notificationId, String coverUrl) {
+        notificationRepository.findById(notificationId).ifPresent(notification -> {
             notification.coverUrl = coverUrl;
             notificationRepository.save(notification);
         });

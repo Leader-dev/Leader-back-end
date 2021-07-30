@@ -1,6 +1,8 @@
 package com.leader.api.controller.admin.user;
 
+import com.leader.api.data.user.OfficialNotificationSentDetail;
 import com.leader.api.data.user.UserInfo;
+import com.leader.api.service.service.ImageService;
 import com.leader.api.service.user.OfficialNotificationService;
 import com.leader.api.service.user.UserInfoService;
 import com.leader.api.util.response.SuccessResponse;
@@ -18,11 +20,14 @@ public class AdminOfficialNotificationController {
 
     private final UserInfoService infoService;
     private final OfficialNotificationService notificationService;
+    private final ImageService imageService;
 
     @Autowired
-    public AdminOfficialNotificationController(UserInfoService infoService, OfficialNotificationService notificationService) {
+    public AdminOfficialNotificationController(UserInfoService infoService, OfficialNotificationService notificationService,
+                                               ImageService imageService) {
         this.infoService = infoService;
         this.notificationService = notificationService;
+        this.imageService = imageService;
     }
 
     public static class QueryObject {
@@ -58,21 +63,35 @@ public class AdminOfficialNotificationController {
 
     @PostMapping("/send")
     public Document sendNotification(@RequestBody QueryObject queryObject) {
+        imageService.assertUploadedTempImage(queryObject.coverUrl);
+
         UserInfo info = infoService.getUserInfo(queryObject.uid);
         ObjectId userId = info == null ? null : info.id;
         notificationService.sendNotification(queryObject.toAll, userId, queryObject.title, queryObject.content, queryObject.coverUrl);
+
+        imageService.confirmUploadImage(queryObject.coverUrl);
+
         return new SuccessResponse();
     }
 
     @PostMapping("/update")
     public Document updateNotification(@RequestBody QueryObject queryObject) {
-        notificationService.updateNotification(queryObject.notificationId, queryObject.title, queryObject.content, queryObject.coverUrl);
+        imageService.assertUploadedTempImage(queryObject.coverUrl);
+
+        notificationService.updateNotification(queryObject.notificationId, queryObject.title, queryObject.content);
+        if (queryObject.coverUrl != null) {
+            notificationService.updateNotificationCover(queryObject.notificationId, queryObject.coverUrl);
+        }
+
+        imageService.confirmUploadImage(queryObject.coverUrl);
         return new SuccessResponse();
     }
 
     @PostMapping("/delete")
     public Document deleteNotification(@RequestBody QueryObject queryObject) {
+        OfficialNotificationSentDetail detail = notificationService.getNotificationDetail(queryObject.notificationId);
         notificationService.deleteNotification(queryObject.notificationId);
+        imageService.deleteImage(detail.coverUrl);
         return new SuccessResponse();
     }
 }

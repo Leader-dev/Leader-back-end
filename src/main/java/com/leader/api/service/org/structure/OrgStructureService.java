@@ -8,6 +8,7 @@ import com.leader.api.data.org.member.OrgMemberRepository;
 import com.leader.api.data.org.member.OrgMemberRole;
 import com.leader.api.service.org.authorization.OrgRoleService;
 import com.leader.api.service.org.member.OrgMemberService;
+import com.leader.api.util.InternalErrorException;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
@@ -96,6 +97,10 @@ public class OrgStructureService extends OrgStructureQueryService {
     }
 
     public void dismissMember(ObjectId memberId) {
+        if (isPresident(memberId)) {
+            throw new InternalErrorException("Cannot dismiss president.");
+        }
+
         memberRepository.findById(memberId).ifPresent(member -> {
             member.userId = null;
             member.roles = new ArrayList<>();

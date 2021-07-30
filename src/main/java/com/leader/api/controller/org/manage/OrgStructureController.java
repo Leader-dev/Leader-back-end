@@ -7,6 +7,7 @@ import com.leader.api.service.org.authorization.OrgAuthorizationService;
 import com.leader.api.service.org.member.OrgMemberIdService;
 import com.leader.api.service.org.member.OrgMemberInfoService;
 import com.leader.api.service.org.structure.OrgStructureService;
+import com.leader.api.util.InternalErrorException;
 import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -175,6 +176,10 @@ public class OrgStructureController {
     public Document removeMember(@RequestBody QueryObject queryObject) {
         authorizationService.assertCurrentMemberHasAuthority(STRUCTURE_MANAGEMENT);
 
+        ObjectId memberId = memberIdService.getCurrentMemberId();
+        if (memberId.equals(queryObject.memberId)) {
+            throw new InternalErrorException("Cannot dismiss self.");
+        }
         structureService.dismissMember(queryObject.memberId);
 
         return new SuccessResponse();

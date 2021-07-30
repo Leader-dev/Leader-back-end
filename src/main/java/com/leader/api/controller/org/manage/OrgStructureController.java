@@ -110,6 +110,17 @@ public class OrgStructureController {
         return new SuccessResponse();
     }
 
+    @PostMapping("/rename-department")
+    public Document renameDepartment(@RequestBody QueryObject queryObject) {
+        authorizationService.assertCurrentMemberHasAuthority(STRUCTURE_MANAGEMENT);
+
+        ObjectId orgId = memberIdService.getCurrentOrgId();
+        structureService.assertDepartmentInOrganization(orgId, queryObject.departmentId);
+        structureService.renameDepartment(queryObject.departmentId, queryObject.name);
+
+        return new SuccessResponse();
+    }
+
     @PostMapping("/delete-department")
     public Document deleteDepartment(@RequestBody QueryObject queryObject) {
         authorizationService.assertCurrentMemberHasAuthority(STRUCTURE_MANAGEMENT);

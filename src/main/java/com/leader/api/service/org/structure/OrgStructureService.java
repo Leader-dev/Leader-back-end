@@ -48,6 +48,13 @@ public class OrgStructureService extends OrgStructureQueryService {
         departmentRepository.insert(department);
     }
 
+    public void renameDepartment(ObjectId departmentId, String name) {
+        departmentRepository.findById(departmentId).ifPresent(department -> {
+            department.name = name;
+            departmentRepository.save(department);
+        });
+    }
+
     public void deleteDepartment(ObjectId departmentId) {
         // remove all members of the department
         OrgMemberRole role = member(departmentId);

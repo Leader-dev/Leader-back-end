@@ -7,7 +7,6 @@ import com.leader.api.service.util.PhoneValidatedService;
 import com.leader.api.service.util.UserIdService;
 import com.leader.api.util.InternalErrorException;
 import com.leader.api.util.response.ErrorResponse;
-import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +14,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import static com.leader.api.util.response.ErrorResponse.error;
+import static com.leader.api.util.response.SuccessResponse.success;
 
 @RestController
 @RequestMapping("/user")
@@ -56,9 +58,9 @@ public class UserAuthController {
     public Document userExist(@RequestBody UserQueryObject queryObject) {
         boolean exist = userAuthService.phoneExists(queryObject.phone);
 
-        Document response = new SuccessResponse();
-        response.append("exist", exist);
-        return response;
+        return success(
+                "exist", exist
+        );
     }
 
     @PostMapping("/key")
@@ -67,9 +69,9 @@ public class UserAuthController {
         byte[] publicKey = passwordService.generateKey();
 
         // put public key in response
-        Document response = new SuccessResponse();
-        response.append("publicKey", publicKey);
-        return response;
+        return success(
+                "publicKey", publicKey
+        );
     }
 
     @PostMapping("/check")
@@ -77,9 +79,9 @@ public class UserAuthController {
         // decrypt password
         String text = passwordService.decrypt(queryObject.password);
 
-        Document response = new SuccessResponse();
-        response.append("text", text);
-        return response;
+        return success(
+                "text", text
+        );
     }
 
     @PostMapping("/authcode")
@@ -87,17 +89,17 @@ public class UserAuthController {
         String phone = phoneOrCurrentUserPhone(queryObject.phone);
         boolean sendSuccess = authCodeService.sendAuthCode(phone);
         if (!sendSuccess) {
-            return new ErrorResponse("request_too_frequent");
+            return error("request_too_frequent");
         }
 
-        return new SuccessResponse();
+        return success();
     }
 
     @PostMapping("/quick-login")
     public Document quickLogin(@RequestBody UserQueryObject queryObject) {
         // check authcode
         if (!authCodeService.validateAuthCode(queryObject.phone, queryObject.authcode)) {
-            return new ErrorResponse("authcode_incorrect");
+            return error("authcode_incorrect");
         }
 
         ObjectId userid;
@@ -111,14 +113,14 @@ public class UserAuthController {
         // invalidate current authcode
         authCodeService.removeAuthCodeRecord(queryObject.phone);
 
-        return new SuccessResponse();
+        return success();
     }
 
     @PostMapping("/register")
     public Document registerUser(@RequestBody UserQueryObject queryObject) {
         // check authcode
         if (!authCodeService.validateAuthCode(queryObject.phone, queryObject.authcode)) {
-            return new ErrorResponse("authcode_incorrect");
+            return error("authcode_incorrect");
         }
 
         // decrypt password
@@ -127,7 +129,7 @@ public class UserAuthController {
         ObjectId userId;
         if (userAuthService.phoneExists(queryObject.phone)) {
             if (userAuthService.hasPassword(queryObject.phone)) {
-                return new ErrorResponse("user_exist");
+                return error("user_exist");
             }
             userAuthService.updateUserPasswordByPhone(queryObject.phone, password);
             userAuthService.updateUserNicknameByPhone(queryObject.phone, queryObject.nickname);
@@ -140,14 +142,14 @@ public class UserAuthController {
         // invalidate current authcode
         authCodeService.removeAuthCodeRecord(queryObject.phone);
 
-        return new SuccessResponse();
+        return success();
     }
 
     @PostMapping("/login")
     public Document login(@RequestBody UserQueryObject queryObject) {
         // check phone
         if (!userAuthService.phoneExists(queryObject.phone)) {
-            return new ErrorResponse("user_not_exist");
+            return error("user_not_exist");
         }
 
         if (queryObject.password != null) {  // if chose to use password
@@ -156,16 +158,16 @@ public class UserAuthController {
 
             // check password
             if (!userAuthService.validateUser(queryObject.phone, password)) {
-                return new ErrorResponse("password_incorrect");
+                return error("password_incorrect");
             }
         } else if (queryObject.authcode != null) {  // if chose to use phone authcode
             // check authcode
             if (!authCodeService.validateAuthCode(queryObject.phone, queryObject.authcode)) {
-                return new ErrorResponse("authcode_incorrect");
+                return error("authcode_incorrect");
             }
 
             if (!userAuthService.hasPassword(queryObject.phone)) {
-                return new ErrorResponse("need_info");
+                return error("need_info");
             }
 
             // invalidate current authcode
@@ -178,23 +180,33 @@ public class UserAuthController {
         ObjectId userid = userAuthService.getUserIdByPhone(queryObject.phone);
         userIdService.setCurrentUserId(userid);
 
-        return new SuccessResponse();
+        return success();
     }
 
     @PostMapping("/logout")
     public Document logout() {
         userIdService.clearCurrentUserId();
 
-        return new SuccessResponse();
+        return success();
+    }
+
+    @PostMapping("/phone")
+    public Document getUserPhone() {
+        ObjectId userId = userIdService.getCurrentUserId();
+        String phone = userAuthService.getUserPhoneById(userId);
+
+        return success(
+                "phone", phone
+        );
     }
 
     @PostMapping("/userid")
     public Document userid() {
         ObjectId userid = userIdService.getCurrentUserId();
 
-        Document response = new SuccessResponse();
-        response.append("userid", userid);
-        return response;
+        return success(
+                "userid", userid
+        );
     }
 
     @PostMapping("/check-authcode")
@@ -214,7 +226,7 @@ public class UserAuthController {
 
         phoneValidatedService.setPhoneValidated(phone);
 
-        return new SuccessResponse();
+        return success();
     }
 
     @PostMapping("/change-password")
@@ -230,6 +242,6 @@ public class UserAuthController {
         // update user
         userAuthService.updateUserPasswordByPhone(phone, password);
 
-        return new SuccessResponse();
+        return success();
     }
 }

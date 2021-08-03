@@ -1,12 +1,13 @@
 package com.leader.api.controller.app;
 
 import com.leader.api.service.app.AppInfoService;
-import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import static com.leader.api.util.response.SuccessResponse.success;
 
 @RestController
 @RequestMapping("/app")
@@ -21,14 +22,14 @@ public class AppInfoController {
 
     @PostMapping("/agreement")
     public Document getAgreement() {
-        return new SuccessResponse(
+        return success().data(
                 "md", appInfoService.getAgreement()
         );
     }
 
     @PostMapping("/privacy")
     public Document getPrivacy() {
-        return new SuccessResponse(
+        return success().data(
                 "md", appInfoService.getPrivacy()
         );
     }

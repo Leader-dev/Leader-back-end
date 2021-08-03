@@ -2,12 +2,12 @@ package com.leader.api.util.response;
 
 public class InternalErrorResponse extends CodeResponse {
 
-    public InternalErrorResponse() {
-        super(500);
+    public static InternalErrorResponse internalError(String errorMessage) {
+        return new InternalErrorResponse(errorMessage);
     }
 
     public InternalErrorResponse(String errorMessage) {
-        this();
+        super(500);
         this.append("message", errorMessage);
     }
 }

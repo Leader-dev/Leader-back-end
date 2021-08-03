@@ -7,8 +7,6 @@ import com.leader.api.service.org.member.OrgMemberService;
 import com.leader.api.service.util.UserIdService;
 import com.leader.api.util.InternalErrorException;
 import com.leader.api.util.UserAuthException;
-import com.leader.api.util.response.AuthErrorResponse;
-import com.leader.api.util.response.InternalErrorResponse;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +27,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
+
+import static com.leader.api.util.response.AuthErrorResponse.authError;
+import static com.leader.api.util.response.InternalErrorResponse.internalError;
 
 @Configuration
 @EnableWebMvc
@@ -117,14 +118,14 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public ResponseEntity<Document> handle(Exception ex) {
         // Special handling for user auth failed, return auth error (403)
         if (ex instanceof UserAuthException) {
-            return new ResponseEntity<>(new AuthErrorResponse(), HttpStatus.OK);
+            return new ResponseEntity<>(authError(), HttpStatus.OK);
         }
         // if an exception other than defined types occur, print trace in console for debug
         if (!(ex instanceof InternalErrorException) || ex.getCause() != null) {
             ex.printStackTrace();
         }
         // whenever an exception occur, return internal error (500) along with the original message of the exception
-        return new ResponseEntity<>(new InternalErrorResponse(ex.getMessage()), HttpStatus.OK);
+        return new ResponseEntity<>(internalError(ex.getMessage()), HttpStatus.OK);
     }
 
     @Override

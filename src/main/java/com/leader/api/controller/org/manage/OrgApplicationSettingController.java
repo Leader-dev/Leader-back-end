@@ -3,11 +3,11 @@ package com.leader.api.controller.org.manage;
 import com.leader.api.data.org.OrgApplicationScheme;
 import com.leader.api.data.org.department.OrgDepartment;
 import com.leader.api.data.org.department.OrgDepartmentRecruitInfo;
+import com.leader.api.data.org.member.OrgMemberOverview;
 import com.leader.api.service.org.application.OrgApplicationSettingService;
 import com.leader.api.service.org.authorization.OrgAuthorizationService;
 import com.leader.api.service.org.member.OrgMemberIdService;
 import com.leader.api.service.org.structure.OrgStructureService;
-import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 import static com.leader.api.service.org.authorization.OrgAuthority.RECRUIT_SETTING;
+import static com.leader.api.util.response.SuccessResponse.success;
 
 @RestController
 @RequestMapping("/org/manage/apply/setting")
@@ -53,12 +54,10 @@ public class OrgApplicationSettingController {
         OrgApplicationScheme scheme = settingService.getApplicationScheme(orgId);
         int receivedApplicationCount = settingService.getReceivedApplicationCount(orgId);
 
-        Document response = new SuccessResponse();
-        Document data = new Document();
-        data.append("scheme", scheme);
-        data.append("receivedApplicationCount", receivedApplicationCount);
-        response.append("data", data);
-        return response;
+        return success().data(
+                "scheme", scheme,
+                "receivedApplicationCount", receivedApplicationCount
+        );
     }
 
     @PostMapping("/set-scheme")
@@ -71,7 +70,7 @@ public class OrgApplicationSettingController {
             settingService.resetReceivedApplicationCount(orgId);
         }
 
-        return new SuccessResponse();
+        return success();
     }
 
     @PostMapping("/get-recruit-manager-info")
@@ -79,19 +78,20 @@ public class OrgApplicationSettingController {
         authorizationService.assertCurrentMemberHasAuthority(RECRUIT_SETTING);
 
         ObjectId orgId = memberIdService.getCurrentOrgId();
-        ObjectId memberId = null;
+        OrgMemberOverview memberInfo = null;
         if (queryObject.departmentId != null) {
-            memberId = settingService.getDepartmentRecruitManagerId(queryObject.departmentId);
+            ObjectId memberId = settingService.getDepartmentRecruitManagerId(queryObject.departmentId);
+            if (memberId != null) {
+                memberInfo = structureService.getMemberOverview(memberId);
+            }
         }
         List<OrgDepartment> departments = structureService.listDepartments(orgId, queryObject.departmentId, OrgDepartment.class);
         List<OrgDepartmentRecruitInfo> departmentsInfo = settingService.getDepartmentsRecruitManagerInfo(departments);
 
-        Document response = new SuccessResponse();
-        Document info = new Document();
-        info.append("memberId", memberId);
-        info.append("departments", departmentsInfo);
-        response.append("data", info);
-        return response;
+        return success().data(
+                "memberInfo", memberInfo,
+                "departments", departmentsInfo
+        );
     }
 
     @PostMapping("/set-recruit-manager")
@@ -100,6 +100,6 @@ public class OrgApplicationSettingController {
 
         settingService.setMemberToRecruitManager(queryObject.memberId, queryObject.departmentId);
 
-        return new SuccessResponse();
+        return success();
     }
 }

@@ -36,14 +36,14 @@ public class OrgStructureQueryService {
         this.roleService = roleService;
     }
 
-    private static final Function<OrgMember, OrgMemberOverview> TO_MEMBER_OVERVIEW_MAPPER = membership -> {
+    private static final Function<OrgMember, OrgMemberOverview> TO_MEMBER_OVERVIEW_MAPPER = member -> {
         OrgMemberOverview overview = new OrgMemberOverview();
-        overview.id = membership.id;
-        overview.name = membership.name;
-        overview.title = membership.title;
-        if (OrgRoleUtil.roleNameExistsIn(membership.roles, DEPARTMENT_MANAGER)) {
+        overview.id = member.id;
+        overview.name = member.name;
+        overview.title = member.title;
+        if (OrgRoleUtil.roleNameExistsIn(member.roles, DEPARTMENT_MANAGER)) {
             overview.roleName = DEPARTMENT_MANAGER;
-        } else if (OrgRoleUtil.anyRoleNameExistIn(membership.roles, GENERAL_MANAGER, PRESIDENT)) {
+        } else if (OrgRoleUtil.anyRoleNameExistIn(member.roles, GENERAL_MANAGER, PRESIDENT)) {
             overview.roleName = GENERAL_MANAGER;
         } else {
             overview.roleName = MEMBER;
@@ -51,8 +51,16 @@ public class OrgStructureQueryService {
         return overview;
     };
 
-    private static List<OrgMemberOverview> mapToMemberOverviewList(List<OrgMember> members) {
+    private static OrgMemberOverview mapToMemberOverview(OrgMember member) {
+        return TO_MEMBER_OVERVIEW_MAPPER.apply(member);
+    }
+
+    private static List<OrgMemberOverview> mapToMemberOverview(List<OrgMember> members) {
         return members.stream().map(TO_MEMBER_OVERVIEW_MAPPER).collect(Collectors.toList());
+    }
+
+    private OrgMember findMember(ObjectId memberId) {
+        return memberRepository.findById(memberId).orElse(null);
     }
 
     private List<OrgMember> findMembersOfOrganization(ObjectId orgId) {
@@ -138,16 +146,20 @@ public class OrgStructureQueryService {
         return departmentRepository.findByOrgIdAndParentId(orgId, parentId, type);
     }
 
+    public OrgMemberOverview getMemberOverview(ObjectId memberId) {
+        return mapToMemberOverview(findMember(memberId));
+    }
+
     public List<OrgMemberOverview> listMembers(ObjectId orgId, ObjectId departmentId) {
-        return mapToMemberOverviewList(findMembers(orgId, departmentId));
+        return mapToMemberOverview(findMembers(orgId, departmentId));
     }
 
     public List<OrgMemberOverview> listMembersOfOrganization(ObjectId orgId) {
-        return mapToMemberOverviewList(findMembersOfOrganization(orgId));
+        return mapToMemberOverview(findMembersOfOrganization(orgId));
     }
 
     public List<OrgMemberOverview> listMembersOfOrganizationWithRoles(ObjectId orgId, OrgMemberRole... roles) {
-        return mapToMemberOverviewList(findMembersOfOrganizationWithRoles(orgId, roles));
+        return mapToMemberOverview(findMembersOfOrganizationWithRoles(orgId, roles));
     }
 
     public List<OrgMemberOverview> searchMembers(ObjectId orgId, String searchText) {

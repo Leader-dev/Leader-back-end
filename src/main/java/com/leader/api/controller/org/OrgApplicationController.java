@@ -3,10 +3,11 @@ package com.leader.api.controller.org;
 import com.leader.api.data.org.application.OrgApplicationForm;
 import com.leader.api.data.org.application.OrgApplicationSentDetail;
 import com.leader.api.data.org.application.OrgApplicationSentOverview;
+import com.leader.api.data.org.department.OrgDepartmentOverview;
 import com.leader.api.service.org.application.OrgApplicationService;
+import com.leader.api.service.org.structure.OrgStructureQueryService;
 import com.leader.api.service.util.UserIdService;
 import com.leader.api.util.InternalErrorException;
-import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import java.util.List;
 
 import static com.leader.api.service.org.application.OrgApplicationService.ReplyAction.ACCEPT;
 import static com.leader.api.service.org.application.OrgApplicationService.ReplyAction.DECLINE;
+import static com.leader.api.util.response.SuccessResponse.success;
 
 @RestController
 @RequestMapping("/org/apply")
@@ -28,12 +30,14 @@ public class OrgApplicationController {
     public static String DECLINE_ACTION = "decline";
 
     private final OrgApplicationService applicationService;
-
+    private final OrgStructureQueryService queryService;
     private final UserIdService userIdService;
 
     @Autowired
-    public OrgApplicationController(OrgApplicationService applicationService, UserIdService userIdService) {
+    public OrgApplicationController(OrgApplicationService applicationService, OrgStructureQueryService queryService,
+                                    UserIdService userIdService) {
         this.applicationService = applicationService;
+        this.queryService = queryService;
         this.userIdService = userIdService;
     }
 
@@ -58,7 +62,7 @@ public class OrgApplicationController {
                 queryObject.applicationForm
         );
 
-        return new SuccessResponse();
+        return success();
     }
 
     @PostMapping("/list")
@@ -67,9 +71,19 @@ public class OrgApplicationController {
 
         List<OrgApplicationSentOverview> list = applicationService.getSentApplications(userid);
 
-        Document response = new SuccessResponse();
-        response.append("list", list);
-        return response;
+        return success(
+                "list", list
+        );
+    }
+
+    @PostMapping("/list-departments")
+    public Document listDepartments(@RequestBody QueryObject queryObject) {
+        List<OrgDepartmentOverview> departments =
+                queryService.listDepartments(queryObject.orgId, null, OrgDepartmentOverview.class);
+
+        return success(
+                "departments", departments
+        );
     }
 
     @PostMapping("/detail")
@@ -78,9 +92,9 @@ public class OrgApplicationController {
 
         OrgApplicationSentDetail application = applicationService.getApplication(userid, queryObject.applicationId);
 
-        Document response = new SuccessResponse();
-        response.append("detail", application);
-        return response;
+        return success(
+                "detail", application
+        );
     }
 
     @PostMapping("/read-notification")
@@ -89,7 +103,7 @@ public class OrgApplicationController {
 
         applicationService.readNotification(userid, queryObject.notificationId);
 
-        return new SuccessResponse();
+        return success();
     }
 
     @PostMapping("/reply")
@@ -104,6 +118,6 @@ public class OrgApplicationController {
             throw new InternalErrorException("Invalid action.");
         }
 
-        return new SuccessResponse();
+        return success();
     }
 }

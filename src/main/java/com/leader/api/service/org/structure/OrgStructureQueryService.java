@@ -7,7 +7,6 @@ import com.leader.api.data.org.member.OrgMemberOverview;
 import com.leader.api.data.org.member.OrgMemberRepository;
 import com.leader.api.data.org.member.OrgMemberRole;
 import com.leader.api.service.org.authorization.OrgRoleService;
-import com.leader.api.service.org.authorization.OrgRoleUtil;
 import com.leader.api.util.InternalErrorException;
 import org.bson.types.ObjectId;
 import org.springframework.context.annotation.Primary;
@@ -19,6 +18,7 @@ import java.util.stream.Collectors;
 
 import static com.leader.api.data.org.member.OrgMemberRole.*;
 import static com.leader.api.service.org.authorization.OrgRoleUtil.anyRoleExistIn;
+import static com.leader.api.service.org.authorization.OrgRoleUtil.roleNameExistsIn;
 
 @Service
 @Primary  // set to primary to distinguish with OrgStructureService when resolving dependency
@@ -42,10 +42,12 @@ public class OrgStructureQueryService {
         overview.numberId = member.numberId;
         overview.name = member.name;
         overview.title = member.title;
-        if (OrgRoleUtil.roleNameExistsIn(member.roles, DEPARTMENT_MANAGER)) {
-            overview.roleName = DEPARTMENT_MANAGER;
-        } else if (OrgRoleUtil.anyRoleNameExistIn(member.roles, GENERAL_MANAGER, PRESIDENT)) {
+        if (roleNameExistsIn(member.roles, PRESIDENT)) {
+            overview.roleName = PRESIDENT;
+        } else if (roleNameExistsIn(member.roles, GENERAL_MANAGER)) {
             overview.roleName = GENERAL_MANAGER;
+        } else if (roleNameExistsIn(member.roles, DEPARTMENT_MANAGER)) {
+            overview.roleName = DEPARTMENT_MANAGER;
         } else {
             overview.roleName = MEMBER;
         }

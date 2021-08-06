@@ -9,4 +9,5 @@ public class OrgMemberOverview {
     public String name;
     public String title;
     public String roleName;
+    public String avatarUrl;
 }

@@ -5,6 +5,8 @@ import com.leader.api.data.org.member.OrgJoinedOverview;
 import com.leader.api.data.org.member.OrgMember;
 import com.leader.api.data.org.member.OrgMemberRepository;
 import com.leader.api.data.org.member.OrgMemberRole;
+import com.leader.api.service.service.ImageService;
+import com.leader.api.service.user.UserInfoService;
 import com.leader.api.service.util.SecureService;
 import com.leader.api.util.InternalErrorException;
 import org.bson.types.ObjectId;
@@ -24,14 +26,20 @@ public class OrgMemberService {
     private final OrganizationRepository organizationRepository;
     private final OrgMemberRepository memberRepository;
     private final SecureService secureService;
+    private final UserInfoService userInfoService;
+    private final ImageService imageService;
 
     @Autowired
     public OrgMemberService(OrganizationRepository organizationRepository,
                             OrgMemberRepository memberRepository,
-                            SecureService secureService) {
+                            SecureService secureService,
+                            UserInfoService userInfoService,
+                            ImageService imageService) {
         this.organizationRepository = organizationRepository;
         this.memberRepository = memberRepository;
         this.secureService = secureService;
+        this.userInfoService = userInfoService;
+        this.imageService = imageService;
     }
 
     private boolean membershipExists(ObjectId orgId, ObjectId userId) {
@@ -46,6 +54,7 @@ public class OrgMemberService {
         newMember.orgId = orgId;
         newMember.userId = userid;
         newMember.name = name;
+        newMember.avatarUrl = imageService.duplicateImage(userInfoService.getAvatar(userid));
         newMember.roles = new ArrayList<>();
         newMember.roles.add(OrgMemberRole.member());
         newMember.resigned = false;

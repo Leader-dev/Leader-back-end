@@ -10,4 +10,5 @@ public class OrgMemberInfoOverview {
     public String name;
     public String numberId;
     public String title;
+    public String avatarUrl;
 }

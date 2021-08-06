@@ -10,4 +10,5 @@ public class OrgMemberInfo {
     public String departmentName;
     public ArrayList<String> phone;
     public ArrayList<String> email;
+    public String avatarUrl;
 }

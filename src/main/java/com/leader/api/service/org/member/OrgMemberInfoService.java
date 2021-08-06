@@ -3,10 +3,8 @@ package com.leader.api.service.org.member;
 import com.leader.api.data.org.department.OrgDepartment;
 import com.leader.api.data.org.member.OrgMember;
 import com.leader.api.data.org.member.OrgMemberInfo;
-import com.leader.api.data.org.member.OrgMemberInfoOverview;
 import com.leader.api.data.org.member.OrgMemberRepository;
 import com.leader.api.service.org.structure.OrgStructureService;
-import com.leader.api.util.InternalErrorException;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -43,6 +41,7 @@ public class OrgMemberInfoService {
         info.title = member.title;
         info.phone = member.phone;
         info.email = member.email;
+        info.avatarUrl = member.avatarUrl;
     }
 
     public OrgMemberInfo getMemberInfo(ObjectId memberId) {
@@ -68,6 +67,12 @@ public class OrgMemberInfoService {
     public void updateMemberTitle(ObjectId memberId, String title) {
         OrgMember member = findMember(memberId);
         member.title = title;
+        saveMember(member);
+    }
+
+    public void updateMemberAvatar(ObjectId memberId, String avatarUrl) {
+        OrgMember member = findMember(memberId);
+        member.avatarUrl = avatarUrl;
         saveMember(member);
     }
 }

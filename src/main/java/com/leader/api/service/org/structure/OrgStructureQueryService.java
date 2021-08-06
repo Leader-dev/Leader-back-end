@@ -39,6 +39,7 @@ public class OrgStructureQueryService {
     private static final Function<OrgMember, OrgMemberOverview> TO_MEMBER_OVERVIEW_MAPPER = member -> {
         OrgMemberOverview overview = new OrgMemberOverview();
         overview.id = member.id;
+        overview.numberId = member.numberId;
         overview.name = member.name;
         overview.title = member.title;
         if (OrgRoleUtil.roleNameExistsIn(member.roles, DEPARTMENT_MANAGER)) {

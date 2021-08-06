@@ -13,6 +13,8 @@ public interface OrgMemberRepository extends MongoRepository<OrgMember, ObjectId
 
     List<OrgMember> findAllByOrgId(ObjectId orgId);
 
+    List<OrgMember> findAllByUserId(ObjectId userId);
+
     long countByOrgIdAndResignedFalse(ObjectId orgId);
 
     List<OrgMember> findByOrgIdAndRolesContaining(ObjectId orgId, OrgMemberRole role);

@@ -4,6 +4,8 @@ import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.Date;
+
 @Document(collection = "user_list")
 public class User {
 
@@ -18,4 +20,7 @@ public class User {
     // info
     public String nickname;
     public String avatarUrl;
+
+    // delete
+    public Date deleteStartDate;
 }

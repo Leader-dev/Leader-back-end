@@ -5,6 +5,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
+import java.util.List;
+
 public interface UserRepository extends MongoRepository<User, ObjectId> {
 
     <T> T findById(ObjectId id, Class<T> type);
@@ -18,4 +20,6 @@ public interface UserRepository extends MongoRepository<User, ObjectId> {
     boolean existsByUid(String uid);
 
     boolean existsByPhone(String phone);
+
+    List<User> findByDeleteStartDateNotNull();
 }

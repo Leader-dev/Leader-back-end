@@ -8,4 +8,6 @@ public interface PuppetRepository extends MongoRepository<Puppet, ObjectId> {
     Puppet findByUserId(ObjectId userId);
 
     <T> T findById(ObjectId id, Class<T> type);
+
+    void deleteByUserId(ObjectId userId);
 }

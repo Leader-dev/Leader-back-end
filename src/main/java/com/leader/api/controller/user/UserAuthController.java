@@ -1,6 +1,7 @@
 package com.leader.api.controller.user;
 
 import com.leader.api.service.user.UserAuthService;
+import com.leader.api.service.user.UserDeleteService;
 import com.leader.api.service.util.AuthCodeService;
 import com.leader.api.service.util.PasswordService;
 import com.leader.api.service.util.PhoneValidatedService;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Date;
+
 import static com.leader.api.util.response.ErrorResponse.error;
 import static com.leader.api.util.response.SuccessResponse.success;
 
@@ -23,16 +26,18 @@ import static com.leader.api.util.response.SuccessResponse.success;
 public class UserAuthController {
 
     private final UserAuthService userAuthService;
+    private final UserDeleteService deleteService;
     private final AuthCodeService authCodeService;
     private final PasswordService passwordService;
     private final UserIdService userIdService;
     private final PhoneValidatedService phoneValidatedService;
 
     @Autowired
-    public UserAuthController(UserAuthService userAuthService, AuthCodeService authCodeService,
+    public UserAuthController(UserAuthService userAuthService, UserDeleteService deleteService, AuthCodeService authCodeService,
                               PasswordService passwordService, UserIdService userIdService,
                               PhoneValidatedService phoneValidatedService) {
         this.userAuthService = userAuthService;
+        this.deleteService = deleteService;
         this.authCodeService = authCodeService;
         this.passwordService = passwordService;
         this.userIdService = userIdService;
@@ -46,10 +51,14 @@ public class UserAuthController {
         public String nickname;
     }
 
+    private String currentUserPhone() {
+        ObjectId userid = userIdService.getCurrentUserId();
+        return userAuthService.getUserPhoneById(userid);
+    }
+
     private String phoneOrCurrentUserPhone(String phone) {
         if (phone == null) {
-            ObjectId userid = userIdService.getCurrentUserId();
-            return userAuthService.getUserPhoneById(userid);
+            return currentUserPhone();
         }
         return phone;
     }
@@ -243,5 +252,37 @@ public class UserAuthController {
         userAuthService.updateUserPasswordByPhone(phone, password);
 
         return success();
+    }
+
+    @PostMapping("/set-delete-user")
+    public Document setDeleteAccount(@RequestBody UserQueryObject queryObject) {
+        String phone = currentUserPhone();
+
+        if (!authCodeService.validateAuthCode(phone, queryObject.authcode)) {
+            return new ErrorResponse("authcode_incorrect");
+        }
+
+        ObjectId userId = userIdService.getCurrentUserId();
+        deleteService.setDeleteUser(userId);
+
+        return success();
+    }
+
+    @PostMapping("/withdraw-delete-user")
+    public Document withdrawDeleteAccount() {
+        ObjectId userId = userIdService.getCurrentUserId();
+        deleteService.withdrawDeleteUser(userId);
+
+        return success();
+    }
+
+    @PostMapping("/user-delete-status")
+    public Document getUserDeleteStatus() {
+        ObjectId userId = userIdService.getCurrentUserId();
+        Date userDeleteDate = deleteService.getUserDeleteDate(userId);
+
+        return success(
+                "deleteDate", userDeleteDate
+        );
     }
 }

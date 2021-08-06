@@ -8,6 +8,7 @@ import com.leader.api.data.org.member.OrgMemberRepository;
 import com.leader.api.data.org.member.OrgMemberRole;
 import com.leader.api.service.org.authorization.OrgRoleService;
 import com.leader.api.service.org.member.OrgMemberService;
+import com.leader.api.service.service.ImageService;
 import com.leader.api.util.InternalErrorException;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
@@ -22,14 +23,17 @@ public class OrgStructureService extends OrgStructureQueryService {
 
     private final OrganizationRepository organizationRepository;
     private final OrgMemberService memberService;
+    private final ImageService imageService;
 
     public OrgStructureService(OrgDepartmentRepository departmentRepository,
                                OrgMemberRepository memberRepository,
                                OrganizationRepository organizationRepository,
-                               OrgRoleService roleService, OrgMemberService memberService) {
+                               OrgRoleService roleService, OrgMemberService memberService,
+                               ImageService imageService) {
         super(memberRepository, departmentRepository, roleService);
         this.organizationRepository = organizationRepository;
         this.memberService = memberService;
+        this.imageService = imageService;
     }
 
     public void setOrgPresidentInfo(ObjectId memberId) {
@@ -102,12 +106,14 @@ public class OrgStructureService extends OrgStructureQueryService {
         }
 
         memberRepository.findById(memberId).ifPresent(member -> {
+            imageService.deleteImage(member.avatarUrl);
             member.userId = null;
             member.roles = new ArrayList<>();
             member.title = null;
             member.phone = null;
             member.email = null;
             member.resigned = true;
+            member.avatarUrl = null;
             memberRepository.save(member);
 
             memberService.updateOrganizationMemberCount(member.orgId);

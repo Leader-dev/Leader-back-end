@@ -9,7 +9,7 @@ public class OrgJoinedOverview {
     public ObjectId id;
     public String numberId;
     public String name;
-    public String institute;
+    public String instituteName;
     public String address;
     public String instituteAuth;
     public String typeAlias;

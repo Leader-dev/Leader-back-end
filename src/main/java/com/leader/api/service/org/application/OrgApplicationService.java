@@ -62,6 +62,12 @@ public class OrgApplicationService {
     }
 
     private static boolean checkQuestions(OrgApplicationForm applicationForm, List<OrgApplicationQuestion> questions) {
+        if (questions == null) {
+            return applicationForm == null || applicationForm.size() == 0;
+        }
+        if (applicationForm == null) {
+            return questions.size() == 0;
+        }
         if (applicationForm.size() != questions.size()) {
             return false;
         }

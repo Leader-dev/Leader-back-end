@@ -25,4 +25,5 @@ public class OrgApplication {
     public Date sendDate;
     public String status;
     public ObjectId operateMemberId;
+    public Date operateDate;
 }

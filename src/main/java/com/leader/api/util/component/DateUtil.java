@@ -17,6 +17,14 @@ public class DateUtil {
         return new Date().getTime();
     }
 
+    public Date getDateBefore(long time) {
+        return new Date(getTimeBefore(time));
+    }
+
+    public long getTimeBefore(long time) {
+        return getCurrentTime() - time;
+    }
+
     public Date getTodayZero() {
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.SECOND, 0);

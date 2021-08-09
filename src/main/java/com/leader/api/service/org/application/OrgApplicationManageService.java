@@ -130,6 +130,7 @@ public class OrgApplicationManageService {
             throw new InternalErrorException("Invalid result.");
         }
         application.operateMemberId = memberId;
+        application.operateDate = dateUtil.getCurrentDate();
         applicationRepository.save(application);
     }
 

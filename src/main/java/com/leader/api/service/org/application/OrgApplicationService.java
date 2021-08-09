@@ -14,15 +14,20 @@ import com.leader.api.util.InternalErrorException;
 import com.leader.api.util.component.DateUtil;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import static com.leader.api.data.org.application.OrgApplication.*;
 
 @Service
 public class OrgApplicationService {
+
+    public static final long DECLINE_PERIOD_DAYS = 7;
+    public static final long DECLINE_PERIOD = DECLINE_PERIOD_DAYS * 24 * 60 * 60 * 1000;
 
     public static final String CLOSED = "closed";
     public static final String FULL = "full";
@@ -195,5 +200,15 @@ public class OrgApplicationService {
         }
 
         applicationRepository.save(application);
+    }
+
+    @Scheduled(cron = "0 0 1 * * ?")
+    public void autoDecline() {
+        Date declineOperateDateBefore = dateUtil.getDateBefore(DECLINE_PERIOD);
+        List<OrgApplication> applications = applicationRepository.findByOperateDateBeforeAndStatusEquals(declineOperateDateBefore, PASSED);
+        applications.forEach(application -> {
+            application.status = DECLINED;
+        });
+        applicationRepository.saveAll(applications);
     }
 }

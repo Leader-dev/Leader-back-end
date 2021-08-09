@@ -62,20 +62,13 @@ public class UserDeleteService {
 
     @Scheduled(cron = "0 0 1 * * ?")
     public void deleteUsers() {
-        long deleteStartBefore = dateUtil.getCurrentTime() - USER_DELETE_PERIOD;
-        List<User> users = userRepository.findByDeleteStartDateNotNull();
+        Date deleteStartBefore = dateUtil.getDateBefore(USER_DELETE_PERIOD);
+        List<User> users = userRepository.findByDeleteStartDateBefore(deleteStartBefore);
         System.out.println("Start cleaning up users:");
-        users.stream()
-                .filter(user -> {
-                    if (user.deleteStartDate != null) {
-                        return user.deleteStartDate.getTime() < deleteStartBefore;
-                    }
-                    return false;
-                })
-                .forEach(user -> {
-                    System.out.println(user.id);
-                    deleteUser(user.id);
-                });
+        users.forEach(user -> {
+            System.out.println(user.id);
+            deleteUser(user.id);
+        });
         System.out.println("Cleaning up ended.");
     }
 

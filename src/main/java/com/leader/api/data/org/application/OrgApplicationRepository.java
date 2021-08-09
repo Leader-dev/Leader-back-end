@@ -5,9 +5,12 @@ import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
+import java.util.Date;
 import java.util.List;
 
 public interface OrgApplicationRepository extends MongoRepository<OrgApplication, ObjectId> {
+
+    List<OrgApplication> findByOperateDateBeforeAndStatusEquals(Date date, String status);
 
     @Aggregation(pipeline = {
             "{" +

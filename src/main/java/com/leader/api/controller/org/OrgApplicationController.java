@@ -3,6 +3,7 @@ package com.leader.api.controller.org;
 import com.leader.api.data.org.application.OrgApplicationForm;
 import com.leader.api.data.org.application.OrgApplicationSentDetail;
 import com.leader.api.data.org.application.OrgApplicationSentOverview;
+import com.leader.api.data.org.application.notification.OrgApplicationNotification;
 import com.leader.api.data.org.department.OrgDepartmentOverview;
 import com.leader.api.service.org.application.OrgApplicationService;
 import com.leader.api.service.org.structure.OrgStructureQueryService;
@@ -97,13 +98,15 @@ public class OrgApplicationController {
         );
     }
 
-    @PostMapping("/read-notification")
+    @PostMapping("/notification-detail")
     public Document readNotification(@RequestBody QueryObject queryObject) {
         ObjectId userid = userIdService.getCurrentUserId();
 
-        applicationService.readNotification(userid, queryObject.notificationId);
+        OrgApplicationNotification notification = applicationService.getNotificationAndSetToRead(userid, queryObject.notificationId);
 
-        return success();
+        return success(
+                "detail", notification
+        );
     }
 
     @PostMapping("/reply")

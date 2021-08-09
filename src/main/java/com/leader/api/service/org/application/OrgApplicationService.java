@@ -4,6 +4,7 @@ import com.leader.api.data.org.OrgApplicationQuestion;
 import com.leader.api.data.org.Organization;
 import com.leader.api.data.org.OrganizationRepository;
 import com.leader.api.data.org.application.*;
+import com.leader.api.data.org.application.notification.OrgApplicationNotification;
 import com.leader.api.data.org.application.notification.OrgApplicationNotificationRepository;
 import com.leader.api.data.org.department.OrgDepartmentRepository;
 import com.leader.api.data.org.member.OrgMember;
@@ -157,14 +158,17 @@ public class OrgApplicationService {
         return detail;
     }
 
-    public void readNotification(ObjectId userId, ObjectId notificationId) {
-        notificationRepository.findById(notificationId).ifPresent(notification -> {
-            if (!applicationRepository.existsByApplicantUserIdAndId(userId, notification.applicationId)) {
-                throw new InternalErrorException("Invalid application.");
-            }
-            notification.unread = false;
-            notificationRepository.save(notification);
-        });
+    public OrgApplicationNotification getNotificationAndSetToRead(ObjectId userId, ObjectId notificationId) {
+        OrgApplicationNotification notification = notificationRepository.findById(notificationId).orElse(null);
+        if (notification == null) {
+            throw new InternalErrorException("Invalid notification.");
+        }
+        if (!applicationRepository.existsByApplicantUserIdAndId(userId, notification.applicationId)) {
+            throw new InternalErrorException("Invalid application.");
+        }
+        notification.unread = false;
+        notificationRepository.save(notification);
+        return notification;
     }
 
     public void replyToApplication(ObjectId userId, ObjectId applicationId, ReplyAction action) {

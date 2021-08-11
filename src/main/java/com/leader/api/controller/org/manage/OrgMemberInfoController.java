@@ -1,7 +1,9 @@
 package com.leader.api.controller.org.manage;
 
 import com.leader.api.data.org.member.OrgMemberInfo;
+import com.leader.api.data.org.member.OrgMemberRole;
 import com.leader.api.service.org.authorization.OrgAuthorizationService;
+import com.leader.api.service.org.authorization.OrgRoleService;
 import com.leader.api.service.org.member.OrgMemberIdService;
 import com.leader.api.service.org.member.OrgMemberInfoService;
 import com.leader.api.service.org.structure.OrgStructureService;
@@ -14,7 +16,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
+import static com.leader.api.data.org.member.OrgMemberRole.*;
 import static com.leader.api.service.org.authorization.OrgAuthority.BASIC;
+import static com.leader.api.service.org.authorization.OrgRoleUtil.anyRoleNameExistIn;
 import static com.leader.api.util.response.SuccessResponse.success;
 
 @RestController
@@ -25,15 +31,18 @@ public class OrgMemberInfoController {
     private final OrgMemberIdService memberIdService;
     private final OrgMemberInfoService memberInfoService;
     private final OrgStructureService structureService;
+    private final OrgRoleService roleService;
     private final ImageService imageService;
 
     @Autowired
     public OrgMemberInfoController(OrgAuthorizationService authorizationService, OrgMemberIdService memberIdService,
-                                   OrgMemberInfoService memberInfoService, OrgStructureService structureService, ImageService imageService) {
+                                   OrgMemberInfoService memberInfoService, OrgStructureService structureService,
+                                   OrgRoleService roleService, ImageService imageService) {
         this.authorizationService = authorizationService;
         this.memberIdService = memberIdService;
         this.memberInfoService = memberInfoService;
         this.structureService = structureService;
+        this.roleService = roleService;
         this.imageService = imageService;
     }
 
@@ -62,6 +71,21 @@ public class OrgMemberInfoController {
         memberInfoService.updateMemberInfo(memberId, queryObject.memberInfo);
 
         return success();
+    }
+
+    @PostMapping("/get-access")
+    public Document getMemberRoles() {
+        authorizationService.assertCurrentMemberHasAuthority(BASIC);
+
+        ObjectId memberId = memberIdService.getCurrentMemberId();
+        List<OrgMemberRole> roles = roleService.findRoles(memberId);
+
+        return success().data(
+                "adminPanel", anyRoleNameExistIn(roles, DEPARTMENT_MANAGER, GENERAL_MANAGER, RECRUIT_MANAGER, PRESIDENT),
+                "managerFunctions", anyRoleNameExistIn(roles, DEPARTMENT_MANAGER, GENERAL_MANAGER, PRESIDENT),
+                "recruitFunctions", anyRoleNameExistIn(roles, DEPARTMENT_MANAGER, GENERAL_MANAGER, RECRUIT_MANAGER, PRESIDENT),
+                "presidentFunctions", anyRoleNameExistIn(roles, PRESIDENT)
+        );
     }
 
     @PostMapping("/set-avatar")

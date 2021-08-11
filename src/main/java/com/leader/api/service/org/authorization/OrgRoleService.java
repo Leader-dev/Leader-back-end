@@ -22,10 +22,6 @@ public class OrgRoleService {
         this.memberRepository = memberRepository;
     }
 
-    private List<OrgMemberRole> findRoles(ObjectId memberId) {
-        return memberRepository.lookupRolesByMemberId(memberId);
-    }
-
     private void operateAndSaveMembership(OrgMember member, Consumer<OrgMember> callable) {
         callable.accept(member);
         memberRepository.save(member);
@@ -33,6 +29,10 @@ public class OrgRoleService {
 
     private void operateAndSaveMembership(ObjectId memberId, Consumer<OrgMember> callable) {
         memberRepository.findById(memberId).ifPresent(member -> operateAndSaveMembership(member, callable));
+    }
+
+    public List<OrgMemberRole> findRoles(ObjectId memberId) {
+        return memberRepository.lookupRolesByMemberId(memberId);
     }
 
     public OrgMemberRole findRoleByName(ObjectId memberId, String name) {

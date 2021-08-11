@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.leader.api.service.org.authorization.OrgAuthority.BASIC;
@@ -47,6 +48,7 @@ public class OrgStructureController {
         public ObjectId parentId;
         public ObjectId userId;
         public ObjectId memberId;
+        public ArrayList<ObjectId> memberIds;
         public String name;
         public String searchText;
         public String title;
@@ -137,8 +139,8 @@ public class OrgStructureController {
     public Document setGeneralManager(@RequestBody QueryObject queryObject) {
         authorizationService.assertCurrentMemberHasAuthority(STRUCTURE_MANAGEMENT);
 
-        memberIdService.assertMemberInCurrentOrganization(queryObject.memberId);
-        structureService.setMemberToGeneralManager(queryObject.memberId);
+        queryObject.memberIds.forEach(memberIdService::assertMemberInCurrentOrganization);
+        queryObject.memberIds.forEach(structureService::setMemberToGeneralManager);
 
         return new SuccessResponse();
     }
@@ -147,8 +149,10 @@ public class OrgStructureController {
     public Document setDepartmentManager(@RequestBody QueryObject queryObject) {
         authorizationService.assertCurrentMemberHasAuthority(STRUCTURE_MANAGEMENT);
 
-        memberIdService.assertMemberInCurrentOrganization(queryObject.memberId);
-        structureService.setMemberToDepartmentManager(queryObject.memberId, queryObject.departmentId);
+        queryObject.memberIds.forEach(memberIdService::assertMemberInCurrentOrganization);
+        queryObject.memberIds.forEach(memberId -> {
+            structureService.setMemberToDepartmentManager(memberId, queryObject.departmentId);
+        });
 
         return new SuccessResponse();
     }
@@ -157,8 +161,10 @@ public class OrgStructureController {
     public Document setMember(@RequestBody QueryObject queryObject) {
         authorizationService.assertCurrentMemberHasAuthority(STRUCTURE_MANAGEMENT);
 
-        memberIdService.assertMemberInCurrentOrganization(queryObject.memberId);
-        structureService.setMemberToMember(queryObject.memberId, queryObject.departmentId);
+        queryObject.memberIds.forEach(memberIdService::assertMemberInCurrentOrganization);
+        queryObject.memberIds.forEach(memberId -> {
+            structureService.setMemberToMember(memberId, queryObject.departmentId);
+        });
 
         return new SuccessResponse();
     }

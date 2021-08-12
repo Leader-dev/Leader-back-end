@@ -22,13 +22,13 @@ public class OrgRoleService {
         this.memberRepository = memberRepository;
     }
 
-    private void operateAndSaveMembership(OrgMember member, Consumer<OrgMember> callable) {
+    private void operateAndSaveMember(OrgMember member, Consumer<OrgMember> callable) {
         callable.accept(member);
         memberRepository.save(member);
     }
 
-    private void operateAndSaveMembership(ObjectId memberId, Consumer<OrgMember> callable) {
-        memberRepository.findById(memberId).ifPresent(member -> operateAndSaveMembership(member, callable));
+    private void operateAndSaveMember(ObjectId memberId, Consumer<OrgMember> callable) {
+        memberRepository.findById(memberId).ifPresent(member -> operateAndSaveMember(member, callable));
     }
 
     public List<OrgMemberRole> findRoles(ObjectId memberId) {
@@ -53,19 +53,19 @@ public class OrgRoleService {
 
     // use when you want to erase all previous roles and set a completely new group of roles
     public void setRolesIn(ObjectId memberId, OrgMemberRole... roles) {
-        operateAndSaveMembership(memberId, membership -> membership.roles = new ArrayList<>(Arrays.asList(roles)));
+        operateAndSaveMember(memberId, membership -> membership.roles = new ArrayList<>(Arrays.asList(roles)));
     }
 
     // use when you want to keep all previous roles and append a group of roles
     public void addRolesIn(ObjectId memberId, OrgMemberRole... roles) {
-        operateAndSaveMembership(memberId, membership -> membership.roles.addAll(Arrays.asList(roles)));
+        operateAndSaveMember(memberId, membership -> membership.roles.addAll(Arrays.asList(roles)));
     }
 
     // use when you want to update one specific role with the same name as given one
     // if no role with same name, than insert the new role
     // throws exception when multiple roles with same name is found
     public void updateRoleDepartmentIdIn(ObjectId memberId, OrgMemberRole role) {
-        operateAndSaveMembership(memberId, membership -> {
+        operateAndSaveMember(memberId, membership -> {
             OrgMemberRole existingRole = OrgRoleUtil.findRoleIn(membership.roles, role.name);
             if (existingRole != null) {
                 membership.roles.remove(existingRole);
@@ -75,7 +75,7 @@ public class OrgRoleService {
     }
 
     public void removeRolesIn(ObjectId memberId, OrgMemberRole... roles) {
-        operateAndSaveMembership(memberId, membership -> {
+        operateAndSaveMember(memberId, membership -> {
             for (OrgMemberRole role : roles) {
                 membership.roles.remove(role);
             }
@@ -84,7 +84,7 @@ public class OrgRoleService {
 
     // use when you want to remove all roles with specific names
     public void removeRolesIn(ObjectId memberId, String... names) {
-        operateAndSaveMembership(memberId, membership -> {
+        operateAndSaveMember(memberId, membership -> {
             for (String name: names) {
                 membership.roles.removeIf(role -> name.equals(role.name));
             }

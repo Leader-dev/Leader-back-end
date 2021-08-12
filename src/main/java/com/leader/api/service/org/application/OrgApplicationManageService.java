@@ -104,13 +104,23 @@ public class OrgApplicationManageService {
         return applicationRepository.lookupByDepartmentIdInAndStatus(departmentIds, PENDING);
     }
 
-    public OrgApplicationReceivedDetail getDetail(ObjectId memberId, ObjectId applicationId) {
-        assertCanSeeApplication(memberId, applicationId);
+    public OrgApplicationReceivedDetail getDetail(ObjectId applicationId) {
         return applicationRepository.lookupByIdIncludeUserInfo(applicationId);
     }
 
-    public void sendNotification(ObjectId memberId, ObjectId applicationId, OrgApplicationNotification notification) {
-        assertCanManageApplication(memberId, applicationId);
+    public OrgApplicationNotification getNotificationDetail(ObjectId notificationId) {
+        return notificationRepository.findById(notificationId).orElse(null);
+    }
+
+    public ObjectId getApplicationIdOfNotification(ObjectId notificationId) {
+        OrgApplicationNotification notification = notificationRepository.findById(notificationId).orElse(null);
+        if (notification == null) {
+            return null;
+        }
+        return notification.applicationId;
+    }
+
+    public void sendNotification(ObjectId applicationId, OrgApplicationNotification notification) {
         OrgApplicationNotification newNotification = new OrgApplicationNotification();
         copyValidItemsTo(newNotification, notification);
         newNotification.applicationId = applicationId;
@@ -120,7 +130,6 @@ public class OrgApplicationManageService {
     }
 
     public void sendResult(ObjectId memberId, ObjectId applicationId, ApplicationResult result) {
-        assertCanManageApplication(memberId, applicationId);
         OrgApplication application = findApplication(applicationId);
         if (result == ApplicationResult.PASS) {
             application.status = PASSED;

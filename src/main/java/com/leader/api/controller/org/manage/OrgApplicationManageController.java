@@ -8,7 +8,6 @@ import com.leader.api.service.org.authorization.OrgAuthorizationService;
 import com.leader.api.service.org.member.OrgMemberIdService;
 import com.leader.api.service.service.ImageService;
 import com.leader.api.util.InternalErrorException;
-import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +21,7 @@ import java.util.List;
 import static com.leader.api.service.org.application.OrgApplicationManageService.ApplicationResult.PASS;
 import static com.leader.api.service.org.application.OrgApplicationManageService.ApplicationResult.REJECT;
 import static com.leader.api.service.org.authorization.OrgAuthority.RECRUIT;
+import static com.leader.api.util.response.SuccessResponse.success;
 
 @RestController
 @RequestMapping("/org/manage/apply")
@@ -48,6 +48,7 @@ public class OrgApplicationManageController {
 
     public static class QueryObject {
         public ObjectId applicationId;
+        public ObjectId notificationId;
         public OrgApplicationNotification notification;
         public String result;
     }
@@ -59,9 +60,9 @@ public class OrgApplicationManageController {
         ObjectId memberId = memberIdService.getCurrentMemberId();
         List<OrgApplicationReceivedOverview> list = applicationManageService.listReceived(memberId);
 
-        Document response = new SuccessResponse();
-        response.append("list", list);
-        return response;
+        return success(
+                "list", list
+        );
     }
 
     @PostMapping("/detail")
@@ -69,25 +70,41 @@ public class OrgApplicationManageController {
         authorizationService.assertCurrentMemberHasAuthority(RECRUIT);
 
         ObjectId memberId = memberIdService.getCurrentMemberId();
-        OrgApplicationReceivedDetail detail = applicationManageService.getDetail(memberId, queryObject.applicationId);
+        applicationManageService.assertCanSeeApplication(memberId, queryObject.applicationId);
+        OrgApplicationReceivedDetail detail = applicationManageService.getDetail(queryObject.applicationId);
 
-        Document response = new SuccessResponse();
-        response.append("detail", detail);
-        return response;
+        return success(
+                "detail", detail
+        );
+    }
+
+    @PostMapping("/notification-detail")
+    public Document getApplicationNotificationDetail(@RequestBody QueryObject queryObject) {
+        authorizationService.assertCurrentMemberHasAuthority(RECRUIT);
+
+        ObjectId memberId = memberIdService.getCurrentMemberId();
+        ObjectId applicationId = applicationManageService.getApplicationIdOfNotification(queryObject.notificationId);
+        applicationManageService.assertCanSeeApplication(memberId, applicationId);
+        OrgApplicationNotification detail = applicationManageService.getNotificationDetail(queryObject.notificationId);
+
+        return success(
+                "detail", detail
+        );
     }
 
     @PostMapping("/send-notification")
     public Document sendApplicationNotification(@RequestBody QueryObject queryObject) {
-        authorizationService.assertCurrentMemberHasAuthority(RECRUIT);
-
         imageService.assertUploadedTempImages(queryObject.notification.imageUrls);
 
+        authorizationService.assertCurrentMemberHasAuthority(RECRUIT);
+
         ObjectId memberId = memberIdService.getCurrentMemberId();
-        applicationManageService.sendNotification(memberId, queryObject.applicationId, queryObject.notification);
+        applicationManageService.assertCanManageApplication(memberId, queryObject.applicationId);
+        applicationManageService.sendNotification(queryObject.applicationId, queryObject.notification);
 
         imageService.confirmUploadImages(queryObject.notification.imageUrls);
 
-        return new SuccessResponse();
+        return success();
     }
 
     @PostMapping("/send-result")
@@ -95,6 +112,7 @@ public class OrgApplicationManageController {
         authorizationService.assertCurrentMemberHasAuthority(RECRUIT);
 
         ObjectId memberId = memberIdService.getCurrentMemberId();
+        applicationManageService.assertCanManageApplication(memberId, queryObject.applicationId);
         if (PASS_RESULT.equals(queryObject.result)) {
             applicationManageService.sendResult(memberId, queryObject.applicationId, PASS);
         } else if (REJECT_RESULT.equals(queryObject.result)) {
@@ -103,7 +121,7 @@ public class OrgApplicationManageController {
             throw new InternalErrorException("Invalid result.");
         }
 
-        return new SuccessResponse();
+        return success();
     }
 
     @PostMapping("/list-operated")
@@ -113,8 +131,8 @@ public class OrgApplicationManageController {
         ObjectId memberId = memberIdService.getCurrentMemberId();
         List<OrgApplicationReceivedOverview> list = applicationManageService.listOperated(memberId);
 
-        Document response = new SuccessResponse();
-        response.append("list", list);
-        return response;
+        return success(
+                "list", list
+        );
     }
 }

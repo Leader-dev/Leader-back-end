@@ -9,7 +9,6 @@ import com.leader.api.util.response.SuccessResponse;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,9 +20,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/org")
 public class OrgCommonController {
-
-    @Value("${leader.qr-code-url-template}")
-    private String QR_CODE_URL_TEMPLATE;
 
     private final OrgTypeService typeService;
     private final OrgQueryService queryService;
@@ -74,15 +70,6 @@ public class OrgCommonController {
         result.append("totalPages", list.getTotalPages());
         result.append("totalNumber", list.getTotalElements());
         response.append("result", result);
-        return response;
-    }
-
-    @PostMapping("/qr-code-url")
-    public Document getQRCodeUrl(@RequestBody QueryObject queryObject) {
-        String url = String.format(QR_CODE_URL_TEMPLATE, queryObject.orgId.toString());
-
-        Document response = new SuccessResponse();
-        response.append("url", url);
         return response;
     }
 }

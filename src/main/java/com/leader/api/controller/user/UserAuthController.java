@@ -265,6 +265,8 @@ public class UserAuthController {
         ObjectId userId = userIdService.getCurrentUserId();
         deleteService.setDeleteUser(userId);
 
+        authCodeService.removeAuthCodeRecord(phone);
+
         return success();
     }
 

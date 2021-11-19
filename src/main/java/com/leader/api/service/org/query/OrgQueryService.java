@@ -23,7 +23,7 @@ public class OrgQueryService {
 
     public <T> List<T> findOrganizationsByNumber(int count, Class<T> type) {
         Page<T> list = organizationRepository.findByQuery(
-                new Document(),
+                new Document("status", RUNNING),
                 PageRequest.of(0, count),
                 type
         );

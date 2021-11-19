@@ -1,6 +1,6 @@
-# This workflow will build a Java project with Maven when pushed to dev
+# This workflow will build a Java project with Maven
 
-name: Maven Dev Package
+name: Maven Prod Package
 
 on:
   workflow_dispatch:
